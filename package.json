@@ -1,0 +1,16 @@
+{
+  "name": "mizai",
+  "type": "module",
+  "scripts": {
+    "start": "bun run ./src/util/bot.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "node-napcat-ts": "^0.4.11"
+  }
+}
