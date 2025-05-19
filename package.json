@@ -2,7 +2,7 @@
   "name": "mizai",
   "type": "module",
   "scripts": {
-    "start": "bun run ./src/util/bot.ts"
+    "start": "bun run ./src/main.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -11,6 +11,9 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "node-napcat-ts": "^0.4.11"
+    "@miz/ai": "file:",
+    "dayjs": "^1.11.13",
+    "node-napcat-ts": "^0.4.11",
+    "winston": "^3.17.0"
   }
 }

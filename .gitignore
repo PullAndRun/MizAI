@@ -1,6 +1,8 @@
 /node_modules
 /bun.lock
 /package-lock.json
-/config.toml
+/config/config.toml
 /resource
 /log
+/doc
+/recource
