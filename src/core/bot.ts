@@ -1,6 +1,6 @@
 import config from "@miz/ai/config/config.toml";
-import { NCWebsocket, type SendMessageSegment } from "node-napcat-ts";
-import { logger } from "./log";
+import { logger } from "@miz/ai/src/core/log.ts";
+import { NCWebsocket, Structs, type SendMessageSegment } from "node-napcat-ts";
 
 const clients: NCWebsocket[] = [];
 
@@ -38,16 +38,80 @@ async function sendGroupMsg(gid: number, message: SendMessageSegment[]) {
     .send_group_msg({ group_id: gid, message: message })
     .catch((e) => {
       logger.warn(
-        `\n->群消息发送失败\n->群号:${gid}\n->原因:\n${JSON.stringify(
+        `群消息发送失败\n群号:${gid}\n\n原因:\n${JSON.stringify(
           e
-        )}\n->内容:\n${JSON.stringify(message)}`
+        )}\n\n内容:\n${JSON.stringify(message)}`
       );
       return undefined;
     });
+}
+
+function cmdText(msg: string, cmd: string[]) {
+  return cmd.reduce(
+    (acc, cur) =>
+      acc
+        .replace(new RegExp(`(^\\s*${cur}\\s*)`, "g"), "")
+        .replace(new RegExp(`(\\[.+?\\])`, "g"), "")
+        .replace(/(\r+)/g, "\r")
+        .replace(/\s+/g, " ")
+        .trim(),
+    msg
+  );
+}
+
+async function cmd(
+  msg: string,
+  event: groupMessageEvent,
+  cmdList: Array<{
+    cmd: string;
+    cmt: string;
+    role: groupRole;
+    plugin: (msg: string, event: groupMessageEvent) => Promise<void>;
+  }>
+) {
+  const roleHierarchy = ["member", "admin", "owner", "system"];
+  const cmdParser: Record<string, string> = {
+    system: "系统管理员",
+    owner: "群主",
+    admin: "群管理员",
+    member: "任何人",
+  };
+  for (const cmd of cmdList) {
+    if (!msg.startsWith(cmd.cmd)) continue;
+    const groupMemberInfo = await getClient().get_group_member_info({
+      group_id: event.groupId,
+      user_id: event.senderId,
+    });
+    if (
+      roleHierarchy.indexOf(groupMemberInfo.role) <
+        roleHierarchy.indexOf(cmd.role) &&
+      event.senderId !== config.bot.admin
+    ) {
+      await sendGroupMsg(event.groupId, [
+        Structs.reply(event.messageId),
+        Structs.text(
+          `权限不足,无法执行命令\n您需要: ${cmdParser[cmd.role]}权限`
+        ),
+      ]);
+      return;
+    }
+    await cmd.plugin(cmdText(msg, [cmd.cmd]), event);
+    return;
+  }
+  const intro = cmdList
+    .map(
+      (cmd) =>
+        `指令: ${cmd.cmd}\n说明: ${cmd.cmt}\n执行权限: ${cmdParser[cmd.role]}`
+    )
+    .join("\n\n");
+  await sendGroupMsg(event.groupId, [
+    Structs.reply(event.messageId),
+    Structs.text(intro),
+  ]);
 }
 
 async function init() {
   await connect();
 }
 
-export { getClient, init, sendGroupMsg };
+export { cmd, cmdText, getClient, init, sendGroupMsg };

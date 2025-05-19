@@ -5,15 +5,22 @@
     "start": "bun run ./src/main.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node-schedule": "^2.1.7"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@google/genai": "^0.15.0",
     "@miz/ai": "file:",
     "dayjs": "^1.11.13",
     "node-napcat-ts": "^0.4.11",
-    "winston": "^3.17.0"
+    "node-schedule": "^2.1.1",
+    "openai": "^4.100.0",
+    "pg": "^8.16.0",
+    "typeorm": "^0.3.24",
+    "winston": "^3.17.0",
+    "zod": "^3.24.4"
   }
 }
