@@ -2,7 +2,7 @@ import { cmd, cmdText, message, sendGroupMsg } from "@miz/ai/src/core/bot";
 import * as aiModel from "@miz/ai/src/models/ai";
 import * as groupModel from "@miz/ai/src/models/group";
 import * as pluginModel from "@miz/ai/src/models/plugin";
-import config from "@tomato/bot/config.toml";
+import config from "@miz/ai/config/config.toml";
 import { Structs } from "node-napcat-ts";
 
 const info = {
