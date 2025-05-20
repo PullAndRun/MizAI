@@ -1,9 +1,9 @@
-import { cmd, cmdText, message, sendGroupMsg } from "@miz/ai/src/core/bot";
+import config from "@miz/ai/config/config.toml";
+import { cmd, cmdText, sendGroupMsg } from "@miz/ai/src/core/bot";
 import * as aiModel from "@miz/ai/src/models/ai";
 import * as groupModel from "@miz/ai/src/models/group";
 import * as pluginModel from "@miz/ai/src/models/plugin";
-import config from "@miz/ai/config/config.toml";
-import { Structs } from "node-napcat-ts";
+import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
   name: "设置",
@@ -16,9 +16,8 @@ const info = {
   plugin,
 };
 
-async function plugin(event: groupMessageEvent) {
-  const msgEvent = await message(event.messageId);
-  const msg = cmdText(msgEvent.raw_message, [config.bot.name, info.name]);
+async function plugin(event: GroupMessage) {
+  const msg = cmdText(event.raw_message, [config.bot.name, info.name]);
   const cmdList: commandList = [
     {
       cmd: "插件",
@@ -36,23 +35,23 @@ async function plugin(event: groupMessageEvent) {
   await cmd(msg, event, cmdList);
 }
 
-async function prompts(msg: string, event: groupMessageEvent) {
+async function prompts(msg: string, event: GroupMessage) {
   const findPrompt = await aiModel.find(msg);
   if (!findPrompt) {
-    await sendGroupMsg(event.groupId, [
-      Structs.reply(event.messageId),
+    await sendGroupMsg(event.group_id, [
+      Structs.reply(event.message_id),
       Structs.text(`人格 ${msg} 切换失败\n没有 ${msg} 人格`),
     ]);
     return;
   }
-  await groupModel.updatePrompt(event.groupId, msg).catch((_) => undefined);
-  await sendGroupMsg(event.groupId, [
-    Structs.reply(event.messageId),
+  await groupModel.updatePrompt(event.group_id, msg).catch((_) => undefined);
+  await sendGroupMsg(event.group_id, [
+    Structs.reply(event.message_id),
     Structs.text(`人格 ${msg} 切换成功`),
   ]);
 }
 
-async function plugins(msg: string, event: groupMessageEvent) {
+async function plugins(msg: string, event: GroupMessage) {
   const cmdList: commandList = [
     {
       cmd: "启用",
@@ -76,29 +75,29 @@ async function plugins(msg: string, event: groupMessageEvent) {
   await cmd(msg, event, cmdList);
 }
 
-async function pluginEnable(msg: string, event: groupMessageEvent) {
-  await pluginModel.update(event.groupId, msg, true).catch((_) => undefined);
-  await sendGroupMsg(event.groupId, [
-    Structs.reply(event.messageId),
+async function pluginEnable(msg: string, event: GroupMessage) {
+  await pluginModel.update(event.group_id, msg, true).catch((_) => undefined);
+  await sendGroupMsg(event.group_id, [
+    Structs.reply(event.message_id),
     Structs.text(`插件 ${msg} 启用成功`),
   ]);
 }
 
-async function pluginDisable(msg: string, event: groupMessageEvent) {
-  await pluginModel.update(event.groupId, msg, false).catch((_) => undefined);
-  await sendGroupMsg(event.groupId, [
-    Structs.reply(event.messageId),
+async function pluginDisable(msg: string, event: GroupMessage) {
+  await pluginModel.update(event.group_id, msg, false).catch((_) => undefined);
+  await sendGroupMsg(event.group_id, [
+    Structs.reply(event.message_id),
     Structs.text(`插件 ${msg} 禁用成功`),
   ]);
 }
 
-async function pluginState(_: string, event: groupMessageEvent) {
-  const plugins = await pluginModel.findByGid(event.groupId);
+async function pluginState(_: string, event: GroupMessage) {
+  const plugins = await pluginModel.findByGid(event.group_id);
   const plugin = plugins
     .map((p) => `${p.name} ${p.enable ? "启用" : "禁用"}`)
     .join("\n");
-  await sendGroupMsg(event.groupId, [
-    Structs.reply(event.messageId),
+  await sendGroupMsg(event.group_id, [
+    Structs.reply(event.message_id),
     Structs.text(`插件状态: \n${plugin}`),
   ]);
 }

@@ -1,6 +1,6 @@
 import { sendGroupMsg } from "@miz/ai/src/core/bot";
 import { help } from "@miz/ai/src/service/help";
-import { Structs } from "node-napcat-ts";
+import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
   name: "帮助",
@@ -8,9 +8,9 @@ const info = {
   plugin,
 };
 
-async function plugin(event: groupMessageEvent) {
-  await sendGroupMsg(event.groupId, [
-    Structs.reply(event.messageId),
+async function plugin(event: GroupMessage) {
+  await sendGroupMsg(event.group_id, [
+    Structs.reply(event.message_id),
     Structs.text(help()),
   ]);
 }

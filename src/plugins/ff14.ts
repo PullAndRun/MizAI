@@ -1,7 +1,7 @@
 import config from "@miz/ai/config/config.toml";
-import { cmd, cmdText, message, sendGroupMsg } from "@miz/ai/src/core/bot";
+import { cmd, cmdText, sendGroupMsg } from "@miz/ai/src/core/bot";
 import { searchBoard } from "@miz/ai/src/service/ff14";
-import { Structs } from "node-napcat-ts";
+import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
   name: "ff14",
@@ -11,9 +11,8 @@ const info = {
   plugin,
 };
 
-async function plugin(event: groupMessageEvent) {
-  const msgEvent = await message(event.messageId);
-  const msg = cmdText(msgEvent.raw_message, [config.bot.name, info.name]);
+async function plugin(event: GroupMessage) {
+  const msg = cmdText(event.raw_message, [config.bot.name, info.name]);
   const cmdList: commandList = [
     {
       cmd: "板子",
@@ -25,18 +24,18 @@ async function plugin(event: groupMessageEvent) {
   await cmd(msg, event, cmdList);
 }
 
-async function board(msg: string, event: groupMessageEvent) {
+async function board(msg: string, event: GroupMessage) {
   const [region, goods] = msg.split(" ");
   if (!region || !goods) {
-    await sendGroupMsg(event.groupId, [
-      Structs.reply(event.messageId),
+    await sendGroupMsg(event.group_id, [
+      Structs.reply(event.message_id),
       Structs.text(`命令错误。请使用 "ff14" 获取命令的正确使用方式。`),
     ]);
     return;
   }
   const result = await searchBoard(region, goods);
-  await sendGroupMsg(event.groupId, [
-    Structs.reply(event.messageId),
+  await sendGroupMsg(event.group_id, [
+    Structs.reply(event.message_id),
     Structs.text(result),
   ]);
 }

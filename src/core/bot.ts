@@ -1,6 +1,14 @@
 import config from "@miz/ai/config/config.toml";
 import { logger } from "@miz/ai/src/core/log";
-import { NCWebsocket, Structs, type SendMessageSegment } from "node-napcat-ts";
+import {
+  NCWebsocket,
+  Structs,
+  type GroupMessage,
+  type SendMessageSegment,
+} from "node-napcat-ts";
+import * as plugin from "@miz/ai/src/core/plugin";
+import * as pluginModel from "@miz/ai/src/models/plugin";
+import * as groupModel from "@miz/ai/src/models/group";
 
 const clients: NCWebsocket[] = [];
 
@@ -59,11 +67,7 @@ function cmdText(msg: string, cmd: string[]) {
   );
 }
 
-async function cmd(
-  msg: string,
-  event: groupMessageEvent,
-  cmdList: commandList
-) {
+async function cmd(msg: string, event: GroupMessage, cmdList: commandList) {
   const roleHierarchy = ["member", "admin", "owner", "system"];
   const cmdParser: Record<string, string> = {
     system: "系统管理员",
@@ -74,16 +78,16 @@ async function cmd(
   for (const cmd of cmdList) {
     if (!msg.startsWith(cmd.cmd)) continue;
     const groupMemberInfo = await getClient().get_group_member_info({
-      group_id: event.groupId,
-      user_id: event.senderId,
+      group_id: event.group_id,
+      user_id: event.sender.user_id,
     });
     if (
       roleHierarchy.indexOf(groupMemberInfo.role) <
         roleHierarchy.indexOf(cmd.role) &&
-      event.senderId !== config.bot.admin
+      event.sender.user_id !== config.bot.admin
     ) {
-      await sendGroupMsg(event.groupId, [
-        Structs.reply(event.messageId),
+      await sendGroupMsg(event.group_id, [
+        Structs.reply(event.message_id),
         Structs.text(
           `权限不足,无法执行命令\n您需要: ${cmdParser[cmd.role]}权限`
         ),
@@ -99,28 +103,78 @@ async function cmd(
         `指令: ${cmd.cmd}\n说明: ${cmd.cmt}\n执行权限: ${cmdParser[cmd.role]}`
     )
     .join("\n\n");
-  await sendGroupMsg(event.groupId, [
-    Structs.reply(event.messageId),
+  await sendGroupMsg(event.group_id, [
+    Structs.reply(event.message_id),
     Structs.text(intro),
   ]);
-}
-
-function message(msgId: number) {
-  return getClient().get_msg({
-    message_id: msgId,
-  });
 }
 
 async function listener() {
   getClient().on("message.group", async (event) => {
     const message = event.raw_message;
     if (!message.startsWith(config.bot.name)) {
+      plugin.pick("聊天")?.plugin(event);
+      return;
     }
+    const cmd = cmdText(message, [config.bot.name]);
+    const pickedPlugin = plugin.pick(cmd);
+    if (!pickedPlugin) {
+      plugin.pick("聊天")?.plugin(event);
+      return;
+    }
+    const lock = await pluginModel.findOrAdd(
+      event.group_id,
+      pickedPlugin.name,
+      true
+    );
+    if (!lock.enable) {
+      await sendGroupMsg(event.group_id, [
+        Structs.text(`错误: "${lock.name}" 功能未激活,请联系管理员激活`),
+      ]);
+      return;
+    }
+    pickedPlugin.plugin(event);
+  });
+  getClient().on("request.group.invte", async (event) => {
+    await event.quick_action(true);
+    await groupModel.active(event.group_id, true);
+    logger.warn(`机器人加入了群 ${event.group_id}`);
+  });
+  getClient().on("notice.group_increase", async (event) => {
+    const member = await getClient().get_group_member_info({
+      group_id: event.group_id,
+      user_id: event.user_id,
+    });
+    const group = await getClient().get_group_info({
+      group_id: event.group_id,
+    });
+    await sendGroupMsg(event.group_id, [
+      Structs.text(`欢迎 ${member.nickname} 加入${group.group_name}`),
+    ]);
+  });
+  getClient().on("notice.group_decrease", async (event) => {
+    if (config.bot.admin === event.user_id) {
+      await getClient().set_group_leave({ group_id: event.group_id });
+      await groupModel.active(event.group_id, false);
+      return;
+    }
+    const member = await getClient().get_group_member_info({
+      group_id: event.group_id,
+      user_id: event.user_id,
+    });
+    await sendGroupMsg(event.group_id, [
+      Structs.text(
+        `有成员退群\n昵称: ${member.nickname}\nID: ${event.user_id}\n原因: ${
+          event.operator_id === event.user_id ? "自己退群" : "管理员清退"
+        }`
+      ),
+    ]);
   });
 }
 
 async function init() {
   await connect();
+  listener();
 }
 
-export { cmd, cmdText, getClient, init, message, sendGroupMsg };
+export { cmd, cmdText, getClient, init, sendGroupMsg };

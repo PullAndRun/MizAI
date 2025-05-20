@@ -1,11 +1,12 @@
 import { logger } from "@miz/ai/src/core/log";
+import type { GroupMessage } from "node-napcat-ts";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 
 interface Plugin {
   name: string;
   comment: Array<string>;
-  plugin: (event: groupMessageEvent) => Promise<void>;
+  plugin: (event: GroupMessage) => Promise<void>;
 }
 
 const plugins: Plugin[] = [];

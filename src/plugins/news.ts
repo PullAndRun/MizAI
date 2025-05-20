@@ -1,7 +1,7 @@
 import config from "@miz/ai/config/config.toml";
-import { cmd, cmdText, message, sendGroupMsg } from "@miz/ai/src/core/bot";
+import { cmd, cmdText, sendGroupMsg } from "@miz/ai/src/core/bot";
 import { duplicate, fetchFinance, fetchHot } from "@miz/ai/src/service/news";
-import { Structs } from "node-napcat-ts";
+import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
   name: "新闻",
@@ -12,9 +12,8 @@ const info = {
   plugin,
 };
 
-async function plugin(event: groupMessageEvent) {
-  const msgEvent = await message(event.messageId);
-  const msg = cmdText(msgEvent.raw_message, [config.bot.name, info.name]);
+async function plugin(event: GroupMessage) {
+  const msg = cmdText(event.raw_message, [config.bot.name, info.name]);
   const cmdList: commandList = [
     {
       cmd: "头条",
@@ -32,16 +31,16 @@ async function plugin(event: groupMessageEvent) {
   await cmd(msg, event, cmdList);
 }
 
-async function hotNews(_: string, event: groupMessageEvent) {
+async function hotNews(_: string, event: GroupMessage) {
   await sendNews(event, fetchHot, "热点新闻");
 }
 
-async function financeNews(_: string, event: groupMessageEvent) {
+async function financeNews(_: string, event: GroupMessage) {
   await sendNews(event, fetchFinance, "财经新闻");
 }
 
 async function sendNews(
-  event: groupMessageEvent,
+  event: GroupMessage,
   fetchFunction: () => Promise<
     Array<{ title: string; content: string }> | undefined
   >,
@@ -49,22 +48,22 @@ async function sendNews(
 ) {
   const news = await fetchFunction();
   if (!news) {
-    await sendGroupMsg(event.groupId, [
-      Structs.reply(event.messageId),
+    await sendGroupMsg(event.group_id, [
+      Structs.reply(event.message_id),
       Structs.text(`获取${newsType}失败,请稍后再试。`),
     ]);
     return;
   }
-  const newNews = await duplicate(event.groupId, news);
+  const newNews = await duplicate(event.group_id, news);
   if (!newNews || !newNews.length) {
-    await sendGroupMsg(event.groupId, [
-      Structs.reply(event.messageId),
+    await sendGroupMsg(event.group_id, [
+      Structs.reply(event.message_id),
       Structs.text(`暂时没有新的${newsType}。`),
     ]);
     return;
   }
-  await sendGroupMsg(event.groupId, [
-    Structs.reply(event.messageId),
+  await sendGroupMsg(event.group_id, [
+    Structs.reply(event.message_id),
     Structs.text(
       `为您推送${newsType}:\n\n` +
         newNews

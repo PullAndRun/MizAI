@@ -1,7 +1,7 @@
 import config from "@miz/ai/config/config.toml";
-import { cmdText, message, sendGroupMsg } from "@miz/ai/src/core/bot";
+import { cmdText, sendGroupMsg } from "@miz/ai/src/core/bot";
 import { divination } from "@miz/ai/src/service/divination";
-import { Structs } from "node-napcat-ts";
+import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
   name: "占卜",
@@ -9,18 +9,17 @@ const info = {
   plugin,
 };
 
-async function plugin(event: groupMessageEvent) {
-  const msgEvent = await message(event.messageId);
-  const msg = cmdText(msgEvent.raw_message, [config.bot.name, info.name]);
+async function plugin(event: GroupMessage) {
+  const msg = cmdText(event.raw_message, [config.bot.name, info.name]);
   if (!msg) {
-    await sendGroupMsg(event.groupId, [
+    await sendGroupMsg(event.group_id, [
       Structs.text(
         `命令错误,缺少占卜内容\n请使用 "占卜 [占卜内容]" 命令进行占卜\n例如${config.bot.name}占卜 晚餐吃鱼`
       ),
     ]);
     return;
   }
-  await sendGroupMsg(event.groupId, [
+  await sendGroupMsg(event.group_id, [
     Structs.text(`您占卜的 "${msg}" 结果是 "${divination()}"`),
   ]);
 }
