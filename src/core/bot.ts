@@ -1,5 +1,5 @@
 import config from "@miz/ai/config/config.toml";
-import { logger } from "@miz/ai/src/core/log.ts";
+import { logger } from "@miz/ai/src/core/log";
 import { NCWebsocket, Structs, type SendMessageSegment } from "node-napcat-ts";
 
 const clients: NCWebsocket[] = [];
@@ -62,12 +62,7 @@ function cmdText(msg: string, cmd: string[]) {
 async function cmd(
   msg: string,
   event: groupMessageEvent,
-  cmdList: Array<{
-    cmd: string;
-    cmt: string;
-    role: groupRole;
-    plugin: (msg: string, event: groupMessageEvent) => Promise<void>;
-  }>
+  cmdList: commandList
 ) {
   const roleHierarchy = ["member", "admin", "owner", "system"];
   const cmdParser: Record<string, string> = {
@@ -108,6 +103,14 @@ async function cmd(
     Structs.reply(event.messageId),
     Structs.text(intro),
   ]);
+}
+
+async function listener() {
+  getClient().on("message.group", async (event) => {
+    const message = event.raw_message;
+    if (!message.startsWith(config.bot.name)) {
+    }
+  });
 }
 
 async function init() {

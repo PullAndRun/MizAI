@@ -1,5 +1,5 @@
 import config from "@miz/ai/config/config.toml";
-import { logger } from "@miz/ai/src/core/log.ts";
+import { logger } from "@miz/ai/src/core/log";
 import { DataSource } from "typeorm";
 
 const db = new DataSource({

@@ -1,4 +1,4 @@
-import { logger } from "@miz/ai/src/core/log.ts";
+import { logger } from "@miz/ai/src/core/log";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 
@@ -35,14 +35,8 @@ function pick(msg: string) {
   return plugins.find((p) => msg.startsWith(p.name));
 }
 
-function help() {
-  return plugins
-    .map((v, i) => `${i + 1}->${v.name}\n${v.comment.join("\n")}`)
-    .join("\n\n");
-}
-
 async function init() {
   await load();
 }
 
-export { help, init, pick };
+export { init, pick, plugins };

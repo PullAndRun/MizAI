@@ -11,7 +11,7 @@ import {
 class Plugin extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
-  //群名
+  //群号
   @Column({ type: "float" })
   gid: number;
   //插件名称
