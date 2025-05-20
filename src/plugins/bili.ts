@@ -1,5 +1,5 @@
 import config from "@miz/ai/config/config.toml";
-import { cmd, cmdText, getClient, sendGroupMsg } from "@miz/ai/src/core/bot";
+import { cmd, cmdText, message, sendGroupMsg } from "@miz/ai/src/core/bot";
 import * as biliModel from "@miz/ai/src/models/bili";
 import { fetchLive, fetchUser, liveMsg } from "@miz/ai/src/service/bili";
 import { Structs } from "node-napcat-ts";
@@ -16,10 +16,8 @@ const info = {
 };
 
 async function plugin(event: groupMessageEvent) {
-  const message = await getClient().get_msg({
-    message_id: event.messageId,
-  });
-  const msg = cmdText(message.raw_message, [config.bot.name, info.name]);
+  const msgEvent = await message(event.messageId);
+  const msg = cmdText(msgEvent.raw_message, [config.bot.name, info.name]);
   const cmdList: commandList = [
     {
       cmd: "关注",

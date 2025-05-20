@@ -105,6 +105,12 @@ async function cmd(
   ]);
 }
 
+function message(msgId: number) {
+  return getClient().get_msg({
+    message_id: msgId,
+  });
+}
+
 async function listener() {
   getClient().on("message.group", async (event) => {
     const message = event.raw_message;
@@ -117,4 +123,4 @@ async function init() {
   await connect();
 }
 
-export { cmd, cmdText, getClient, init, sendGroupMsg };
+export { cmd, cmdText, getClient, init, message, sendGroupMsg };
