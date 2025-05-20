@@ -113,13 +113,13 @@ async function listener() {
   getClient().on("message.group", async (event) => {
     const message = event.raw_message;
     if (!message.startsWith(config.bot.name)) {
-      plugin.pick("聊天")?.plugin(event);
+      plugin.pick("复读=>无法调用")?.plugin(event);
       return;
     }
     const cmd = cmdText(message, [config.bot.name]);
     const pickedPlugin = plugin.pick(cmd);
     if (!pickedPlugin) {
-      plugin.pick("聊天")?.plugin(event);
+      plugin.pick("聊天=>无法调用")?.plugin(event);
       return;
     }
     const lock = await pluginModel.findOrAdd(
@@ -135,7 +135,7 @@ async function listener() {
     }
     pickedPlugin.plugin(event);
   });
-  getClient().on("request.group.invte", async (event) => {
+  getClient().on("request.group.invite", async (event) => {
     await event.quick_action(true);
     await groupModel.active(event.group_id, true);
     logger.warn(`机器人加入了群 ${event.group_id}`);
