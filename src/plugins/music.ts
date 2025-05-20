@@ -1,7 +1,7 @@
 import config from "@miz/ai/config/config.toml";
 import { cmdText, message, sendGroupMsg } from "@miz/ai/src/core/bot";
+import { fetchID } from "@miz/ai/src/service/music";
 import { Structs } from "node-napcat-ts";
-import { fetchID } from "../service/music";
 
 const info = {
   name: "听",
