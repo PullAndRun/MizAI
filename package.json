@@ -15,6 +15,7 @@
     "@google/genai": "^0.15.0",
     "@miz/ai": "file:",
     "dayjs": "^1.11.13",
+    "NeteaseCloudMusicApi": "^4.27.0",
     "node-napcat-ts": "^0.4.11",
     "node-schedule": "^2.1.1",
     "openai": "^4.100.0",
