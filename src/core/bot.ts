@@ -172,8 +172,16 @@ async function listener() {
   });
 }
 
+async function groupInit() {
+  const groupList = await getClient().get_group_list();
+  for (const group of groupList) {
+    await groupModel.findOrAdd(group.group_id);
+  }
+}
+
 async function init() {
   await connect();
+  await groupInit();
   listener();
 }
 
