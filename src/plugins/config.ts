@@ -22,7 +22,7 @@ async function plugin(event: GroupMessage) {
     {
       cmd: "插件",
       cmt: `使用 "设置 插件" 命令查看如何操作插件`,
-      role: "system",
+      role: "member",
       plugin: plugins,
     },
     {
@@ -40,7 +40,7 @@ async function prompts(msg: string, event: GroupMessage) {
   if (!findPrompt) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text(`人格 ${msg} 切换失败\n没有 ${msg} 人格`),
+      Structs.text(`人格 ${msg} 切换失败\n系统未录入 ${msg} 人格`),
     ]);
     return;
   }
@@ -68,7 +68,7 @@ async function plugins(msg: string, event: GroupMessage) {
     {
       cmd: "状态",
       cmt: `使用 "设置 插件 状态" 命令查询所有插件状态`,
-      role: "system",
+      role: "member",
       plugin: pluginState,
     },
   ];

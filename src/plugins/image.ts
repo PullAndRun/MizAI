@@ -10,6 +10,13 @@ const info = {
 };
 async function plugin(event: GroupMessage) {
   const msg = cmdText(event.raw_message, [config.bot.name, info.name]);
+  if (!msg) {
+    await sendGroupMsg(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text(`命令错误，请使用 "看 [要看的图]" 命令看图`),
+    ]);
+    return;
+  }
   const image = await search(msg);
   if (!image) {
     await sendGroupMsg(event.group_id, [

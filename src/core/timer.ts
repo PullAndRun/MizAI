@@ -17,7 +17,7 @@ async function load() {
       }
     } catch (err) {
       logger.error(
-        `加载计时器失败\n计时器名: ${file}\n\n错误:\n${JSON.stringify(err)}`
+        `加载计时器失败\n->计时器名: ${file}\n->错误:\n${JSON.stringify(err)}`
       );
     }
   }

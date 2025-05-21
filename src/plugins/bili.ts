@@ -123,7 +123,7 @@ async function query(uname: string, event: GroupMessage) {
     ]);
     return;
   }
-  const live = await fetchLive([user.room_id]);
+  const live = await fetchLive([user.mid]);
   if (!live) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),

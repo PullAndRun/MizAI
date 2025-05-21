@@ -29,12 +29,12 @@ async function fetchUser(name: string) {
   return userData.success ? userData.data.data.result[0] : undefined;
 }
 
-async function fetchLive(room_id: Array<number>) {
+async function fetchLive(mids: Array<number>) {
   const live = await fetch(config.bili.live, {
     method: "post",
     signal: AbortSignal.timeout(5000),
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ uids: room_id }),
+    body: JSON.stringify({ uids: mids }),
   })
     .then((res) => res.json())
     .catch((_) => undefined);

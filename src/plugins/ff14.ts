@@ -29,7 +29,9 @@ async function board(msg: string, event: GroupMessage) {
   if (!region || !goods) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text(`命令错误。请使用 "ff14" 获取命令的正确使用方式。`),
+      Structs.text(
+        `命令错误。请使用 "ff14 板子 [猫|猪|狗|鸟] [商品名]" 命令进行最终幻想14交易板商品查询。`
+      ),
     ]);
     return;
   }

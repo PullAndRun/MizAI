@@ -1,14 +1,14 @@
 import config from "@miz/ai/config/config.toml";
 import { logger } from "@miz/ai/src/core/log";
+import * as plugin from "@miz/ai/src/core/plugin";
+import * as groupModel from "@miz/ai/src/models/group";
+import * as pluginModel from "@miz/ai/src/models/plugin";
 import {
   NCWebsocket,
   Structs,
   type GroupMessage,
   type SendMessageSegment,
 } from "node-napcat-ts";
-import * as plugin from "@miz/ai/src/core/plugin";
-import * as pluginModel from "@miz/ai/src/models/plugin";
-import * as groupModel from "@miz/ai/src/models/group";
 
 const clients: NCWebsocket[] = [];
 
@@ -16,6 +16,9 @@ async function connect() {
   const napcat = new NCWebsocket(
     {
       ...config.napcat,
+      reconnection: {
+        ...config.napcat.reconnection,
+      },
     },
     config.napcat.debug
   );
@@ -46,9 +49,9 @@ async function sendGroupMsg(gid: number, message: SendMessageSegment[]) {
     .send_group_msg({ group_id: gid, message: message })
     .catch((e) => {
       logger.warn(
-        `群消息发送失败\n群号:${gid}\n\n原因:\n${JSON.stringify(
+        `群消息发送失败\n->群号:${gid}\n->原因:\n${JSON.stringify(
           e
-        )}\n\n内容:\n${JSON.stringify(message)}`
+        )}\n->内容:\n${JSON.stringify(message)}`
       );
       return undefined;
     });
@@ -129,6 +132,7 @@ async function listener() {
     );
     if (!lock.enable) {
       await sendGroupMsg(event.group_id, [
+        Structs.reply(event.message_id),
         Structs.text(`错误: "${lock.name}" 功能未激活,请联系管理员激活`),
       ]);
       return;

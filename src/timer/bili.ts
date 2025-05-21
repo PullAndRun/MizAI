@@ -11,8 +11,8 @@ async function pushLiveNotifications() {
   const groups = await getClient().get_group_list();
   const biliFindAll = await biliModel.findAll();
   if (!biliFindAll) return;
-  const rids = biliFindAll.map((v) => v.rid);
-  const lives = await fetchLive(rids);
+  const mids = biliFindAll.map((v) => v.mid);
+  const lives = await fetchLive(mids);
   if (!lives) return;
   for (const [_, group] of groups.entries()) {
     const lock = await pluginModel.findOrAdd(group.group_id, "直播推送", true);

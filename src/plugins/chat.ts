@@ -14,6 +14,7 @@ const info = {
 
 async function plugin(event: GroupMessage) {
   const msg = cmdText(event.raw_message, [config.bot.name]);
+  if (!msg) return;
   const group = await groupModel.findOrAdd(event.group_id);
   const prompt = await aiModel.find(group.prompt);
   if (!prompt) {
@@ -27,13 +28,13 @@ async function plugin(event: GroupMessage) {
   if (!chatText) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text("机器人现在并不想理你\n请稍候重试。"),
+      Structs.text("机器人cpu正在冒烟\n请稍候重试。"),
     ]);
     return;
   }
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.markdown(chatText),
+    Structs.markdown(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
   ]);
 }
 
