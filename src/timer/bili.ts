@@ -25,7 +25,7 @@ async function pushLiveNotifications() {
       if (
         !dayjs()
           .subtract(config.bili.frequency, "minute")
-          .isBefore(new Date(user.live_time)) ||
+          .isBefore(new Date(user.live_time * 1000)) ||
         user.live_status !== 1
       )
         continue;
