@@ -77,8 +77,8 @@ async function liveMsg(liveData: {
     }\n⏰ 开播时间: ${
       liveData.live_time === 0
         ? "未开播"
-        : dayjs(liveData.live_time * 1000).format("YYYY-MM-DD HH:mm:ss")
-    }\n👉 立即预约不迷路: https://live.bilibili.com/${liveData.room_id}`,
+        : dayjs(liveData.live_time * 1000).format("YYYY年MM月DD日 HH点mm分ss秒")
+    }\n👉 立即观看不迷路: https://live.bilibili.com/${liveData.room_id}`,
   };
 }
 
