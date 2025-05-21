@@ -10,7 +10,7 @@ import schedule from "node-schedule";
 async function pushLiveNotifications() {
   const groups = await getClient().get_group_list();
   const biliFindAll = await biliModel.findAll();
-  if (!biliFindAll) return;
+  if (!biliFindAll.length) return;
   const mids = biliFindAll.map((v) => v.mid);
   const lives = await fetchLive(mids);
   if (!lives) return;
@@ -18,7 +18,7 @@ async function pushLiveNotifications() {
     const lock = await pluginModel.findOrAdd(group.group_id, "直播推送", true);
     if (!lock.enable) continue;
     const vtbs = biliFindAll.filter((v) => v.gid === group.group_id);
-    if (!vtbs) continue;
+    if (!vtbs.length) continue;
     for (const vtb of vtbs) {
       const user = lives[vtb.mid];
       if (!user) continue;

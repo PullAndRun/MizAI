@@ -15,7 +15,7 @@ async function plugin(event: GroupMessage) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(
-        `命令错误,缺少占卜内容\n请使用 "占卜 [占卜内容]" 命令进行占卜\n例如${config.bot.name}占卜 晚餐吃鱼`
+        `命令错误,缺少占卜内容\n请使用 "占卜 [占卜内容]" 命令进行占卜\n例如 ${config.bot.name}占卜 晚餐吃鱼`
       ),
     ]);
     return;

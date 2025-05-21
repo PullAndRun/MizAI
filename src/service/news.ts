@@ -36,7 +36,7 @@ async function fetchFinance() {
           return vv.data;
         })
         .filter((v) => v !== undefined);
-      if (!content) return undefined;
+      if (!content.length) return undefined;
       return {
         title: v.title || "本快讯无标题",
         content: content.join("\n"),
@@ -87,7 +87,9 @@ async function duplicate(
   news: Array<{ title: string; content: string }>
 ) {
   const newsItem = newsMap.get(gid) || [];
-  const newNews = news.filter((v) => !newsItem.includes(v.title));
+  const newNews = news.filter(
+    (v, i) => !newsItem.includes(v.title) && i < config.news.items
+  );
   if (!newNews.length) return undefined;
   const newNewsTitles = newNews.map((v) => v.title);
   newsMap.set(gid, [...newsItem, ...newNewsTitles]);

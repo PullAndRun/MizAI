@@ -72,11 +72,11 @@ async function liveMsg(liveData: {
 }) {
   return {
     cover: liveData.cover_from_user,
-    text: `\n主播: "${liveData.uname}"\n标题: ${
-      liveData.title
-    }\n开播时间: ${dayjs(liveData.live_time * 1000).format(
-      "YYYY-MM-DD HH:mm:ss"
-    )}\n直播间: https://live.bilibili.com/${liveData.room_id}`,
+    text: `\n主播: "${liveData.uname}"\n标题: ${liveData.title}\n开播时间: ${
+      liveData.live_time === 0
+        ? "未开播"
+        : dayjs(liveData.live_time * 1000).format("YYYY-MM-DD HH:mm:ss")
+    }\n直播间: https://live.bilibili.com/${liveData.room_id}`,
   };
 }
 

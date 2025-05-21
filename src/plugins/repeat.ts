@@ -23,7 +23,7 @@ async function plugin(event: GroupMessage) {
   }
   const newCount = repeatItem.count + 1;
   if (newCount === config.bot.repeat) {
-    await sendGroupMsg(group_id, [Structs.forward(event.message_id)]);
+    await sendGroupMsg(group_id, [Structs.text(event.raw_message)]);
   }
   repeatMap.set(group_id, {
     msg: raw_message,

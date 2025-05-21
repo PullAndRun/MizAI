@@ -1,5 +1,6 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
+import { file } from "bun";
 
 async function joke() {
   const jokeDir = path.resolve("resource/miHoYoJokes");
@@ -13,7 +14,10 @@ async function joke() {
   if (!jpgFiles.length) return undefined;
   const randomFile = jpgFiles[Math.floor(Math.random() * jpgFiles.length)];
   if (!randomFile) return;
-  return path.resolve(randomFile.parentPath + "/" + randomFile.name);
+  const filePath = path.resolve(randomFile.parentPath + "/" + randomFile.name);
+  const readFile = file(filePath);
+  const fileArrayBuffer = await readFile.arrayBuffer();
+  return Buffer.from(fileArrayBuffer);
 }
 
 export { joke };

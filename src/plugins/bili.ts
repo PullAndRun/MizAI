@@ -90,17 +90,17 @@ async function unfollow(uname: string, event: GroupMessage) {
 
 async function list(_: string, event: GroupMessage) {
   const followList = await biliModel.findAll();
-  if (!followList) {
+  if (followList.length === 0) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text(`拉取关注列表失败,本群尚未关注任何主播。`),
+      Structs.text(`本群尚未关注任何主播。`),
     ]);
     return;
   }
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
     Structs.text(
-      `本群订阅的主播:\n${followList.map((v) => v.name).join("\n")}`
+      `本群关注的主播:\n${followList.map((v) => v.name).join("\n")}`
     ),
   ]);
 }

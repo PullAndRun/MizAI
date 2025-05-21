@@ -2,7 +2,7 @@
   "name": "mizai",
   "type": "module",
   "scripts": {
-    "start": "bun run ./src/main.ts"
+    "start": "bun run ./main.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -22,6 +22,6 @@
     "pg": "^8.16.0",
     "typeorm": "^0.3.24",
     "winston": "^3.17.0",
-    "zod": "^3.25.7"
+    "zod": "^3.25.9"
   }
 }
