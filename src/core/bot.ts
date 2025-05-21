@@ -145,6 +145,8 @@ async function listener() {
     logger.warn(`机器人加入了群 ${event.group_id}`);
   });
   getClient().on("notice.group_increase", async (event) => {
+    const loginInfo = await getClient().get_login_info();
+    if (event.user_id === loginInfo.user_id) return;
     const member = await getClient().get_group_member_info({
       group_id: event.group_id,
       user_id: event.user_id,
