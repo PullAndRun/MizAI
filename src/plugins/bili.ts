@@ -100,7 +100,10 @@ async function list(_: string, event: GroupMessage) {
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
     Structs.text(
-      `本群关注的主播:\n${followList.map((v) => v.name).join("\n")}`
+      `本群关注的主播:\n${followList
+        .filter((v) => v.gid === event.group_id)
+        .map((v) => v.name)
+        .join("\n")}`
     ),
   ]);
 }
