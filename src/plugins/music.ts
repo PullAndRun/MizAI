@@ -22,7 +22,7 @@ async function plugin(event: GroupMessage) {
   if (!musicID) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text(`没有找到相关歌曲。`),
+      Structs.text(`没有找到您想听的歌曲。`),
     ]);
     return;
   }

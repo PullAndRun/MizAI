@@ -72,11 +72,13 @@ async function liveMsg(liveData: {
 }) {
   return {
     cover: liveData.cover_from_user,
-    text: `\n主播: "${liveData.uname}"\n标题: ${liveData.title}\n开播时间: ${
+    text: `🔥【直播进行时】🔥\n🎤 人气主播: "${liveData.uname}"\n🌟 独家主题: ${
+      liveData.title
+    }\n⏰ 开播时间: ${
       liveData.live_time === 0
         ? "未开播"
         : dayjs(liveData.live_time * 1000).format("YYYY-MM-DD HH:mm:ss")
-    }\n直播间: https://live.bilibili.com/${liveData.room_id}`,
+    }\n👉 立即预约不迷路: https://live.bilibili.com/${liveData.room_id}`,
   };
 }
 

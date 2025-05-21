@@ -60,7 +60,7 @@ async function follow(uname: string, event: GroupMessage) {
   if (!user || user.uname !== uname) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text(`关注失败,没找到您想关注的主播\n请检查主播昵称是否正确。`),
+      Structs.text(`关注失败,没找到您想关注的主播\n请检查主播昵称。`),
     ]);
     return;
   }
@@ -100,7 +100,7 @@ async function list(_: string, event: GroupMessage) {
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
     Structs.text(
-      `本群关注的主播:\n${followList
+      `本群已关注:\n${followList
         .filter((v) => v.gid === event.group_id)
         .map((v) => v.name)
         .join("\n")}`

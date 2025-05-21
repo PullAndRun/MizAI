@@ -28,13 +28,13 @@ async function plugin(event: GroupMessage) {
   if (!chatText) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text("机器人cpu正在冒烟\n请稍候重试。"),
+      Structs.text("机器人cpu过热\n请稍候重试。"),
     ]);
     return;
   }
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
+    Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n\n")),
   ]);
 }
 
