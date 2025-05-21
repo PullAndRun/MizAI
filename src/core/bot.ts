@@ -168,7 +168,7 @@ async function listener() {
     await sendGroupMsg(event.group_id, [
       Structs.text(
         `有成员退群\n昵称: ${member.nickname}\nID: ${event.user_id}\n原因: ${
-          event.operator_id === event.user_id ? "自己退群" : "管理员清退"
+          event.sub_type === "leave" ? "自己退群" : "管理员清退"
         }`
       ),
     ]);
