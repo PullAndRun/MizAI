@@ -34,7 +34,7 @@ async function plugin(event: GroupMessage) {
   }
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n\n")),
+    Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
   ]);
 }
 
