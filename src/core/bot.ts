@@ -162,8 +162,7 @@ async function listener() {
       await groupModel.active(event.group_id, false);
       return;
     }
-    const member = await getClient().get_group_member_info({
-      group_id: event.group_id,
+    const member = await getClient().get_stranger_info({
       user_id: event.user_id,
     });
     await sendGroupMsg(event.group_id, [
