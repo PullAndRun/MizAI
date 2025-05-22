@@ -13,7 +13,7 @@ async function plugin(event: GroupMessage) {
   if (!imageInfo || !imageInfo.image) return;
   await sendGroupMsg(event.group_id, [
     Structs.image(imageInfo.image),
-    Structs.text(`🌅 晨间美学播报 🌄\n✨ 来自: ${imageInfo.copyright}`),
+    Structs.text(`🌅 每日壁纸 🌄\n✨ 来自: ${imageInfo.copyright}`),
   ]);
 }
 
