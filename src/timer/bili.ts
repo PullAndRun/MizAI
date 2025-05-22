@@ -39,10 +39,7 @@ async function pushLiveNotifications() {
 }
 
 function task() {
-  schedule.scheduleJob(
-    `0 */${config.bili.frequency} * * * *`,
-    pushLiveNotifications
-  );
+  schedule.scheduleJob(config.bili.push, pushLiveNotifications);
 }
 
 export { task };

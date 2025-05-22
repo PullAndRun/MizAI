@@ -1,3 +1,4 @@
+import config from "@miz/ai/config/config.toml";
 import { getClient, sendGroupMsg } from "@miz/ai/src/core/bot";
 import { wallpaper } from "@miz/ai/src/service/wallpaper";
 import { Structs } from "node-napcat-ts";
@@ -16,7 +17,7 @@ async function pushWallpaper() {
 }
 
 function task() {
-  schedule.scheduleJob(`0 0 8 * * *`, pushWallpaper);
+  schedule.scheduleJob(config.wallpaper.push, pushWallpaper);
 }
 
 export { task };

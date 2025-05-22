@@ -1,3 +1,4 @@
+import config from "@miz/ai/config/config.toml";
 import { getClient, sendGroupMsg } from "@miz/ai/src/core/bot";
 import { findOrAdd } from "@miz/ai/src/models/plugin";
 import {
@@ -32,14 +33,14 @@ async function taskSendNews(
   ]);
 }
 function task() {
-  schedule.scheduleJob(`0 0 0 */1 * *`, () => {
+  schedule.scheduleJob(config.news.clean, () => {
     newsMap.forEach((news, gid) => {
       if (news.length >= 300) {
         newsMap.set(gid, news.slice(news.length / 2));
       }
     });
   });
-  schedule.scheduleJob(`0 */2 * * * *`, async () => {
+  schedule.scheduleJob(config.news.push, async () => {
     const groups = await getClient().get_group_list();
     const hotNews = await fetchHot();
     const financeNews = await fetchFinance();
