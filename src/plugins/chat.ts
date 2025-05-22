@@ -1,10 +1,10 @@
 import config from "@miz/ai/config/config.toml";
 import { cmdText, sendGroupMsg } from "@miz/ai/src/core/bot";
-import * as groupModel from "@miz/ai/src/models/group";
 import * as aiModel from "@miz/ai/src/models/ai";
+import * as groupModel from "@miz/ai/src/models/group";
+import { deepSeekChat } from "@miz/ai/src/service/ai";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
-import { deepSeekChat } from "../service/ai";
 
 const info = {
   name: "聊天=>无法调用",
