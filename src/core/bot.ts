@@ -49,9 +49,7 @@ async function sendGroupMsg(gid: number, message: SendMessageSegment[]) {
     .send_group_msg({ group_id: gid, message: message })
     .catch((e) => {
       logger.warn(
-        `群消息发送失败\n->群号:${gid}\n->原因:\n${JSON.stringify(
-          e
-        )}\n->内容:\n${JSON.stringify(message)}`
+        `群消息发送失败\n->群号:${gid}\n->原因:\n${JSON.stringify(e)}`
       );
       return undefined;
     });
