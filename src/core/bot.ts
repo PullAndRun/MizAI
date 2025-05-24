@@ -166,16 +166,17 @@ async function listener() {
       await groupModel.active(event.group_id, false);
       return;
     }
-    const member = await getClient().get_stranger_info({
-      user_id: event.user_id,
-    });
-    await sendGroupMsg(event.group_id, [
-      Structs.text(
-        `有成员退群\n昵称: ${member.nickname}\nID: ${event.user_id}\n原因: ${
-          event.sub_type === "leave" ? "自己退群" : "管理员清退"
-        }`
-      ),
-    ]);
+    ////推送群员退群
+    // const member = await getClient().get_stranger_info({
+    //   user_id: event.user_id,
+    // });
+    // await sendGroupMsg(event.group_id, [
+    //   Structs.text(
+    //     `有成员退群\n昵称: ${member.nickname}\nID: ${event.user_id}\n原因: ${
+    //       event.sub_type === "leave" ? "自己退群" : "管理员清退"
+    //     }`
+    //   ),
+    // ]);
   });
 }
 
