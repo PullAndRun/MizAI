@@ -55,13 +55,13 @@ async function realtimeNews() {
     await sendNews(
       group.group_id,
       financeNews,
-      "为您推送财经新闻",
+      "为您播报财经新闻",
       config.news.realtimeItems
     );
     await sendNews(
       group.group_id,
       hotNews,
-      "为您推送热点新闻",
+      "为您播报热点新闻",
       config.news.realtimeItems
     );
   }
@@ -77,7 +77,7 @@ async function dailyNews() {
     await sendNews(
       group.group_id,
       news,
-      "为您推送早间新闻",
+      "为您播报早间新闻",
       config.news.dailyItems
     );
   }
