@@ -17,7 +17,7 @@ async function pushWallpaper() {
 }
 
 function task() {
-  schedule.scheduleJob(config.wallpaper.realtime, pushWallpaper);
+  schedule.scheduleJob(config.wallpaper.daily, pushWallpaper);
 }
 
 export { task };
