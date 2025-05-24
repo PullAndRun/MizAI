@@ -10,7 +10,7 @@ import {
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";
 
-async function newsTemplate(
+async function sendNews(
   groupId: number,
   news:
     | Array<{
@@ -34,7 +34,7 @@ async function newsTemplate(
   ]);
 }
 
-function halfNewsMemory() {
+function cleanNews() {
   newsMap.forEach((news, gid) => {
     if (news.length >= 300) {
       newsMap.set(gid, news.slice(news.length / 2));
@@ -42,20 +42,20 @@ function halfNewsMemory() {
   });
 }
 
-async function sendRealtimeNews() {
+async function realtimeNews() {
   const groups = await getClient().get_group_list();
   const hotNews = await fetchHot();
   const financeNews = await fetchFinance();
   for (const [_, group] of groups.entries()) {
     const lock = await findOrAdd(group.group_id, "新闻推送", false);
     if (!lock.enable) continue;
-    await newsTemplate(
+    await sendNews(
       group.group_id,
       financeNews,
       "为您推送财经新闻",
       config.news.realTimeItems
     );
-    await newsTemplate(
+    await sendNews(
       group.group_id,
       hotNews,
       "为您推送热点新闻",
@@ -64,12 +64,12 @@ async function sendRealtimeNews() {
   }
 }
 
-async function sendDailyNews() {
+async function dailyNews() {
   const groupList = await getClient().get_group_list();
   const news = await fetchHot();
   if (!news) return;
   for (const group of groupList) {
-    await newsTemplate(
+    await sendNews(
       group.group_id,
       news,
       "为您推送早间新闻",
@@ -79,9 +79,9 @@ async function sendDailyNews() {
 }
 
 function task() {
-  schedule.scheduleJob(config.news.clean, halfNewsMemory);
-  schedule.scheduleJob(config.news.realTime, sendRealtimeNews);
-  schedule.scheduleJob(config.news.daily, sendDailyNews);
+  schedule.scheduleJob(config.news.clean, cleanNews);
+  schedule.scheduleJob(config.news.realTime, realtimeNews);
+  schedule.scheduleJob(config.news.daily, dailyNews);
 }
 
 export { task };
