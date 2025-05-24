@@ -1,6 +1,7 @@
 import config from "@miz/ai/config/config.toml";
 import { getClient, sendGroupMsg } from "@miz/ai/src/core/bot";
 import * as biliModel from "@miz/ai/src/models/bili";
+import * as groupModel from "@miz/ai/src/models/group";
 import * as pluginModel from "@miz/ai/src/models/plugin";
 import { fetchLive, liveMsg } from "@miz/ai/src/service/bili";
 import dayjs from "dayjs";
@@ -14,7 +15,9 @@ async function pushLiveNotifications() {
   const mids = biliFindAll.map((v) => v.mid);
   const lives = await fetchLive(mids);
   if (!lives) return;
-  for (const [_, group] of groups.entries()) {
+  for (const group of groups) {
+    const findGroup = await groupModel.findOrAdd(group.group_id);
+    if (!findGroup.active) continue;
     const lock = await pluginModel.findOrAdd(group.group_id, "直播推送", true);
     if (!lock.enable) continue;
     const vtbs = biliFindAll.filter((v) => v.gid === group.group_id);
