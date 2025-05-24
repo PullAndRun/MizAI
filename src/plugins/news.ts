@@ -69,7 +69,7 @@ async function sendNews(
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
     Structs.text(
-      `为您推送${newsType}:\n\n` +
+      `为您播报${newsType}:\n\n` +
         newNews
           .map((v, i) => `${i + 1}、${v.title}\n=>${v.content}`)
           .join("\n\n")
