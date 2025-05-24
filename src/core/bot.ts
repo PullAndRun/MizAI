@@ -160,6 +160,10 @@ async function listener() {
       Structs.text(`欢迎 ${member.nickname} 加入${group.group_name}`),
     ]);
   });
+  getClient().on("notice.group_decrease.kick_me", async (event) => {
+    await groupModel.active(event.group_id, false);
+    logger.warn(`机器人被移出了群 ${event.group_id}`);
+  });
   getClient().on("notice.group_decrease", async (event) => {
     if (config.bot.admin === event.user_id) {
       await getClient().set_group_leave({ group_id: event.group_id });
