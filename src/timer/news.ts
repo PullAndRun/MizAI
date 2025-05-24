@@ -52,7 +52,7 @@ async function sendRealtimeNews() {
     await newsTemplate(
       group.group_id,
       financeNews,
-      "为您推送财经头条",
+      "为您推送财经新闻",
       config.news.realTimeItems
     );
     await newsTemplate(
