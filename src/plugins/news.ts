@@ -57,7 +57,7 @@ async function sendNews(
   const newNews = await duplicate(
     event.group_id,
     news,
-    config.news.realTimeItems
+    config.news.realtimeItems
   );
   if (!newNews || !newNews.length) {
     await sendGroupMsg(event.group_id, [

@@ -39,7 +39,7 @@ async function pushLiveNotifications() {
 }
 
 function task() {
-  schedule.scheduleJob(config.bili.realTime, pushLiveNotifications);
+  schedule.scheduleJob(config.bili.realtime, pushLiveNotifications);
 }
 
 export { task };

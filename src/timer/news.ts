@@ -53,13 +53,13 @@ async function realtimeNews() {
       group.group_id,
       financeNews,
       "为您推送财经新闻",
-      config.news.realTimeItems
+      config.news.realtimeItems
     );
     await sendNews(
       group.group_id,
       hotNews,
       "为您推送热点新闻",
-      config.news.realTimeItems
+      config.news.realtimeItems
     );
   }
 }
@@ -80,7 +80,7 @@ async function dailyNews() {
 
 function task() {
   schedule.scheduleJob(config.news.clean, cleanNews);
-  schedule.scheduleJob(config.news.realTime, realtimeNews);
+  schedule.scheduleJob(config.news.realtime, realtimeNews);
   schedule.scheduleJob(config.news.daily, dailyNews);
 }
 
