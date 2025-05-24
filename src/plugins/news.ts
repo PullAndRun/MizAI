@@ -54,7 +54,7 @@ async function sendNews(
     ]);
     return;
   }
-  const newNews = await duplicate(event.group_id, news);
+  const newNews = await duplicate(event.group_id, news, config.news.items);
   if (!newNews || !newNews.length) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),

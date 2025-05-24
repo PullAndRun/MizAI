@@ -84,11 +84,12 @@ async function fetchHot() {
 
 async function duplicate(
   gid: number,
-  news: Array<{ title: string; content: string }>
+  news: Array<{ title: string; content: string }>,
+  lines: number
 ) {
   const newsItem = newsMap.get(gid) || [];
   const newNews = news.filter(
-    (v, i) => !newsItem.includes(v.title) && i < config.news.items
+    (v, i) => !newsItem.includes(v.title) && i < lines
   );
   if (!newNews.length) return undefined;
   const newNewsTitles = newNews.map((v) => v.title);

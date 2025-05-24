@@ -10,7 +10,7 @@ import {
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";
 
-async function taskSendNews(
+async function newsTemplate(
   groupId: number,
   news:
     | Array<{
@@ -18,39 +18,70 @@ async function taskSendNews(
         content: string;
       }>
     | undefined,
-  newsType: string
+  newsType: string,
+  lines: number
 ) {
   if (!news) return;
-  const newNews = await duplicate(groupId, news);
+  const newNews = await duplicate(groupId, news, lines);
   if (!newNews || !newNews.length) return;
   await sendGroupMsg(groupId, [
     Structs.text(
-      `为您推送${newsType}:\n\n` +
+      `${newsType}:\n\n` +
         newNews
           .map((v, i) => `${i + 1}、${v.title}\n=>${v.content}`)
           .join("\n\n")
     ),
   ]);
 }
-function task() {
-  schedule.scheduleJob(config.news.clean, () => {
-    newsMap.forEach((news, gid) => {
-      if (news.length >= 300) {
-        newsMap.set(gid, news.slice(news.length / 2));
-      }
-    });
-  });
-  schedule.scheduleJob(config.news.push, async () => {
-    const groups = await getClient().get_group_list();
-    const hotNews = await fetchHot();
-    const financeNews = await fetchFinance();
-    for (const [_, group] of groups.entries()) {
-      const lock = await findOrAdd(group.group_id, "新闻推送", false);
-      if (!lock.enable) continue;
-      await taskSendNews(group.group_id, financeNews, "财经新闻");
-      await taskSendNews(group.group_id, hotNews, "热点新闻");
+
+function halfNewsMemory() {
+  newsMap.forEach((news, gid) => {
+    if (news.length >= 300) {
+      newsMap.set(gid, news.slice(news.length / 2));
     }
   });
+}
+
+async function sendRealtimeNews() {
+  const groups = await getClient().get_group_list();
+  const hotNews = await fetchHot();
+  const financeNews = await fetchFinance();
+  for (const [_, group] of groups.entries()) {
+    const lock = await findOrAdd(group.group_id, "新闻推送", false);
+    if (!lock.enable) continue;
+    await newsTemplate(
+      group.group_id,
+      financeNews,
+      "为您推送财经头条",
+      config.news.items
+    );
+    await newsTemplate(
+      group.group_id,
+      hotNews,
+      "为您推送热点新闻",
+      config.news.items
+    );
+  }
+}
+
+async function sendDailyNews() {
+  const groupList = await getClient().get_group_list();
+  const news = await fetchHot();
+  if (!news) return;
+  for (const group of groupList) {
+    await newsTemplate(
+      group.group_id,
+      news,
+      "为您推送早间新闻",
+      config.news.dailyItems
+    );
+  }
+}
+
+function task() {
+  schedule.scheduleJob(config.news.clean, halfNewsMemory);
+  schedule.scheduleJob(config.news.push, sendRealtimeNews);
+  schedule.scheduleJob(config.news.daily, sendDailyNews);
 }
 
 export { task };

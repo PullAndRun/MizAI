@@ -11,7 +11,7 @@ async function pushWallpaper() {
   for (const group of groupList) {
     await sendGroupMsg(group.group_id, [
       Structs.image(imageInfo.image),
-      Structs.text(`🌅 晨间美学播报 🌄\n✨ 来自: ${imageInfo.copyright}`),
+      Structs.text(`🌅 数字艺术日报 🌄\n✨ 本日焦点: ${imageInfo.copyright}`),
     ]);
   }
 }
