@@ -1,6 +1,6 @@
 import config from "@miz/ai/config/config.toml";
 import { cmdText, sendGroupMsg } from "@miz/ai/src/core/bot";
-import { fetchID } from "@miz/ai/src/service/music";
+import { fetchHotComment, fetchID } from "@miz/ai/src/service/music";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
@@ -26,7 +26,16 @@ async function plugin(event: GroupMessage) {
     ]);
     return;
   }
-  await sendGroupMsg(event.group_id, [Structs.music("163", musicID)]);
+  const message = await sendGroupMsg(event.group_id, [
+    Structs.music("163", musicID),
+  ]);
+  if (!message) return;
+  const hotComment = await fetchHotComment(musicID);
+  if (!hotComment) return;
+  await sendGroupMsg(event.group_id, [
+    Structs.reply(message.message_id),
+    Structs.text(hotComment),
+  ]);
 }
 
 export { info };

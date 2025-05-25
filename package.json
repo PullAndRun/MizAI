@@ -12,16 +12,16 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@google/genai": "^1.0.0",
+    "@google/genai": "^1.0.1",
     "@miz/ai": "file:",
     "dayjs": "^1.11.13",
     "NeteaseCloudMusicApi": "^4.27.0",
     "node-napcat-ts": "^0.4.13",
     "node-schedule": "^2.1.1",
-    "openai": "^4.100.0",
+    "openai": "^4.103.0",
     "pg": "^8.16.0",
     "typeorm": "^0.3.24",
     "winston": "^3.17.0",
-    "zod": "^3.25.17"
+    "zod": "^3.25.28"
   }
 }
