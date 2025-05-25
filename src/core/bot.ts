@@ -189,6 +189,13 @@ async function groupInit() {
   for (const group of groupList) {
     await groupModel.findOrAdd(group.group_id);
   }
+  const dbGroupList = await groupModel.findAll();
+  const leaveGroupId = dbGroupList.filter(
+    (dbg) => groupList.filter((g) => dbg.gid === g.group_id).length === 0
+  );
+  for (const group of leaveGroupId) {
+    await groupModel.active(group.gid, false);
+  }
 }
 
 async function init() {

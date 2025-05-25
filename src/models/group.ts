@@ -21,6 +21,10 @@ function find(gid: number) {
   });
 }
 
+function findAll() {
+  return Group.find();
+}
+
 async function add(gid: number) {
   const group = new Group();
   group.gid = gid;
@@ -50,4 +54,4 @@ async function active(gid: number, active: boolean) {
   return group;
 }
 
-export { active, findOrAdd, Group, updatePrompt };
+export { active, findAll, findOrAdd, Group, updatePrompt };
