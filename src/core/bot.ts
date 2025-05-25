@@ -187,7 +187,7 @@ async function listener() {
 async function groupInit() {
   const groupList = await getClient().get_group_list();
   for (const group of groupList) {
-    await groupModel.findOrAdd(group.group_id);
+    await groupModel.active(group.group_id, true);
   }
   const dbGroupList = await groupModel.findAll();
   const leaveGroupId = dbGroupList.filter(
