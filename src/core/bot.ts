@@ -59,6 +59,19 @@ async function sendGroupMsg(gid: number, message: SendMessageSegment[]) {
     });
 }
 
+async function forwardGroupMsg(gid: number, messageId: number) {
+  return getClient()
+    .forward_group_single_msg({ group_id: gid, message_id: messageId })
+    .catch((e) => {
+      logger.warn(
+        `群消息转发失败\n->群号:${gid}\n->原因:\n${JSON.stringify(
+          e
+        )}\n->消息id:\n${messageId}`
+      );
+      return undefined;
+    });
+}
+
 function cmdText(msg: string, cmd: string[]) {
   return cmd.reduce(
     (acc, cur) =>
@@ -204,4 +217,4 @@ async function init() {
   listener();
 }
 
-export { cmd, cmdText, getClient, init, sendGroupMsg };
+export { cmd, cmdText, forwardGroupMsg, getClient, init, sendGroupMsg };

@@ -1,6 +1,6 @@
 import config from "@miz/ai/config/config.toml";
-import { sendGroupMsg } from "@miz/ai/src/core/bot";
-import { Structs, type GroupMessage } from "node-napcat-ts";
+import { forwardGroupMsg } from "@miz/ai/src/core/bot";
+import { type GroupMessage } from "node-napcat-ts";
 
 const info = {
   name: "复读=>无法调用",
@@ -10,7 +10,8 @@ const info = {
 
 const repeatMap: Map<number, { msg: string; count: number }> = new Map();
 async function plugin(event: GroupMessage) {
-  const { raw_message, group_id } = event;
+  const { group_id } = event;
+  const raw_message = event.raw_message.replace(/url=\S+,/g, "");
   if (
     raw_message.trim().startsWith(config.bot.name) ||
     raw_message.trim().includes(config.bot.nick_name)
@@ -22,13 +23,12 @@ async function plugin(event: GroupMessage) {
     return;
   }
   const newCount = repeatItem.count + 1;
-  if (newCount === config.bot.repeat) {
-    await sendGroupMsg(group_id, [Structs.text(event.raw_message)]);
-  }
   repeatMap.set(group_id, {
     msg: raw_message,
     count: newCount,
   });
+  if (newCount !== config.bot.repeat) return;
+  await forwardGroupMsg(group_id, event.message_id);
 }
 
 export { info };
