@@ -42,7 +42,9 @@ async function chat(msg: string, prompt: string) {
   const message: ChatCompletionMessageParam[] = [
     { role: "user", content: msg },
   ];
-  message.unshift({ role: "system", content: prompt });
+  if (prompt !== "默认") {
+    message.unshift({ role: "system", content: prompt });
+  }
   return deepSeekChat(message);
 }
 
