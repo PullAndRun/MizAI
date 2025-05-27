@@ -48,12 +48,12 @@ async function plugin(event: GroupMessage) {
       role: "member",
       plugin: list,
     },
-    {
-      cmd: "动态",
-      cmt: `使用 "主播 动态" 命令展示已关注主播的动态`,
-      role: "member",
-      plugin: dynamic,
-    },
+    // {
+    //   cmd: "动态",
+    //   cmt: `使用 "主播 动态" 命令展示已关注主播的动态`,
+    //   role: "member",
+    //   plugin: dynamic,
+    // },
   ];
   await cmd(msg, event, cmdList);
 }

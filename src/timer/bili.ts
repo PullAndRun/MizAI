@@ -78,7 +78,7 @@ async function pushDynamicNotifications() {
 
 function task() {
   schedule.scheduleJob(config.bili.realtime, pushLiveNotifications);
-  schedule.scheduleJob(config.bili.realtime, pushDynamicNotifications);
+  //schedule.scheduleJob(config.bili.realtime, pushDynamicNotifications);
 }
 
 export { task };
