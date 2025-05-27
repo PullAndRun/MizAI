@@ -1,11 +1,12 @@
 import config from "@miz/ai/config/config.toml";
 import { sleep } from "bun";
 import dayjs from "dayjs";
-import puppeteer, { KnownDevices } from "puppeteer";
+import { KnownDevices } from "puppeteer";
 import { z } from "zod";
+import { getBrowser } from "../core/puppeteer";
 
 async function dynamicImage(url: string) {
-  const browser = await puppeteer.launch();
+  const browser = getBrowser();
   const page = await browser.newPage();
   await page.emulate(KnownDevices["iPad Pro"]);
   await page.goto(url);
@@ -14,11 +15,11 @@ async function dynamicImage(url: string) {
   await page.click("#app");
   await sleep(500);
   if (!waitScreenshot) {
-    await browser.close();
+    await page.close();
     return;
   }
   const image = await waitScreenshot.screenshot();
-  await browser.close();
+  await page.close();
   return Buffer.from(image);
 }
 
@@ -56,10 +57,8 @@ async function fetchDynamic(mid: number) {
     (v) => v.modules.module_author.pub_time
   )[0];
   if (!data) return undefined;
-  const dynamicInfo = await dynamicImage(config.bili.dynamicInfo + data.id_str);
-  if (!dynamicInfo) return undefined;
   return {
-    info: dynamicInfo,
+    url: config.bili.dynamicInfo + data.id_str,
     date: data.modules.module_author.pub_ts,
     name: data.modules.module_author.name,
     id: data.id_str,
@@ -147,13 +146,14 @@ async function liveMsg(liveData: {
 }
 
 async function dynamicMsg(dynamicData: {
-  info: Buffer<ArrayBuffer>;
+  url: string;
   name: string;
   date: number;
   id: string;
 }) {
+  const image = await dynamicImage(dynamicData.url);
   return {
-    dynamic: dynamicData.info,
+    image: image,
     text: `🔥【未读动态+1】🔥\n🎤 人气UP主: "${
       dynamicData.name
     }"\n⏰ 推送时间: ${dayjs(dynamicData.date * 1000).format(

@@ -67,8 +67,9 @@ async function pushDynamicNotifications() {
       )
         continue;
       const msg = await dynamicMsg(dynamic);
+      if (!msg.image) continue;
       await sendGroupMsg(group.group_id, [
-        Structs.image(msg.dynamic),
+        Structs.image(msg.image),
         Structs.text(msg.text),
       ]);
     }
@@ -77,7 +78,7 @@ async function pushDynamicNotifications() {
 
 function task() {
   schedule.scheduleJob(config.bili.realtime, pushLiveNotifications);
-  //schedule.scheduleJob(config.bili.realtime, pushDynamicNotifications);
+  schedule.scheduleJob(config.bili.realtime, pushDynamicNotifications);
 }
 
 export { task };
