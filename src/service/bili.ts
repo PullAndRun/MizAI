@@ -6,8 +6,9 @@ import { z } from "zod";
 
 async function dynamicImage(url: string) {
   const browser = await puppeteer.launch({
-    browser: "firefox",
+    executablePath: "/usr/bin/chromium-browser",
     headless: true,
+    args: ["--disable-dev-shm-usage", "--no-sandbox", "--disable-gpu"],
   });
   const page = await browser.newPage();
   await page.emulate(KnownDevices["iPad Pro"]);
