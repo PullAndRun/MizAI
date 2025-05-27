@@ -46,6 +46,7 @@ async function pushLiveNotifications() {
   }
 }
 
+//@ts-ignore
 async function pushDynamicNotifications() {
   const groups = await getClient().get_group_list();
   const biliFindAll = await biliModel.findAll();

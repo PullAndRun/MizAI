@@ -6,7 +6,7 @@ import { z } from "zod";
 
 async function dynamicImage(url: string) {
   const browser = await puppeteer.launch({
-    executablePath: "/usr/bin/chromium-browser",
+    browser: "chrome",
     headless: true,
     args: ["--disable-dev-shm-usage", "--no-sandbox", "--disable-gpu"],
   });

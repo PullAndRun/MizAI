@@ -13,3 +13,12 @@ RUN apk update && \
     nodejs \
     yarn
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
+    && mkdir -p /home/pptruser/Downloads \
+    && mkdir -p /data \
+    && chown -R pptruser:pptruser /data
+USER pptruser
+ENV TZ=Asia/Shanghai
+WORKDIR /data
+ENTRYPOINT [ "bun", "start" ]
