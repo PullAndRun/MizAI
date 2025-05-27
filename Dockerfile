@@ -1,23 +1,29 @@
-FROM oven/bun:alpine
-RUN rm /etc/apk/repositories
-RUN echo "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.17/main" >> /etc/apk/repositories
-RUN echo "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.17/community" >> /etc/apk/repositories
-RUN apk update
-RUN apk add --no-cache \
-      chromium \
-      nss \
-      freetype \
-      harfbuzz \
-      ca-certificates \
-      ttf-freefont \
-      nodejs \
-      yarn
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-RUN yarn add puppeteer@24.9.0
-RUN addgroup -S pptruser && adduser -S -G pptruser pptruser \
-    && mkdir -p /home/pptruser/Downloads /app /data \
-    && chown -R pptruser:pptruser /home/pptruser \
-    && chown -R pptruser:pptruser /app \
+FROM oven/bun:debian
+RUN rm -f /etc/apt/sources.list
+RUN rm -f /etc/apt/sources.list.d/debian.sources
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware" >> /etc/apt/sources.list 
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware" >> /etc/apt/sources.list 
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main contrib non-free non-free-firmware" >> /etc/apt/sources.list 
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian-security bookworm-security main contrib non-free non-free-firmware" >> /etc/apt/sources.list 
+RUN apt-get update && \
+    apt-get install -y \
+    wget \
+    gnupg \
+    nodejs \
+    fonts-ipafont-gothic \
+    fonts-wqy-zenhei \
+    fonts-thai-tlwg \
+    fonts-kacst \
+    fonts-freefont-ttf \
+    libxss1 \
+    npm \
+    firefox-esr \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/firefox
+RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
+    && mkdir -p /home/pptruser/Downloads \
+    && mkdir -p /data \
     && chown -R pptruser:pptruser /data
 USER pptruser
 ENV TZ=Asia/Shanghai

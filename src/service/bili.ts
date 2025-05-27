@@ -1,12 +1,14 @@
 import config from "@miz/ai/config/config.toml";
 import { sleep } from "bun";
 import dayjs from "dayjs";
-import { KnownDevices } from "puppeteer";
+import puppeteer, { KnownDevices } from "puppeteer";
 import { z } from "zod";
-import { getBrowser } from "../core/puppeteer";
 
 async function dynamicImage(url: string) {
-  const browser = getBrowser();
+  const browser = await puppeteer.launch({
+    browser: "firefox",
+    headless: true,
+  });
   const page = await browser.newPage();
   await page.emulate(KnownDevices["iPad Pro"]);
   await page.goto(url);
