@@ -5,7 +5,7 @@ import puppeteer, { KnownDevices } from "puppeteer";
 import { z } from "zod";
 
 async function dynamicImage(url: string) {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({ browser: "firefox" });
   const page = await browser.newPage();
   await page.emulate(KnownDevices["iPad Pro"]);
   await page.goto(url);
