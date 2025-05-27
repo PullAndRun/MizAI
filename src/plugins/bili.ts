@@ -1,7 +1,13 @@
 import config from "@miz/ai/config/config.toml";
 import { cmd, cmdText, sendGroupMsg } from "@miz/ai/src/core/bot";
 import * as biliModel from "@miz/ai/src/models/bili";
-import { fetchLive, fetchUser, liveMsg } from "@miz/ai/src/service/bili";
+import {
+  dynamicMsg,
+  fetchDynamic,
+  fetchLive,
+  fetchUser,
+  liveMsg,
+} from "@miz/ai/src/service/bili";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
@@ -42,8 +48,42 @@ async function plugin(event: GroupMessage) {
       role: "member",
       plugin: list,
     },
+    {
+      cmd: "动态",
+      cmt: `使用 "主播 动态" 命令展示已关注主播的动态`,
+      role: "member",
+      plugin: dynamic,
+    },
   ];
   await cmd(msg, event, cmdList);
+}
+
+async function dynamic(uname: string, event: GroupMessage) {
+  if (!uname) {
+    await sendGroupMsg(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text(
+        `缺少主播昵称\n请使用 "主播 动态 [主播昵称]" 命令展示已关注主播的动态。`
+      ),
+    ]);
+    return;
+  }
+  const user = await fetchUser(uname);
+  if (!user || user.uname !== uname) {
+    await sendGroupMsg(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text(`没找到您想看动态的主播\n请检查主播昵称。`),
+    ]);
+    return;
+  }
+  const dynamic = await fetchDynamic(user.mid);
+  if (!dynamic) return;
+  const msg = await dynamicMsg(dynamic);
+  if (!msg.image) return;
+  await sendGroupMsg(event.group_id, [
+    Structs.image(msg.image),
+    Structs.text(msg.text),
+  ]);
 }
 
 async function follow(uname: string, event: GroupMessage) {
