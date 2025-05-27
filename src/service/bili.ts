@@ -1,12 +1,76 @@
 import config from "@miz/ai/config/config.toml";
+import { sleep } from "bun";
 import dayjs from "dayjs";
+import puppeteer, { KnownDevices } from "puppeteer";
 import { z } from "zod";
+
+async function dynamicImage(url: string) {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.emulate(KnownDevices["iPad Pro"]);
+  await page.goto(url);
+  const waitScreenshot = await page.waitForSelector(".bili-dyn-item");
+  await page.click(".v-popover-content");
+  await page.click("#app");
+  await sleep(500);
+  if (!waitScreenshot) {
+    await browser.close();
+    return;
+  }
+  const image = await waitScreenshot.screenshot();
+  await browser.close();
+  return Buffer.from(image);
+}
+
+async function fetchDynamic(mid: number) {
+  const dynamic = await fetch(config.bili.dynamic + mid, {
+    signal: AbortSignal.timeout(5000),
+    headers: {
+      cookie: config.bili.cookie,
+    },
+  })
+    .then((res) => res.json())
+    .catch((_) => undefined);
+  if (!dynamic) return undefined;
+  const dynamicSchema = z.object({
+    data: z.object({
+      items: z
+        .array(
+          z.object({
+            id_str: z.string(),
+            modules: z.object({
+              module_author: z.object({
+                pub_ts: z.number(),
+                pub_time: z.string().nullish(),
+                name: z.string(),
+              }),
+            }),
+          })
+        )
+        .min(1),
+    }),
+  });
+  const userData = dynamicSchema.safeParse(dynamic);
+  if (!userData.success) return undefined;
+  const data = userData.data.data.items.filter(
+    (v) => v.modules.module_author.pub_time
+  )[0];
+  if (!data) return undefined;
+  const dynamicInfo = await dynamicImage(config.bili.dynamicInfo + data.id_str);
+  if (!dynamicInfo) return undefined;
+  return {
+    info: dynamicInfo,
+    date: data.modules.module_author.pub_ts,
+    name: data.modules.module_author.name,
+    id: data.id_str,
+  };
+}
 
 async function fetchUser(name: string) {
   const user = await fetch(config.bili.user + name, {
     signal: AbortSignal.timeout(5000),
     headers: {
-      cookie: config.bili.cookie,
+      Cookie: config.bili.cookie,
     },
   })
     .then((res) => res.json())
@@ -82,4 +146,27 @@ async function liveMsg(liveData: {
   };
 }
 
-export { fetchLive, fetchUser, liveMsg };
+async function dynamicMsg(dynamicData: {
+  info: Buffer<ArrayBuffer>;
+  name: string;
+  date: number;
+  id: string;
+}) {
+  return {
+    dynamic: dynamicData.info,
+    text: `🔥【未读动态+1】🔥\n🎤 人气UP主: "${
+      dynamicData.name
+    }"\n⏰ 推送时间: ${dayjs(dynamicData.date * 1000).format(
+      "YYYY年MM月DD日 HH点mm分ss秒"
+    )}\n👉 新鲜速递: ${config.bili.dynamicInfo}${dynamicData.id}`,
+  };
+}
+
+export {
+  dynamicImage,
+  dynamicMsg,
+  fetchDynamic,
+  fetchLive,
+  fetchUser,
+  liveMsg,
+};
