@@ -16,6 +16,9 @@ async function fetchDynamic(mid: number) {
   const dynamicSchema = z.object({
     rss: z.object({
       channel: z.object({
+        image: z.object({
+          url: z.string(),
+        }),
         item: z
           .array(
             z.object({
@@ -46,6 +49,7 @@ async function fetchDynamic(mid: number) {
   $("a").remove();
   return {
     ...currentItem,
+    image: dynamicData.data.rss.channel.image.url,
     description: $.text()
       .replace(/(\n+)/g, "\n")
       .trim()

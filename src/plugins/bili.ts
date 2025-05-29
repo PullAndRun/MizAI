@@ -79,7 +79,10 @@ async function dynamic(uname: string, event: GroupMessage) {
   const dynamic = await fetchDynamic(user.mid);
   if (!dynamic) return;
   const msg = dynamicMsg(dynamic);
-  await sendGroupMsg(event.group_id, [Structs.text(msg.text)]);
+  await sendGroupMsg(event.group_id, [
+    Structs.image(dynamic.image),
+    Structs.text(msg.text),
+  ]);
 }
 
 async function follow(uname: string, event: GroupMessage) {

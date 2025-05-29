@@ -69,7 +69,10 @@ async function pushDynamicNotifications() {
       )
         continue;
       const msg = dynamicMsg(dynamic);
-      await sendGroupMsg(group.group_id, [Structs.text(msg.text)]);
+      await sendGroupMsg(group.group_id, [
+        Structs.image(dynamic.image),
+        Structs.text(msg.text),
+      ]);
     }
   }
 }
