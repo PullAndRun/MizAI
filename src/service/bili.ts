@@ -143,8 +143,8 @@ function liveMsg(liveData: {
 
 function dynamicMsg(dynamicData: {
   link: string;
-  title: string;
-  description: string;
+  title: string | undefined;
+  description: string | undefined;
   author: string;
   pubDate: string;
 }) {
