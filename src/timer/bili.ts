@@ -9,7 +9,6 @@ import {
   fetchLive,
   liveMsg,
 } from "@miz/ai/src/service/bili";
-import { sleep } from "bun";
 import dayjs from "dayjs";
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";
@@ -60,7 +59,6 @@ async function pushDynamicNotifications() {
     if (!vtbs.length) continue;
     for (const vtb of vtbs) {
       const dynamic = await fetchDynamic(vtb.mid);
-      await sleep(config.bili.sleep * 1000);
       if (!dynamic) continue;
       if (
         !dayjs()
