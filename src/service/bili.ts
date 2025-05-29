@@ -48,27 +48,31 @@ async function fetchDynamic(mid: number) {
       .replace(/图文地址：|视频地址：/g, "")
   );
   $("a").remove();
-  const title =
+  const titleReg =
     currentItem.title
       .toString()
       .replace(/\[[^\]]*\]|\u3000+/g, " ")
-      .replace(/…$/g, "")
-      .trim() || "暂无";
-  const description =
+      .trim()
+      .replace(/…$|\.{3}/g, "") || "暂无";
+  const descriptionReg =
     $.text()
       .replace(/\n{2,}/g, "\n")
       .replace(/\[[^\]]*\]/g, " ")
       .replace(/^\n+|\n+$/g, "")
       .trim() || "暂无";
-  if (title === "暂无" && description === "暂无") return undefined;
-  const isTitleDescSame = description
+  if (titleReg === "暂无" && descriptionReg === "暂无") return undefined;
+  const isTitleDescSame = descriptionReg
     ?.replace(/[\n \u3000+]+/g, "")
-    .includes(title?.replace(/[ ]+/g, ""));
+    .includes(titleReg?.replace(/[ \u3000+]+/g, ""));
+  const title = isTitleDescSame ? "暂无" : titleReg;
+  const description = descriptionReg?.includes("\n")
+    ? "\n" + descriptionReg
+    : descriptionReg;
   return {
     ...currentItem,
     image: dynamicData.data.rss.channel.image.url,
-    title: isTitleDescSame ? "暂无" : title,
-    description: description?.includes("\n") ? "\n" + description : description,
+    title: title,
+    description: description,
   };
 }
 
