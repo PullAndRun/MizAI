@@ -33,7 +33,7 @@ async function pushLiveNotifications() {
       if (!user) continue;
       if (
         !dayjs()
-          .subtract(config.bili.frequency, "minute")
+          .subtract(config.bili.liveFrequency, "minute")
           .isBefore(new Date(user.live_time * 1000)) ||
         user.live_status !== 1
       )
@@ -64,7 +64,7 @@ async function pushDynamicNotifications() {
       if (!dynamic) continue;
       if (
         !dayjs()
-          .subtract(config.bili.frequency, "minute")
+          .subtract(config.bili.dynamicFrequency, "minute")
           .isBefore(new Date(dynamic.pubDate))
       )
         continue;
