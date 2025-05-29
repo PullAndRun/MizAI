@@ -12,17 +12,18 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@google/genai": "^1.0.1",
+    "@google/genai": "^1.2.0",
     "@miz/ai": "file:",
+    "cheerio": "^1.0.0",
     "dayjs": "^1.11.13",
+    "fast-xml-parser": "^5.2.3",
     "NeteaseCloudMusicApi": "^4.27.0",
     "node-napcat-ts": "^0.4.13",
     "node-schedule": "^2.1.1",
-    "openai": "^4.103.0",
+    "openai": "^5.0.0",
     "pg": "^8.16.0",
-    "puppeteer": "^24.9.0",
     "typeorm": "^0.3.24",
     "winston": "^3.17.0",
-    "zod": "^3.25.28"
+    "zod": "^3.25.36"
   }
 }

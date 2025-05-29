@@ -9,6 +9,7 @@ import {
   fetchLive,
   liveMsg,
 } from "@miz/ai/src/service/bili";
+import { sleep } from "bun";
 import dayjs from "dayjs";
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";
@@ -37,7 +38,7 @@ async function pushLiveNotifications() {
         user.live_status !== 1
       )
         continue;
-      const msg = await liveMsg(user);
+      const msg = liveMsg(user);
       await sendGroupMsg(group.group_id, [
         Structs.image(msg.cover),
         Structs.text(msg.text),
@@ -46,7 +47,6 @@ async function pushLiveNotifications() {
   }
 }
 
-//@ts-ignore
 async function pushDynamicNotifications() {
   const groups = await getClient().get_group_list();
   const biliFindAll = await biliModel.findAll();
@@ -60,26 +60,23 @@ async function pushDynamicNotifications() {
     if (!vtbs.length) continue;
     for (const vtb of vtbs) {
       const dynamic = await fetchDynamic(vtb.mid);
+      await sleep(config.bili.sleep * 1000);
       if (!dynamic) continue;
       if (
         !dayjs()
           .subtract(config.bili.frequency, "minute")
-          .isBefore(new Date(dynamic.date * 1000))
+          .isBefore(new Date(dynamic.pubDate))
       )
         continue;
-      const msg = await dynamicMsg(dynamic);
-      if (!msg.image) continue;
-      await sendGroupMsg(group.group_id, [
-        Structs.image(msg.image),
-        Structs.text(msg.text),
-      ]);
+      const msg = dynamicMsg(dynamic);
+      await sendGroupMsg(group.group_id, [Structs.text(msg.text)]);
     }
   }
 }
 
 function task() {
-  schedule.scheduleJob(config.bili.realtime, pushLiveNotifications);
-  //schedule.scheduleJob(config.bili.realtime, pushDynamicNotifications);
+  schedule.scheduleJob(config.bili.liveTime, pushLiveNotifications);
+  schedule.scheduleJob(config.bili.dynamicTime, pushDynamicNotifications);
 }
 
 export { task };

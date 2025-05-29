@@ -48,12 +48,12 @@ async function plugin(event: GroupMessage) {
       role: "member",
       plugin: list,
     },
-    // {
-    //   cmd: "动态",
-    //   cmt: `使用 "主播 动态" 命令展示已关注主播的动态`,
-    //   role: "member",
-    //   plugin: dynamic,
-    // },
+    {
+      cmd: "动态",
+      cmt: `使用 "主播 动态" 命令展示已关注主播的动态`,
+      role: "member",
+      plugin: dynamic,
+    },
   ];
   await cmd(msg, event, cmdList);
 }
@@ -78,12 +78,8 @@ async function dynamic(uname: string, event: GroupMessage) {
   }
   const dynamic = await fetchDynamic(user.mid);
   if (!dynamic) return;
-  const msg = await dynamicMsg(dynamic);
-  if (!msg.image) return;
-  await sendGroupMsg(event.group_id, [
-    Structs.image(msg.image),
-    Structs.text(msg.text),
-  ]);
+  const msg = dynamicMsg(dynamic);
+  await sendGroupMsg(event.group_id, [Structs.text(msg.text)]);
 }
 
 async function follow(uname: string, event: GroupMessage) {
@@ -182,7 +178,7 @@ async function query(uname: string, event: GroupMessage) {
     ]);
     return;
   }
-  const msg = await liveMsg(liveData);
+  const msg = liveMsg(liveData);
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
     Structs.image(msg.cover),

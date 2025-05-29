@@ -1,70 +1,55 @@
 import config from "@miz/ai/config/config.toml";
-import { sleep } from "bun";
+import * as cheerio from "cheerio";
 import dayjs from "dayjs";
-import puppeteer, { KnownDevices } from "puppeteer";
+import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
 
-async function dynamicImage(url: string) {
-  const browser = await puppeteer.launch({
-    browser: "chrome",
-    headless: true,
-    args: ["--disable-dev-shm-usage", "--no-sandbox", "--disable-gpu"],
-  });
-  const page = await browser.newPage();
-  await page.emulate(KnownDevices["iPad Pro"]);
-  await page.goto(url);
-  const waitScreenshot = await page.waitForSelector(".bili-dyn-item");
-  await page.click(".v-popover-content");
-  await page.click("#app");
-  await sleep(500);
-  if (!waitScreenshot) {
-    await page.close();
-    return;
-  }
-  const image = await waitScreenshot.screenshot();
-  await page.close();
-  return Buffer.from(image);
-}
-
 async function fetchDynamic(mid: number) {
-  const dynamic = await fetch(config.bili.dynamic + mid, {
+  const dynamic = await fetch(config.rsshub.bili + mid, {
     signal: AbortSignal.timeout(5000),
-    headers: {
-      cookie: config.bili.cookie,
-    },
   })
-    .then((res) => res.json())
+    .then((res) => res.text())
     .catch((_) => undefined);
   if (!dynamic) return undefined;
+  const parser = new XMLParser();
+  let dynamicObj = parser.parse(dynamic);
   const dynamicSchema = z.object({
-    data: z.object({
-      items: z
-        .array(
-          z.object({
-            id_str: z.string(),
-            modules: z.object({
-              module_author: z.object({
-                pub_ts: z.number(),
-                pub_time: z.string().nullish(),
-                name: z.string(),
-              }),
-            }),
-          })
-        )
-        .min(1),
+    rss: z.object({
+      channel: z.object({
+        item: z
+          .array(
+            z.object({
+              title: z.string(),
+              description: z.string(),
+              pubDate: z.string(),
+              link: z.string(),
+              author: z.string(),
+            })
+          )
+          .min(1),
+      }),
     }),
   });
-  const userData = dynamicSchema.safeParse(dynamic);
-  if (!userData.success) return undefined;
-  const data = userData.data.data.items.filter(
-    (v) => v.modules.module_author.pub_time
-  )[0];
-  if (!data) return undefined;
+  const dynamicData = dynamicSchema.safeParse(dynamicObj);
+  if (!dynamicData.success) return undefined;
+  const items = dynamicData.data.rss.channel.item.filter(
+    (v) => !v.description.includes("直播间地址：")
+  );
+  if (!items.length) return undefined;
+  const currentItem = items[0];
+  if (!currentItem) return undefined;
+  const $ = cheerio.load(
+    currentItem.description
+      .replace(/<br>/g, "\n")
+      .replace(/图文地址：|视频地址：/g, "")
+  );
+  $("a").remove();
   return {
-    url: config.bili.dynamicInfo + data.id_str,
-    date: data.modules.module_author.pub_ts,
-    name: data.modules.module_author.name,
-    id: data.id_str,
+    ...currentItem,
+    description: $.text()
+      .replace(/(\n+)/g, "\n")
+      .trim()
+      .replace(/^(\n)|(\n)$/g, ""),
   };
 }
 
@@ -129,7 +114,7 @@ async function fetchLive(mids: Array<number>) {
   return liveData.success ? liveData.data.data : undefined;
 }
 
-async function liveMsg(liveData: {
+function liveMsg(liveData: {
   cover_from_user: string;
   title: string;
   uname: string;
@@ -148,28 +133,22 @@ async function liveMsg(liveData: {
   };
 }
 
-async function dynamicMsg(dynamicData: {
-  url: string;
-  name: string;
-  date: number;
-  id: string;
+function dynamicMsg(dynamicData: {
+  link: string;
+  title: string;
+  description: string;
+  author: string;
+  pubDate: string;
 }) {
-  const image = await dynamicImage(dynamicData.url);
   return {
-    image: image,
     text: `🔥【未读动态+1】🔥\n🎤 人气UP主: "${
-      dynamicData.name
-    }"\n⏰ 推送时间: ${dayjs(dynamicData.date * 1000).format(
+      dynamicData.author
+    }"\n📌 劲爆标题: ${dynamicData.title}\n📝 精彩预览: ${
+      dynamicData.description
+    }\n⏰ 推送时间: ${dayjs(dynamicData.pubDate).format(
       "YYYY年MM月DD日 HH点mm分ss秒"
-    )}\n👉 新鲜速递: ${config.bili.dynamicInfo}${dynamicData.id}`,
+    )}\n🔍 立即围观: ${dynamicData.link}`,
   };
 }
 
-export {
-  dynamicImage,
-  dynamicMsg,
-  fetchDynamic,
-  fetchLive,
-  fetchUser,
-  liveMsg,
-};
+export { dynamicMsg, fetchDynamic, fetchLive, fetchUser, liveMsg };
