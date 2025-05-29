@@ -52,7 +52,7 @@ async function fetchDynamic(mid: number) {
     currentItem.title
       .toString()
       .replace(/\[[^\]]*\]|\u3000+/g, " ")
-      .replace(/\.{3}/g, "")
+      .replace(/…$/g, "")
       .trim() || undefined;
   const description =
     $.text()
