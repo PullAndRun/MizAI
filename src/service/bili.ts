@@ -53,7 +53,10 @@ async function fetchDynamic(mid: number) {
       .toString()
       .replace(/\[[^\]]*\]|\u3000+/g, " ")
       .trim()
-      .replace(/…$|\.{3}|\u200b+/g, "") || "暂无";
+      .replace(
+        /…$|\.{3}|[\x00-\x1F\x7F-\x9F]|[\u2000-\u200a\u202f\u2800\u200B\u200C\u200D\uFEFF]+/g,
+        ""
+      ) || "暂无";
   const descriptionReg =
     $.text()
       .replace(/\n{2,}/g, "\n")
