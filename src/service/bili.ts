@@ -161,7 +161,7 @@ function dynamicMsg(dynamicData: {
   return {
     text: `🔥【未读动态+1】🔥\n🎤 人气UP主: "${
       dynamicData.author
-    }"\n📌 劲爆标题: ${dynamicData.title}\n📝 精彩预览: ${
+    }"\n📌 劲爆标题: ${dynamicData.title}\n📝 精彩预览: \n${
       dynamicData.description
     }\n⏰ 推送时间: ${dayjs(dynamicData.pubDate).format(
       "YYYY年MM月DD日 HH点mm分ss秒"
