@@ -45,7 +45,7 @@ async function plugin(event: GroupMessage) {
     },
     {
       cmd: "动态",
-      cmt: `主播 动态 [主播昵称]" 命令查询主播个人动态`,
+      cmt: `使用 "主播 动态 [主播昵称]" 命令查询主播个人动态`,
       role: "member",
       plugin: dynamic,
     },
