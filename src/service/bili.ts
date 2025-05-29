@@ -51,12 +51,17 @@ async function fetchDynamic(mid: number) {
   return {
     ...currentItem,
     image: dynamicData.data.rss.channel.image.url,
-    title: currentItem.title.toString().trim() || undefined,
+    title:
+      currentItem.title
+        .toString()
+        .replace(/\[([^\]]*)\]/g, " ")
+        .trim() || undefined,
     description:
       $.text()
         .replace(/(\n+)/g, "\n")
         .trim()
         .replace(/^(\n)|(\n)$/g, "")
+        .replace(/\[([^\]]*)\]/g, " ")
         .trim() || undefined,
   };
 }
