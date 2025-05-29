@@ -53,21 +53,22 @@ async function fetchDynamic(mid: number) {
       .toString()
       .replace(/\[[^\]]*\]|\u3000+/g, " ")
       .replace(/…$/g, "")
-      .trim() || undefined;
+      .trim() || "暂无";
   const description =
     $.text()
       .replace(/\n{2,}/g, "\n")
       .replace(/\[[^\]]*\]/g, " ")
       .replace(/^\n+|\n+$/g, "")
-      .trim() || undefined;
+      .trim() || "暂无";
+  if (title === "暂无" && description === "暂无") return undefined;
   const isTitleDescSame = description
     ?.replace(/[\n \u3000+]+/g, "")
-    .includes(title?.replace(/[ ]+/g, "") || "暂无");
+    .includes(title?.replace(/[ ]+/g, ""));
   return {
     ...currentItem,
     image: dynamicData.data.rss.channel.image.url,
-    title: isTitleDescSame ? "暂无" : title || "暂无",
-    description: description || "暂无",
+    title: isTitleDescSame ? "暂无" : title,
+    description: description?.includes("\n") ? "\n" + description : description,
   };
 }
 
@@ -161,7 +162,7 @@ function dynamicMsg(dynamicData: {
   return {
     text: `🔥【未读动态+1】🔥\n🎤 人气UP主: "${
       dynamicData.author
-    }"\n📌 劲爆标题: ${dynamicData.title}\n📝 精彩预览: \n${
+    }"\n📌 劲爆标题: ${dynamicData.title}\n📝 精彩预览: ${
       dynamicData.description
     }\n⏰ 推送时间: ${dayjs(dynamicData.pubDate).format(
       "YYYY年MM月DD日 HH点mm分ss秒"
