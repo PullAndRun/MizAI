@@ -22,8 +22,8 @@ async function fetchDynamic(mid: number) {
         item: z
           .array(
             z.object({
-              title: z.string(),
-              description: z.string(),
+              title: z.string().or(z.number()).or(z.boolean()),
+              description: z.string().or(z.number()).or(z.boolean()),
               pubDate: z.string(),
               link: z.string(),
               author: z.string(),
@@ -36,13 +36,14 @@ async function fetchDynamic(mid: number) {
   const dynamicData = dynamicSchema.safeParse(dynamicObj);
   if (!dynamicData.success) return undefined;
   const items = dynamicData.data.rss.channel.item.filter(
-    (v) => !v.description.includes("直播间地址：")
+    (v) => !v.description.toString().includes("直播间地址：")
   );
   if (!items.length) return undefined;
   const currentItem = items[0];
   if (!currentItem) return undefined;
   const $ = cheerio.load(
     currentItem.description
+      .toString()
       .replace(/<br>/g, "\n")
       .replace(/图文地址：|视频地址：/g, "")
   );
@@ -50,6 +51,7 @@ async function fetchDynamic(mid: number) {
   return {
     ...currentItem,
     image: dynamicData.data.rss.channel.image.url,
+    title: currentItem.title.toString(),
     description: $.text()
       .replace(/(\n+)/g, "\n")
       .trim()
