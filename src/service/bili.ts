@@ -151,7 +151,7 @@ function liveMsg(liveData: {
     }\n📅 开播日期: ${
       liveData.live_time === 0
         ? "未开播"
-        : dayjs(liveData.live_time * 1000).format("YYYY年MM月DD日 HH点mm分")
+        : dayjs(liveData.live_time * 1000).format("YYYY年MM月DD日 HH点mm分ss秒")
     }\n👉 立即观看不迷路: https://live.bilibili.com/${liveData.room_id}`,
   };
 }
@@ -169,7 +169,7 @@ function dynamicMsg(dynamicData: {
     }"\n📌 独家主题: ${dynamicData.title}\n📝 内容亮点: ${
       dynamicData.description
     }\n📅 发布日期: ${dayjs(dynamicData.pubDate).format(
-      "YYYY年MM月DD日 HH点mm分"
+      "YYYY年MM月DD日 HH点mm分ss秒"
     )}\n👉 立即围观: ${dynamicData.link}`,
   };
 }
