@@ -60,7 +60,7 @@ async function pushDynamicNotifications() {
     if (!vtbs.length) continue;
     for (const vtb of vtbs) {
       const dynamic = await fetchDynamic(vtb.mid);
-      await sleep(config.bili.wait);
+      await sleep(config.bili.wait * 1000);
       if (!dynamic) continue;
       if (
         !dayjs()
