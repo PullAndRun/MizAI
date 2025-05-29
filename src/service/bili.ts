@@ -146,9 +146,9 @@ function liveMsg(liveData: {
 }) {
   return {
     cover: liveData.cover_from_user,
-    text: `🔥【直播进行时】🔥\n🎤 人气主播: "${liveData.uname}"\n🌟 独家主题: ${
+    text: `🔥【直播进行时】🔥\n🎤 人气主播: "${liveData.uname}"\n📌 独家主题: ${
       liveData.title
-    }\n⏰ 开播时间: ${
+    }\n📅 开播日期: ${
       liveData.live_time === 0
         ? "未开播"
         : dayjs(liveData.live_time * 1000).format("YYYY年MM月DD日 HH点mm分ss秒")
@@ -166,11 +166,11 @@ function dynamicMsg(dynamicData: {
   return {
     text: `🔥【未读动态+1】🔥\n🎤 人气UP主: "${
       dynamicData.author
-    }"\n📌 劲爆标题: ${dynamicData.title}\n📝 精彩预览: ${
+    }"\n📌 独家主题: ${dynamicData.title}\n📝 内容亮点: ${
       dynamicData.description
-    }\n⏰ 推送时间: ${dayjs(dynamicData.pubDate).format(
+    }\n📅 发布日期: ${dayjs(dynamicData.pubDate).format(
       "YYYY年MM月DD日 HH点mm分ss秒"
-    )}\n🔍 立即围观: ${dynamicData.link}`,
+    )}\n👉 立即围观: ${dynamicData.link}`,
   };
 }
 
