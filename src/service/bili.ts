@@ -51,11 +51,13 @@ async function fetchDynamic(mid: number) {
   return {
     ...currentItem,
     image: dynamicData.data.rss.channel.image.url,
-    title: currentItem.title.toString(),
-    description: $.text()
-      .replace(/(\n+)/g, "\n")
-      .trim()
-      .replace(/^(\n)|(\n)$/g, ""),
+    title: currentItem.title.toString().trim() || undefined,
+    description:
+      $.text()
+        .replace(/(\n+)/g, "\n")
+        .trim()
+        .replace(/^(\n)|(\n)$/g, "")
+        .trim() || undefined,
   };
 }
 
@@ -149,8 +151,8 @@ function dynamicMsg(dynamicData: {
   return {
     text: `🔥【未读动态+1】🔥\n🎤 人气UP主: "${
       dynamicData.author
-    }"\n📌 劲爆标题: ${dynamicData.title}\n📝 精彩预览: ${
-      dynamicData.description
+    }"\n📌 劲爆标题: ${dynamicData.title || "暂无"}\n📝 精彩预览: ${
+      dynamicData.description || "暂无"
     }\n⏰ 推送时间: ${dayjs(dynamicData.pubDate).format(
       "YYYY年MM月DD日 HH点mm分ss秒"
     )}\n🔍 立即围观: ${dynamicData.link}`,
