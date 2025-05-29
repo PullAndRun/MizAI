@@ -48,21 +48,26 @@ async function fetchDynamic(mid: number) {
       .replace(/图文地址：|视频地址：/g, "")
   );
   $("a").remove();
+  const title =
+    currentItem.title
+      .toString()
+      .replace(/\[[^\]]*\]|\u3000+/g, " ")
+      .replace(/\.{3}/g, "")
+      .trim() || undefined;
+  const description =
+    $.text()
+      .replace(/\n{2,}/g, "\n")
+      .replace(/\[[^\]]*\]/g, " ")
+      .replace(/^\n+|\n+$/g, "")
+      .trim() || undefined;
+  const isTitleDescSame = description
+    ?.replace(/[\n \u3000+]+/g, "")
+    .includes(title?.replace(/[ ]+/g, "") || "暂无");
   return {
     ...currentItem,
     image: dynamicData.data.rss.channel.image.url,
-    title:
-      currentItem.title
-        .toString()
-        .replace(/\[([^\]]*)\]/g, " ")
-        .trim() || undefined,
-    description:
-      $.text()
-        .replace(/(\n+)/g, "\n")
-        .trim()
-        .replace(/^(\n)|(\n)$/g, "")
-        .replace(/\[([^\]]*)\]/g, " ")
-        .trim() || undefined,
+    title: isTitleDescSame ? "暂无" : title || "暂无",
+    description: description || "暂无",
   };
 }
 
@@ -149,15 +154,15 @@ function liveMsg(liveData: {
 function dynamicMsg(dynamicData: {
   link: string;
   title: string | undefined;
-  description: string | undefined;
+  description: string;
   author: string;
   pubDate: string;
 }) {
   return {
     text: `🔥【未读动态+1】🔥\n🎤 人气UP主: "${
       dynamicData.author
-    }"\n📌 劲爆标题: ${dynamicData.title || "暂无"}\n📝 精彩预览: ${
-      dynamicData.description || "暂无"
+    }"\n📌 劲爆标题: ${dynamicData.title}\n📝 精彩预览: ${
+      dynamicData.description
     }\n⏰ 推送时间: ${dayjs(dynamicData.pubDate).format(
       "YYYY年MM月DD日 HH点mm分ss秒"
     )}\n🔍 立即围观: ${dynamicData.link}`,
