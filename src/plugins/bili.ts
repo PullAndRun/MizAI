@@ -15,7 +15,8 @@ const info = {
   comment: [
     `使用 "主播 关注 [主播昵称]" 命令关注主播`,
     `使用 "主播 取关 [主播昵称]" 命令取关主播`,
-    `使用 "主播 查询 [主播昵称]" 命令查询主播直播动态`,
+    `使用 "主播 直播 [主播昵称]" 命令查询主播直播动态`,
+    `使用 "主播 动态 [主播昵称]" 命令查询主播个人动态`,
     `使用 "主播 列表" 命令展示已关注主播列表`,
   ],
   plugin,
@@ -37,22 +38,22 @@ async function plugin(event: GroupMessage) {
       plugin: unfollow,
     },
     {
-      cmd: "查询",
-      cmt: `使用 "主播 查询 [主播昵称]" 命令查询主播直播讯息`,
+      cmd: "直播",
+      cmt: `使用 "主播 直播 [主播昵称]" 命令查询主播直播动态`,
       role: "member",
       plugin: query,
+    },
+    {
+      cmd: "动态",
+      cmt: `主播 动态 [主播昵称]" 命令查询主播个人动态`,
+      role: "member",
+      plugin: dynamic,
     },
     {
       cmd: "列表",
       cmt: `使用 "主播 列表" 命令展示已关注主播列表`,
       role: "member",
       plugin: list,
-    },
-    {
-      cmd: "动态",
-      cmt: `使用 "主播 动态" 命令展示已关注主播的动态`,
-      role: "member",
-      plugin: dynamic,
     },
   ];
   await cmd(msg, event, cmdList);
