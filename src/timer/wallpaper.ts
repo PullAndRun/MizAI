@@ -4,6 +4,7 @@ import * as groupModel from "@miz/ai/src/models/group";
 import { wallpaper } from "@miz/ai/src/service/wallpaper";
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";
+import * as pluginModel from "@miz/ai/src/models/plugin";
 
 async function pushWallpaper() {
   const groupList = await getClient().get_group_list();
@@ -12,6 +13,8 @@ async function pushWallpaper() {
   for (const group of groupList) {
     const findGroup = await groupModel.findOrAdd(group.group_id);
     if (!findGroup.active) continue;
+    const lock = await pluginModel.findOrAdd(group.group_id, "每日壁纸", false);
+    if (!lock.enable) continue;
     await sendGroupMsg(group.group_id, [
       Structs.image(imageInfo.image),
       Structs.text(`🌅 数字艺术日报 🌄\n✨ 本日焦点: ${imageInfo.copyright}`),

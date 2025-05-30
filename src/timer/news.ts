@@ -1,7 +1,7 @@
 import config from "@miz/ai/config/config.toml";
 import { getClient, sendGroupMsg } from "@miz/ai/src/core/bot";
 import * as groupModel from "@miz/ai/src/models/group";
-import { findOrAdd } from "@miz/ai/src/models/plugin";
+import * as pluginModel from "@miz/ai/src/models/plugin";
 import {
   duplicate,
   fetchFinance,
@@ -50,7 +50,7 @@ async function realtimeNews() {
   for (const group of groups) {
     const findGroup = await groupModel.findOrAdd(group.group_id);
     if (!findGroup.active) continue;
-    const lock = await findOrAdd(group.group_id, "新闻推送", false);
+    const lock = await pluginModel.findOrAdd(group.group_id, "新闻推送", false);
     if (!lock.enable) continue;
     await sendNews(
       group.group_id,
@@ -74,6 +74,8 @@ async function dailyNews() {
   for (const group of groupList) {
     const findGroup = await groupModel.findOrAdd(group.group_id);
     if (!findGroup.active) continue;
+    const lock = await pluginModel.findOrAdd(group.group_id, "每日新闻", false);
+    if (!lock.enable) continue;
     await sendNews(
       group.group_id,
       news,
