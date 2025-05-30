@@ -13,7 +13,7 @@ async function pushWallpaper() {
   for (const group of groupList) {
     const findGroup = await groupModel.findOrAdd(group.group_id);
     if (!findGroup.active) continue;
-    const lock = await pluginModel.findOrAdd(group.group_id, "每日壁纸", false);
+    const lock = await pluginModel.findOrAdd(group.group_id, "每日壁纸", true);
     if (!lock.enable) continue;
     await sendGroupMsg(group.group_id, [
       Structs.image(imageInfo.image),
