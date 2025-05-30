@@ -160,6 +160,8 @@ async function listener() {
     logger.warn(`机器人加入了群 ${event.group_id}`);
   });
   getClient().on("notice.group_increase", async (event) => {
+    const lock = await pluginModel.findOrAdd(event.group_id, "入群推送", true);
+    if (!lock.enable) return;
     const loginInfo = await getClient().get_login_info();
     if (event.user_id === loginInfo.user_id) return;
     const member = await getClient().get_group_member_info({
@@ -183,17 +185,18 @@ async function listener() {
       await groupModel.active(event.group_id, false);
       return;
     }
-    ////推送群员退群
-    // const member = await getClient().get_stranger_info({
-    //   user_id: event.user_id,
-    // });
-    // await sendGroupMsg(event.group_id, [
-    //   Structs.text(
-    //     `有成员退群\n昵称: ${member.nickname}\nID: ${event.user_id}\n原因: ${
-    //       event.sub_type === "leave" ? "自己退群" : "管理员清退"
-    //     }`
-    //   ),
-    // ]);
+    const lock = await pluginModel.findOrAdd(event.group_id, "退群推送", false);
+    if (!lock.enable) return;
+    const member = await getClient().get_stranger_info({
+      user_id: event.user_id,
+    });
+    await sendGroupMsg(event.group_id, [
+      Structs.text(
+        `有成员退群\n昵称: ${member.nickname}\nID: ${event.user_id}\n原因: ${
+          event.sub_type === "leave" ? "自己退群" : "管理员清退"
+        }`
+      ),
+    ]);
   });
 }
 
