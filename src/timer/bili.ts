@@ -49,7 +49,7 @@ async function pushLiveNotifications() {
       if (
         user.live_status !== 1 ||
         user.live_time === 0 ||
-        dayjs().diff(dayjs(user.live_time * 1000), "minute") >
+        dayjs().diff(dayjs(user.live_time * 1000), "minute") >=
           config.bili.liveFrequency
       )
         continue;
@@ -85,7 +85,7 @@ async function pushDynamicNotifications() {
       await sleep(config.bili.wait * 1000);
       if (!dynamic) continue;
       if (
-        dayjs().diff(dayjs(new Date(dynamic.pubDate)), "minute") >
+        dayjs().diff(dayjs(new Date(dynamic.pubDate)), "minute") >=
         config.bili.dynamicFrequency
       )
         continue;
