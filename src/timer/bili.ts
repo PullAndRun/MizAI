@@ -85,7 +85,7 @@ async function pushDynamicNotifications() {
       await sleep(config.bili.wait * 1000);
       if (!dynamic) continue;
       if (
-        dayjs().diff(dayjs(new Date(dynamic.pubDate)), "minute") >=
+        dayjs().diff(dayjs(dynamic.pubDate), "minute") >=
         config.bili.dynamicFrequency
       )
         continue;

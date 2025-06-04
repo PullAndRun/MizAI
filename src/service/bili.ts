@@ -174,7 +174,7 @@ function liveEndMsg(liveData: {
   };
   return {
     cover: liveData.cover_from_user,
-    text: `💤【本场直播即将进入尾声】💤\n⚡流量宠儿: "${
+    text: `💤【本场直播即将进入尾声】💤\n⚡ 流量宠儿: "${
       liveData.uname
     }"\n📌 独家主题: ${
       liveData.title
