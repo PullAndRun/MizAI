@@ -7,6 +7,7 @@ import {
   dynamicMsg,
   fetchDynamic,
   fetchLive,
+  liveEndMsg,
   liveMsg,
 } from "@miz/ai/src/service/bili";
 import { sleep } from "bun";
@@ -31,11 +32,25 @@ async function pushLiveNotifications() {
     for (const vtb of vtbs) {
       const user = lives[vtb.mid];
       if (!user) continue;
+      if (user.live_status !== 1 && vtb.isLive) {
+        const msg = liveEndMsg({
+          cover_from_user: user.cover_from_user,
+          uname: user.uname,
+          title: user.title,
+          startTime: vtb.liveTime,
+        });
+        await sendGroupMsg(group.group_id, [
+          Structs.image(msg.cover),
+          Structs.text(msg.text),
+        ]);
+        await biliModel.updateLiveStatus(vtb.gid, vtb.mid, vtb.rid, 0, false);
+        continue;
+      }
       if (
-        !dayjs()
-          .subtract(config.bili.liveFrequency, "minute")
-          .isBefore(new Date(user.live_time * 1000)) ||
-        user.live_status !== 1
+        user.live_status !== 1 ||
+        user.live_time === 0 ||
+        dayjs().diff(dayjs(user.live_time * 1000), "minute") >
+          config.bili.liveFrequency
       )
         continue;
       const msg = liveMsg(user);
@@ -43,6 +58,13 @@ async function pushLiveNotifications() {
         Structs.image(msg.cover),
         Structs.text(msg.text),
       ]);
+      await biliModel.updateLiveStatus(
+        vtb.gid,
+        vtb.mid,
+        vtb.rid,
+        user.live_time,
+        true
+      );
     }
   }
 }
@@ -63,9 +85,8 @@ async function pushDynamicNotifications() {
       await sleep(config.bili.wait * 1000);
       if (!dynamic) continue;
       if (
-        !dayjs()
-          .subtract(config.bili.dynamicFrequency, "minute")
-          .isBefore(new Date(dynamic.pubDate))
+        dayjs().diff(dayjs(new Date(dynamic.pubDate)), "minute") >
+        config.bili.dynamicFrequency
       )
         continue;
       const msg = dynamicMsg(dynamic);

@@ -147,15 +147,38 @@ function liveMsg(liveData: {
   live_time: number;
   room_id: number;
 }) {
+  const liveTime = () => {
+    if (liveData.live_time === 0) return "未开播";
+    return dayjs(liveData.live_time * 1000).format(
+      "YYYY年MM月DD日 HH点mm分ss秒"
+    );
+  };
   return {
     cover: liveData.cover_from_user,
     text: `🔥【直播进行时】🔥\n🎤 人气主播: "${liveData.uname}"\n📌 独家主题: ${
       liveData.title
-    }\n⏰ 开播日期: ${
-      liveData.live_time === 0
-        ? "未开播"
-        : dayjs(liveData.live_time * 1000).format("YYYY年MM月DD日 HH点mm分ss秒")
-    }\n👉 立即观看不迷路: https://live.bilibili.com/${liveData.room_id}`,
+    }\n⏰ 开播日期: ${liveTime()}\n👉 立即观看不迷路: https://live.bilibili.com/${
+      liveData.room_id
+    }`,
+  };
+}
+
+function liveEndMsg(liveData: {
+  cover_from_user: string;
+  uname: string;
+  title: string;
+  startTime: number;
+}) {
+  const liveTime = () => {
+    return dayjs().diff(dayjs(liveData.startTime * 1000), "minute");
+  };
+  return {
+    cover: liveData.cover_from_user,
+    text: `💤【本场直播即将进入尾声】💤\n⚡流量宠儿: "${
+      liveData.uname
+    }"\n📌 独家主题: ${
+      liveData.title
+    }\n💕 感谢家人们${liveTime()}分钟的暖心陪伴，明天见`,
   };
 }
 
@@ -177,4 +200,4 @@ function dynamicMsg(dynamicData: {
   };
 }
 
-export { dynamicMsg, fetchDynamic, fetchLive, fetchUser, liveMsg };
+export { dynamicMsg, fetchDynamic, fetchLive, fetchUser, liveEndMsg, liveMsg };
