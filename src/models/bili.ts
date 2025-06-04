@@ -24,10 +24,10 @@ class Bili extends BaseEntity {
   @Column({ type: "float" })
   rid: number;
   //开播时间,时间戳
-  @Column({ type: "float" })
+  @Column({ type: "float", default: 0 })
   liveTime: number;
   //是否开播
-  @Column({ type: "boolean" })
+  @Column({ type: "boolean", default: false })
   isLive: boolean;
 }
 
