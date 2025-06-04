@@ -8,10 +8,8 @@ import { Structs, type GroupMessage } from "node-napcat-ts";
 const info = {
   name: "设置",
   comment: [
-    `使用 "设置 插件 启用 [插件名]" 命令启用插件`,
-    `使用 "设置 插件 禁用 [插件名]" 命令禁用插件`,
     `使用 "设置 人格 [人格名]" 命令设置AI人格`,
-    `使用 "设置 插件 状态" 命令查询所有插件状态`,
+    `使用 "设置 插件" 命令查看如何操作插件`,
   ],
   plugin,
 };
