@@ -41,7 +41,7 @@ async function pushLiveNotifications() {
           startTime: vtb.liveTime,
         });
         await sendGroupMsg(group.group_id, [
-          msg.cover ? Structs.image(msg.cover) : Structs.text(""),
+          msg.cover && Structs.image(msg.cover),
           Structs.text(msg.text),
         ]);
         await biliModel.updateLiveStatus(vtb.gid, vtb.mid, vtb.rid, 0, false);
@@ -56,7 +56,7 @@ async function pushLiveNotifications() {
         continue;
       const msg = await liveMsg(user);
       await sendGroupMsg(group.group_id, [
-        msg.cover ? Structs.image(msg.cover) : Structs.text(""),
+        msg.cover && Structs.image(msg.cover),
         Structs.text(msg.text),
       ]);
       await biliModel.updateLiveStatus(
@@ -93,7 +93,7 @@ async function pushDynamicNotifications() {
       const msg = dynamicMsg(dynamic);
       const msgImage = await urlToBuffer(dynamic.image);
       await sendGroupMsg(group.group_id, [
-        msgImage ? Structs.image(dynamic.image) : Structs.text(""),
+        msgImage && Structs.image(msgImage),
         Structs.text(msg.text),
       ]);
     }

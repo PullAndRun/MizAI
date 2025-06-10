@@ -9,6 +9,7 @@ import {
   liveMsg,
 } from "@miz/ai/src/service/bili";
 import { Structs, type GroupMessage } from "node-napcat-ts";
+import { urlToBuffer } from "../core/http";
 
 const info = {
   name: "主播",
@@ -80,8 +81,9 @@ async function dynamic(uname: string, event: GroupMessage) {
   const dynamic = await fetchDynamic(user.mid);
   if (!dynamic) return;
   const msg = dynamicMsg(dynamic);
+  const dynamicImage = await urlToBuffer(dynamic.image);
   await sendGroupMsg(event.group_id, [
-    Structs.image(dynamic.image),
+    dynamicImage && Structs.image(dynamicImage),
     Structs.text(msg.text),
   ]);
 }
@@ -185,7 +187,7 @@ async function query(uname: string, event: GroupMessage) {
   const msg = await liveMsg(liveData);
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
-    msg.cover ? Structs.image(msg.cover) : Structs.text(""),
+    msg.cover && Structs.image(msg.cover),
     Structs.text(msg.text),
   ]);
 }
