@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
+import { urlToBuffer } from "../core/http";
 
 async function fetchDynamic(mid: number) {
   const dynamic = await fetch(config.rsshub.bili + mid, {
@@ -140,7 +141,7 @@ async function fetchLive(mids: Array<number>) {
   return liveData.success ? liveData.data.data : undefined;
 }
 
-function liveMsg(liveData: {
+async function liveMsg(liveData: {
   cover_from_user: string;
   title: string;
   uname: string;
@@ -154,7 +155,7 @@ function liveMsg(liveData: {
     );
   };
   return {
-    cover: liveData.cover_from_user,
+    cover: await urlToBuffer(liveData.cover_from_user),
     text: `🔥【直播进行时】🔥\n🎤 人气主播: "${liveData.uname}"\n📌 独家主题: ${
       liveData.title
     }\n⏰ 开播日期: ${liveTime()}\n👉 立即观看不迷路: https://live.bilibili.com/${
@@ -163,7 +164,7 @@ function liveMsg(liveData: {
   };
 }
 
-function liveEndMsg(liveData: {
+async function liveEndMsg(liveData: {
   cover_from_user: string;
   uname: string;
   title: string;
@@ -173,7 +174,7 @@ function liveEndMsg(liveData: {
     return dayjs().diff(dayjs(liveData.startTime * 1000), "minute");
   };
   return {
-    cover: liveData.cover_from_user,
+    cover: await urlToBuffer(liveData.cover_from_user),
     text: `💤【本场直播即将进入尾声】💤\n⚡ 流量宠儿: "${
       liveData.uname
     }"\n📌 独家主题: ${

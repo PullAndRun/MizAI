@@ -14,6 +14,7 @@ import { sleep } from "bun";
 import dayjs from "dayjs";
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";
+import { urlToBuffer } from "../core/http";
 
 async function pushLiveNotifications() {
   const groups = await getClient().get_group_list();
@@ -33,14 +34,14 @@ async function pushLiveNotifications() {
       const user = lives[vtb.mid];
       if (!user) continue;
       if (user.live_status !== 1 && vtb.isLive) {
-        const msg = liveEndMsg({
+        const msg = await liveEndMsg({
           cover_from_user: user.cover_from_user,
           uname: user.uname,
           title: user.title,
           startTime: vtb.liveTime,
         });
         await sendGroupMsg(group.group_id, [
-          Structs.image(msg.cover),
+          msg.cover ? Structs.image(msg.cover) : Structs.text(""),
           Structs.text(msg.text),
         ]);
         await biliModel.updateLiveStatus(vtb.gid, vtb.mid, vtb.rid, 0, false);
@@ -53,9 +54,9 @@ async function pushLiveNotifications() {
           config.bili.liveFrequency
       )
         continue;
-      const msg = liveMsg(user);
+      const msg = await liveMsg(user);
       await sendGroupMsg(group.group_id, [
-        Structs.image(msg.cover),
+        msg.cover ? Structs.image(msg.cover) : Structs.text(""),
         Structs.text(msg.text),
       ]);
       await biliModel.updateLiveStatus(
@@ -90,8 +91,9 @@ async function pushDynamicNotifications() {
       )
         continue;
       const msg = dynamicMsg(dynamic);
+      const msgImage = await urlToBuffer(dynamic.image);
       await sendGroupMsg(group.group_id, [
-        Structs.image(dynamic.image),
+        msgImage ? Structs.image(dynamic.image) : Structs.text(""),
         Structs.text(msg.text),
       ]);
     }

@@ -175,17 +175,17 @@ async function query(uname: string, event: GroupMessage) {
     return;
   }
   const liveData = live[user.mid];
-  if (!liveData || liveData.live_status === 0) {
+  if (!liveData) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text(`您查询的主播没开播。`),
+      Structs.text(`您查询的主播没有开通直播间。`),
     ]);
     return;
   }
-  const msg = liveMsg(liveData);
+  const msg = await liveMsg(liveData);
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.image(msg.cover),
+    msg.cover ? Structs.image(msg.cover) : Structs.text(""),
     Structs.text(msg.text),
   ]);
 }
