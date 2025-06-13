@@ -17,7 +17,7 @@ async function pushEarthquake() {
   for (const group of groups) {
     const findGroup = await groupModel.findOrAdd(group.group_id);
     if (!findGroup.active) continue;
-    const lock = await pluginModel.findOrAdd(group.group_id, "地震推送", false);
+    const lock = await pluginModel.findOrAdd(group.group_id, "地震推送", true);
     if (!lock.enable) continue;
     if (
       dayjs().diff(dayjs(earthquake.pubDate), "minute") >=
