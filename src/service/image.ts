@@ -1,5 +1,5 @@
 import config from "@miz/ai/config/config.toml";
-import { urlToJson } from "@miz/ai/src/core/http";
+import { urlToBuffer, urlToJson } from "@miz/ai/src/core/http";
 import { z } from "zod";
 
 async function search(text: string) {
@@ -24,4 +24,34 @@ async function search(text: string) {
   return images[Math.floor(Math.random() * images.length)];
 }
 
-export { search };
+async function baiduSearch(text: string) {
+  const fetchImageInfo = await fetch(
+    config.image.baiduUrl +
+      new URLSearchParams({
+        tn: "resultjson_com",
+        word: text,
+        pn: "1",
+        rn: "10",
+      }),
+    {
+      signal: AbortSignal.timeout(5000),
+    }
+  )
+    .then(async (res) => res.json())
+    .catch((_) => undefined);
+  if (!fetchImageInfo) return undefined;
+  const imageInfoSchema = z.object({
+    data: z.array(z.object({ thumbURL: z.string().nullish() })).min(1),
+  });
+  const safeImageInfo = imageInfoSchema.safeParse(fetchImageInfo);
+  if (!safeImageInfo.success) return undefined;
+  const images = safeImageInfo.data.data.filter(
+    (url): url is { thumbURL: string } => !!url.thumbURL
+  );
+  if (!images.length) return undefined;
+  const randomImage = images[Math.floor(Math.random() * images.length)];
+  if (!randomImage) return undefined;
+  return urlToBuffer(randomImage.thumbURL);
+}
+
+export { baiduSearch, search };

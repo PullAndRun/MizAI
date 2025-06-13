@@ -1,6 +1,6 @@
 import config from "@miz/ai/config/config.toml";
 import { cmdText, sendGroupMsg } from "@miz/ai/src/core/bot";
-import { search } from "@miz/ai/src/service/image";
+import { baiduSearch } from "@miz/ai/src/service/image";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
@@ -17,7 +17,7 @@ async function plugin(event: GroupMessage) {
     ]);
     return;
   }
-  const image = await search(msg);
+  const image = await baiduSearch(msg);
   if (!image) {
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
