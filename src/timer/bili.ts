@@ -83,7 +83,6 @@ async function pushDynamicNotifications() {
     if (!vtbs.length) continue;
     for (const vtb of vtbs) {
       const dynamic = await fetchDynamic(vtb.mid);
-      await sleep(config.bili.wait * 1000);
       if (!dynamic) continue;
       if (
         dayjs().diff(dayjs(dynamic.pubDate), "minute") >=
@@ -92,6 +91,7 @@ async function pushDynamicNotifications() {
         continue;
       const msg = dynamicMsg(dynamic);
       const msgImage = await urlToBuffer(dynamic.image);
+      await sleep(config.bili.wait * 1000);
       await sendGroupMsg(group.group_id, [
         msgImage && Structs.image(msgImage),
         Structs.text(msg.text),
