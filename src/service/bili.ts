@@ -192,7 +192,7 @@ async function liveEndMsg(liveData: {
   };
   const fans = () => {
     if (!liveData.fans || liveData.fans <= 0) return "";
-    return `\n🎉 今日有 ${liveData.fans} 位小可爱加入守护队列`;
+    return `\n🎉 本场直播有 ${liveData.fans} 位小可爱加入守护队列`;
   };
   return {
     cover: await urlToBuffer(liveData.cover_from_user),
