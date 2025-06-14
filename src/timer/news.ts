@@ -89,9 +89,9 @@ async function dailyNews() {
 }
 
 function task() {
-  schedule.scheduleJob(config.news.clean, cleanNews);
-  schedule.scheduleJob(config.news.realtime, realtimeNews);
-  schedule.scheduleJob(config.news.daily, dailyNews);
+  schedule.scheduleJob(config.news.cleanSpec, cleanNews);
+  schedule.scheduleJob(config.news.realtimeSpec, realtimeNews);
+  schedule.scheduleJob(config.news.dailySpec, dailyNews);
 }
 
 export { task };

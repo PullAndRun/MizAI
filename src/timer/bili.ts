@@ -37,8 +37,7 @@ async function pushLiveNotifications() {
       if (user.live_status !== 1 && vtb.isLive) {
         const card = await fetchCard(vtb.mid);
         const fans = () => {
-          if (!card) return 0;
-          if (!vtb.fans) return 0;
+          if (!card || !vtb.fans) return 0;
           return card.fans - vtb.fans;
         };
         const msg = await liveEndMsg({
@@ -60,7 +59,7 @@ async function pushLiveNotifications() {
         user.live_status !== 1 ||
         user.live_time === 0 ||
         dayjs().diff(dayjs(user.live_time * 1000), "minute") >=
-          config.bili.liveFrequency
+          config.bili.liveDelay
       )
         continue;
       const msg = await liveMsg(user);
@@ -94,12 +93,12 @@ async function pushDynamicNotifications() {
       if (!dynamic) continue;
       if (
         dayjs().diff(dayjs(dynamic.pubDate), "minute") >=
-        config.bili.dynamicFrequency
+        config.bili.dynamicDelay
       )
         continue;
       const msg = dynamicMsg(dynamic);
       const msgImage = await urlToBuffer(dynamic.image);
-      await sleep(config.bili.wait * 1000);
+      await sleep(config.bili.sleep * 1000);
       await sendGroupMsg(group.group_id, [
         msgImage && Structs.image(msgImage),
         Structs.text(msg.text),
@@ -109,8 +108,8 @@ async function pushDynamicNotifications() {
 }
 
 function task() {
-  schedule.scheduleJob(config.bili.liveTime, pushLiveNotifications);
-  schedule.scheduleJob(config.bili.dynamicTime, pushDynamicNotifications);
+  schedule.scheduleJob(config.bili.liveSpec, pushLiveNotifications);
+  schedule.scheduleJob(config.bili.dynamicSpec, pushDynamicNotifications);
 }
 
 export { task };

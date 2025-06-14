@@ -6,7 +6,7 @@ import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
 
 async function fetchDynamic(mid: number) {
-  const dynamic = await fetch(config.rsshub.bili + mid, {
+  const dynamic = await fetch(config.bili.dynamic + mid, {
     signal: AbortSignal.timeout(5000),
   })
     .then((res) => res.text())
