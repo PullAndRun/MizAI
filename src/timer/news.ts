@@ -53,7 +53,7 @@ async function realtimeNews() {
     if (!findGroup.active) continue;
     const lock = await pluginModel.findOrAdd(group.group_id, "新闻推送", false);
     if (!lock.enable) continue;
-    await sleep(config.bot.pushWait * 1000);
+    await sleep(config.bot.sleep * 1000);
     await sendNews(
       group.group_id,
       financeNews,
@@ -78,7 +78,7 @@ async function dailyNews() {
     if (!findGroup.active) continue;
     const lock = await pluginModel.findOrAdd(group.group_id, "每日新闻", true);
     if (!lock.enable) continue;
-    await sleep(config.bot.pushWait * 1000);
+    await sleep(config.bot.sleep * 1000);
     await sendNews(
       group.group_id,
       news,

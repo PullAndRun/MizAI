@@ -25,7 +25,7 @@ async function pushEarthquake() {
     )
       continue;
     const msg = earthquakeMsg(earthquake);
-    await sleep(config.bot.pushWait * 1000);
+    await sleep(config.bot.sleep * 1000);
     await sendGroupMsg(group.group_id, [Structs.text(msg.text)]);
   }
 }
