@@ -107,6 +107,22 @@ async function fetchUser(name: string) {
   return userData.success ? userData.data.data.result[0] : undefined;
 }
 
+async function fetchCard(mid: number) {
+  const user = await fetch(config.bili.card + mid, {
+    signal: AbortSignal.timeout(5000),
+  })
+    .then((res) => res.json())
+    .catch((_) => undefined);
+  if (!user) return undefined;
+  const userSchema = z.object({
+    data: z.object({
+      card: z.object({ fans: z.number() }),
+    }),
+  });
+  const userData = userSchema.safeParse(user);
+  return userData.success ? userData.data.data.card : undefined;
+}
+
 async function fetchLive(mids: Array<number>) {
   const live = await fetch(config.bili.live, {
     method: "post",
@@ -169,9 +185,14 @@ async function liveEndMsg(liveData: {
   uname: string;
   title: string;
   startTime: number;
+  fans: number;
 }) {
   const liveTime = () => {
     return dayjs().diff(dayjs(liveData.startTime * 1000), "minute");
+  };
+  const fans = () => {
+    if (!liveData.fans || liveData.fans <= 0) return "";
+    return `\n🎉 今日有 ${liveData.fans} 位小可爱加入守护队列`;
   };
   return {
     cover: await urlToBuffer(liveData.cover_from_user),
@@ -179,7 +200,7 @@ async function liveEndMsg(liveData: {
       liveData.uname
     }"\n📌 独家主题: ${
       liveData.title
-    }\n💕 感谢家人们 ${liveTime()} 分钟的暖心陪伴`,
+    }${fans()}\n💕 感谢家人们 ${liveTime()} 分钟的暖心陪伴`,
   };
 }
 
@@ -201,4 +222,12 @@ function dynamicMsg(dynamicData: {
   };
 }
 
-export { dynamicMsg, fetchDynamic, fetchLive, fetchUser, liveEndMsg, liveMsg };
+export {
+  dynamicMsg,
+  fetchCard,
+  fetchDynamic,
+  fetchLive,
+  fetchUser,
+  liveEndMsg,
+  liveMsg,
+};

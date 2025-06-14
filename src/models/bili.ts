@@ -26,9 +26,9 @@ class Bili extends BaseEntity {
   //开播时间,时间戳
   @Column({ type: "float", default: 0 })
   liveTime: number;
-  //是否开播
-  @Column({ type: "boolean", default: false })
-  isLive: boolean;
+  //粉丝数
+  @Column({ type: "float", default: 0 })
+  fans: number;
 }
 
 function find(gid: number, mid: number, rid: number) {
@@ -37,6 +37,14 @@ function find(gid: number, mid: number, rid: number) {
     mid,
     rid,
   });
+}
+
+async function updateFans(gid: number, mid: number, rid: number, fans: number) {
+  const bili = await find(gid, mid, rid);
+  if (!bili) return undefined;
+  bili.fans = fans;
+  await bili.save().catch((_) => undefined);
+  return bili;
 }
 
 async function add(name: string, gid: number, mid: number, rid: number) {
@@ -64,17 +72,15 @@ async function remove(gid: number, name: string) {
   return bili;
 }
 
-async function updateLiveStatus(
+async function updateLiveTime(
   gid: number,
   mid: number,
   rid: number,
-  liveTime: number,
-  isLive: boolean
+  liveTime: number
 ) {
   const findOne = await find(gid, mid, rid);
   if (!findOne) return undefined;
   findOne.liveTime = liveTime;
-  findOne.isLive = isLive;
   await findOne.save().catch((_) => undefined);
   return findOne;
 }
@@ -92,4 +98,12 @@ async function findAll() {
   return Bili.find();
 }
 
-export { Bili, findAll, findOrAdd, remove, removeGroup, updateLiveStatus };
+export {
+  Bili,
+  findAll,
+  findOrAdd,
+  remove,
+  removeGroup,
+  updateFans,
+  updateLiveTime,
+};

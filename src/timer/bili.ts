@@ -5,6 +5,7 @@ import * as groupModel from "@miz/ai/src/models/group";
 import * as pluginModel from "@miz/ai/src/models/plugin";
 import {
   dynamicMsg,
+  fetchCard,
   fetchDynamic,
   fetchLive,
   liveEndMsg,
@@ -33,18 +34,25 @@ async function pushLiveNotifications() {
     for (const vtb of vtbs) {
       const user = lives[vtb.mid];
       if (!user) continue;
-      if (user.live_status !== 1 && vtb.isLive) {
+      if (user.live_status !== 1) {
+        const card = await fetchCard(vtb.mid);
+        const fans = () => {
+          if (!card) return 0;
+          if (!vtb.fans) return 0;
+          return card.fans - vtb.fans;
+        };
         const msg = await liveEndMsg({
           cover_from_user: user.cover_from_user,
           uname: user.uname,
           title: user.title,
           startTime: vtb.liveTime,
+          fans: fans(),
         });
         await sendGroupMsg(group.group_id, [
           msg.cover && Structs.image(msg.cover),
           Structs.text(msg.text),
         ]);
-        await biliModel.updateLiveStatus(vtb.gid, vtb.mid, vtb.rid, 0, false);
+        await biliModel.updateLiveTime(vtb.gid, vtb.mid, vtb.rid, 0);
         continue;
       }
       if (
@@ -59,13 +67,11 @@ async function pushLiveNotifications() {
         msg.cover && Structs.image(msg.cover),
         Structs.text(msg.text),
       ]);
-      await biliModel.updateLiveStatus(
-        vtb.gid,
-        vtb.mid,
-        vtb.rid,
-        user.live_time,
-        true
-      );
+      const card = await fetchCard(vtb.mid);
+      if (card) {
+        await biliModel.updateFans(vtb.gid, vtb.mid, vtb.rid, card.fans);
+      }
+      await biliModel.updateLiveTime(vtb.gid, vtb.mid, vtb.rid, user.live_time);
     }
   }
 }
