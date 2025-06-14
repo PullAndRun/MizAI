@@ -34,7 +34,7 @@ async function pushLiveNotifications() {
     for (const vtb of vtbs) {
       const user = lives[vtb.mid];
       if (!user) continue;
-      if (user.live_status !== 1) {
+      if (user.live_status !== 1 && vtb.isLive) {
         const card = await fetchCard(vtb.mid);
         const fans = () => {
           if (!card) return 0;
@@ -52,6 +52,7 @@ async function pushLiveNotifications() {
           msg.cover && Structs.image(msg.cover),
           Structs.text(msg.text),
         ]);
+        await biliModel.updateLiveStatus(vtb.gid, vtb.mid, vtb.rid, false);
         await biliModel.updateLiveTime(vtb.gid, vtb.mid, vtb.rid, 0);
         continue;
       }
@@ -71,6 +72,7 @@ async function pushLiveNotifications() {
       if (card) {
         await biliModel.updateFans(vtb.gid, vtb.mid, vtb.rid, card.fans);
       }
+      await biliModel.updateLiveStatus(vtb.gid, vtb.mid, vtb.rid, true);
       await biliModel.updateLiveTime(vtb.gid, vtb.mid, vtb.rid, user.live_time);
     }
   }
