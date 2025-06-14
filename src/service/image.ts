@@ -2,8 +2,8 @@ import config from "@miz/ai/config/config.toml";
 import { urlToBuffer, urlToJson } from "@miz/ai/src/core/http";
 import { z } from "zod";
 
-async function search(text: string) {
-  const json = await urlToJson(config.image.url + text);
+async function suyanwSearch(text: string) {
+  const json = await urlToJson(config.image.suyanw + text);
   const schema = z.object({
     data: z
       .array(
@@ -26,7 +26,7 @@ async function search(text: string) {
 
 async function baiduSearch(text: string) {
   const fetchImageInfo = await fetch(
-    config.image.baiduUrl +
+    config.image.baidu +
       new URLSearchParams({
         tn: "resultjson_com",
         word: text,
@@ -54,4 +54,4 @@ async function baiduSearch(text: string) {
   return urlToBuffer(randomImage.thumbURL);
 }
 
-export { baiduSearch, search };
+export { baiduSearch, suyanwSearch };

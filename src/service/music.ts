@@ -11,7 +11,7 @@ async function pick(keyword: string) {
   return {
     albumPicture: song.al.picUrl || undefined,
     comment,
-    url: `${config.music.url}${id}`,
+    url: `${config.music.netease}${id}`,
     name: song.name,
     singer: song.ar.map((singer) => singer.name).join("、"),
     album: song.al.name,
