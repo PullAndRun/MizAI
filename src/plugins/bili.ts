@@ -1,15 +1,16 @@
 import config from "@miz/ai/config/config.toml";
 import { cmd, cmdText, sendGroupMsg } from "@miz/ai/src/core/bot";
+import { urlToBuffer } from "@miz/ai/src/core/http";
 import * as biliModel from "@miz/ai/src/models/bili";
 import {
   dynamicMsg,
+  fetchCard,
   fetchDynamic,
   fetchLive,
   fetchUser,
   liveMsg,
 } from "@miz/ai/src/service/bili";
 import { Structs, type GroupMessage } from "node-napcat-ts";
-import { urlToBuffer } from "../core/http";
 
 const info = {
   name: "主播",
@@ -107,6 +108,15 @@ async function follow(uname: string, event: GroupMessage) {
     return;
   }
   await biliModel.findOrAdd(user.uname, event.group_id, user.mid, user.room_id);
+  const card = await fetchCard(user.mid);
+  if (card) {
+    await biliModel.updateFans(
+      event.group_id,
+      user.mid,
+      user.room_id,
+      card.fans
+    );
+  }
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
     Structs.text(`关注成功\n已为您关注主播 "${uname}"`),

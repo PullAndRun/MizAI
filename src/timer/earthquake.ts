@@ -1,12 +1,12 @@
 import config from "@miz/ai/config/config.toml";
+import { getClient, sendGroupMsg } from "@miz/ai/src/core/bot";
 import * as groupModel from "@miz/ai/src/models/group";
 import * as pluginModel from "@miz/ai/src/models/plugin";
+import { earthquakeMsg, fetchEarthquake } from "@miz/ai/src/service/earthquake";
 import { sleep } from "bun";
 import dayjs from "dayjs";
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";
-import { getClient, sendGroupMsg } from "../core/bot";
-import { earthquakeMsg, fetchEarthquake } from "../service/earthquake";
 
 async function pushEarthquake() {
   const groups = await getClient().get_group_list();

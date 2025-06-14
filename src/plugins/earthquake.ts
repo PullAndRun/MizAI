@@ -1,8 +1,8 @@
 import config from "@miz/ai/config/config.toml";
 import { sendGroupMsg } from "@miz/ai/src/core/bot";
+import { fetchEarthquake } from "@miz/ai/src/service/earthquake";
 import dayjs from "dayjs";
 import { Structs, type GroupMessage } from "node-napcat-ts";
-import { fetchEarthquake } from "../service/earthquake";
 
 const info = {
   name: "地震",

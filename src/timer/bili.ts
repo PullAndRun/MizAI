@@ -1,5 +1,6 @@
 import config from "@miz/ai/config/config.toml";
 import { getClient, sendGroupMsg } from "@miz/ai/src/core/bot";
+import { urlToBuffer } from "@miz/ai/src/core/http";
 import * as biliModel from "@miz/ai/src/models/bili";
 import * as groupModel from "@miz/ai/src/models/group";
 import * as pluginModel from "@miz/ai/src/models/plugin";
@@ -15,7 +16,6 @@ import { sleep } from "bun";
 import dayjs from "dayjs";
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";
-import { urlToBuffer } from "../core/http";
 
 async function pushLiveNotifications() {
   const groups = await getClient().get_group_list();

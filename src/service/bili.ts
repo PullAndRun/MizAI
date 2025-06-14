@@ -1,9 +1,9 @@
 import config from "@miz/ai/config/config.toml";
+import { urlToBuffer } from "@miz/ai/src/core/http";
 import * as cheerio from "cheerio";
 import dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
-import { urlToBuffer } from "../core/http";
 
 async function fetchDynamic(mid: number) {
   const dynamic = await fetch(config.rsshub.bili + mid, {
