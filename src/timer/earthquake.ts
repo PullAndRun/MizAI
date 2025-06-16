@@ -21,7 +21,7 @@ async function pushEarthquake() {
     if (!lock.enable) continue;
     if (
       dayjs().diff(dayjs(earthquake.pubDate), "minute") >=
-      config.earthquake.frequency
+      config.earthquake.delay
     )
       continue;
     const msg = earthquakeMsg(earthquake);

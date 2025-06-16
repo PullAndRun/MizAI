@@ -191,7 +191,7 @@ async function liveEndMsg(liveData: {
     return dayjs().diff(dayjs(liveData.startTime * 1000), "minute");
   };
   const fans = () => {
-    if (!liveData.fans || liveData.fans <= 0) return "";
+    if (liveData.fans <= 0) return "";
     return `\n🎉 本场直播将鸣谢 ${liveData.fans} 位新粉丝`;
   };
   return {
