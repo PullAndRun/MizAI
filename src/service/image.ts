@@ -1,5 +1,6 @@
 import config from "@miz/ai/config/config.toml";
 import { urlToBuffer, urlToJson } from "@miz/ai/src/core/http";
+import { parseJson } from "@miz/ai/src/core/util";
 import { z } from "zod";
 
 async function suyanwSearch(text: string) {
@@ -37,7 +38,11 @@ async function baiduSearch(text: string) {
       signal: AbortSignal.timeout(5000),
     }
   )
-    .then(async (res) => res.json())
+    .then(async (res) => {
+      const resText = await res.text();
+      const text = resText.replaceAll(/\u0001/g, "");
+      return parseJson(text);
+    })
     .catch((_) => undefined);
   if (!fetchImageInfo) return undefined;
   const imageInfoSchema = z.object({
