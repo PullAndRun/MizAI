@@ -14,17 +14,16 @@
   "dependencies": {
     "@google/genai": "^1.4.0",
     "@miz/ai": "file:",
-    "@modelcontextprotocol/sdk": "^1.12.1",
     "cheerio": "^1.1.0",
     "dayjs": "^1.11.13",
     "fast-xml-parser": "^5.2.5",
     "NeteaseCloudMusicApi": "^4.27.0",
     "node-napcat-ts": "^0.4.13",
     "node-schedule": "^2.1.1",
-    "openai": "^5.3.0",
-    "pg": "^8.16.0",
-    "typeorm": "^0.3.24",
+    "openai": "^5.5.1",
+    "pg": "^8.16.2",
+    "typeorm": "^0.3.25",
     "winston": "^3.17.0",
-    "zod": "^3.25.64"
+    "zod": "^3.25.67"
   }
 }

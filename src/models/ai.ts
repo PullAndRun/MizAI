@@ -16,4 +16,16 @@ function find(name: string) {
   return Ai.findOneBy({ name });
 }
 
-export { Ai, find };
+function count() {
+  return Ai.count();
+}
+
+async function add(name: string, prompt: string) {
+  const ai = new Ai();
+  ai.name = name;
+  ai.prompt = prompt;
+  await ai.save().catch((_) => undefined);
+  return ai;
+}
+
+export { add, Ai, count, find };
