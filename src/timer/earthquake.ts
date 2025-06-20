@@ -5,6 +5,7 @@ import * as groupModel from "@miz/ai/src/models/group";
 import * as pluginModel from "@miz/ai/src/models/plugin";
 import { earthquakeMsg, fetchEarthquake } from "@miz/ai/src/service/earthquake";
 import { sleep } from "bun";
+import dayjs from "dayjs";
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";
 
@@ -18,7 +19,7 @@ async function pushEarthquake() {
     link: string;
   }> = [];
   for (const earthquake of earthquakeList.filter(
-    (_, i) => i < config.earthquake.limit
+    (v) => dayjs().diff(dayjs(v.pubDate), "day") < config.earthquake.limit
   )) {
     const findEarthquake = await earthquakeModel.find(
       earthquake.title,
