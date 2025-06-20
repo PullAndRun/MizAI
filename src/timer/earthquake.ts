@@ -17,7 +17,7 @@ async function pushEarthquake() {
     pubDate: string;
     link: string;
   }> = [];
-  for (const earthquake of earthquakeList) {
+  for (const earthquake of earthquakeList.filter((_, i) => i < 5)) {
     const findEarthquake = await earthquakeModel.find(
       earthquake.title,
       earthquake.description,
