@@ -12,15 +12,16 @@ import schedule from "node-schedule";
 async function pushEarthquake() {
   const earthquakeList = await fetchEarthquake(config.earthquake.level);
   if (!earthquakeList || !earthquakeList.length) return;
+  const recentEarthquakeList = earthquakeList.filter(
+    (v) => dayjs().diff(dayjs(v.pubDate), "day") < config.earthquake.limit
+  );
   const earthquakes: Array<{
     title: string;
     description: string;
     pubDate: string;
     link: string;
   }> = [];
-  for (const earthquake of earthquakeList.filter(
-    (v) => dayjs().diff(dayjs(v.pubDate), "day") < config.earthquake.limit
-  )) {
+  for (const earthquake of recentEarthquakeList) {
     const findEarthquake = await earthquakeModel.find(
       earthquake.title,
       earthquake.description,
