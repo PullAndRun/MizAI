@@ -211,14 +211,20 @@ function dynamicMsg(dynamicData: {
   author: string;
   pubDate: string;
 }) {
+  const title = () => {
+    if (dynamicData.title === "暂无") return "";
+    return `📌 独家主题: ${dynamicData.title}\n`;
+  };
+  const description = () => {
+    if (dynamicData.description === "暂无") return "";
+    return `💬 内容亮点: ${dynamicData.description}\n`;
+  };
   return {
     text: `🔥【未读动态+1】🔥\n🎤 人气UP主: "${
       dynamicData.author
-    }"\n📌 独家主题: ${dynamicData.title}\n💬 内容亮点: ${
-      dynamicData.description
-    }\n⏰ 发布日期: ${dayjs(dynamicData.pubDate).format(
-      "YYYY年MM月DD日 HH点mm分ss秒"
-    )}\n👉 立即围观: ${dynamicData.link}`,
+    }"\n${title()}${description()}⏰ 发布日期: ${dayjs(
+      dynamicData.pubDate
+    ).format("YYYY年MM月DD日 HH点mm分ss秒")}\n👉 立即围观: ${dynamicData.link}`,
   };
 }
 
