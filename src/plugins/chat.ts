@@ -61,7 +61,7 @@ async function plugin(event: GroupMessage) {
   let chatText: string | undefined | null = "";
   //如果有图就用gemini
   if (images.length) {
-    const prompt = await aiModel.find("看图");
+    const prompt = await aiModel.find("说中文");
     if (!prompt) {
       await sendGroupMsg(event.group_id, [
         Structs.reply(event.message_id),
