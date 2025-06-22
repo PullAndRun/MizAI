@@ -15,30 +15,28 @@ const info = {
 async function plugin(event: GroupMessage) {
   const msg = cmdText(event.raw_message, [config.bot.name]);
   if (!msg) return;
-  const texts: Array<string> = [];
+  const texts: ChatCompletionMessageParam[] = [];
   for (const msg of event.message) {
     if (msg.type === "reply") {
       const message = await getGroupMsg(msg.data.id);
       if (!message) continue;
       for (const msg of message.message) {
         if (msg.type === "text") {
-          texts.push(cmdText(msg.data.text, [config.bot.name]));
+          texts.push({
+            role: "assistant",
+            content: cmdText(msg.data.text, [config.bot.name]),
+          });
         }
       }
     }
     if (msg.type === "text") {
-      texts.push(cmdText(msg.data.text, [config.bot.name]));
+      texts.push({
+        role: "user",
+        content: cmdText(msg.data.text, [config.bot.name]),
+      });
     }
   }
   if (texts.length) {
-    const message: ChatCompletionMessageParam[] = [];
-    if (texts.length === 1) {
-      message.push({ role: "user", content: texts[0] || "" });
-    }
-    if (texts.length === 2) {
-      message.push({ role: "assistant", content: texts[0] });
-      message.push({ role: "user", content: texts[1] || "" });
-    }
     const group = await groupModel.findOrAdd(event.group_id);
     const prompt = await aiModel.find(group.prompt);
     if (!prompt) {
@@ -49,9 +47,9 @@ async function plugin(event: GroupMessage) {
       return;
     }
     if (prompt.name !== "默认") {
-      message.unshift({ role: "system", content: prompt.prompt });
+      texts.unshift({ role: "system", content: prompt.prompt });
     }
-    const chatText = await deepSeekChat(message);
+    const chatText = await deepSeekChat(texts);
     if (!chatText) {
       await sendGroupMsg(event.group_id, [
         Structs.reply(event.message_id),
