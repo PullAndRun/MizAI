@@ -65,6 +65,14 @@ async function sendGroupMsg(
     });
 }
 
+async function getGroupMsg(id: string) {
+  return getClient()
+    .get_msg({
+      message_id: Number.parseFloat(id),
+    })
+    .catch((_) => undefined);
+}
+
 async function forwardGroupMsg(gid: number, messageId: number) {
   return getClient()
     .forward_group_single_msg({ group_id: gid, message_id: messageId })
@@ -135,7 +143,7 @@ async function cmd(msg: string, event: GroupMessage, cmdList: commandList) {
 
 async function listener() {
   getClient().on("message.group", async (event) => {
-    const message = event.raw_message;
+    const message = event.raw_message.replace(/\[.*?\]/g, "");
     if (!message.startsWith(config.bot.name)) {
       plugin.pick("复读=>无法调用")?.plugin(event);
       return;
@@ -226,4 +234,12 @@ async function init() {
   listener();
 }
 
-export { cmd, cmdText, forwardGroupMsg, getClient, init, sendGroupMsg };
+export {
+  cmd,
+  cmdText,
+  forwardGroupMsg,
+  getClient,
+  getGroupMsg,
+  init,
+  sendGroupMsg,
+};
