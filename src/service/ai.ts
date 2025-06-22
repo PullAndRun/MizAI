@@ -39,21 +39,23 @@ async function explain(bfs: Array<Buffer<ArrayBuffer>>, prompt: string) {
     });
   }
   if (!parts.length) return undefined;
-  const response = await gemini.models.generateContent({
-    model: config.gemini.model,
-    contents: [
-      {
-        role: "user",
-        parts: parts,
+  return gemini.models
+    .generateContent({
+      model: config.gemini.model,
+      contents: [
+        {
+          role: "user",
+          parts: parts,
+        },
+      ],
+      config: {
+        systemInstruction: prompt,
+        tools: [{ googleSearch: {} }],
+        ...config.gemini.config,
       },
-    ],
-    config: {
-      systemInstruction: prompt,
-      tools: [{ googleSearch: {} }],
-      ...config.gemini.config,
-    },
-  });
-  return response.text;
+    })
+    .then((v) => v.text)
+    .catch((_) => undefined);
 }
 
 export { deepSeekChat, explain };
