@@ -36,7 +36,6 @@ async function plugin(event: GroupMessage) {
     ]);
     return;
   }
-
   const prompt = await aiModel.find("锐评");
   if (!prompt) {
     await sendGroupMsg(event.group_id, [
