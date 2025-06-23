@@ -4,6 +4,7 @@ import {
   type ContentUnion,
 } from "@google/genai";
 import config from "@miz/ai/config/config.toml";
+import { sleep } from "bun";
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
@@ -30,18 +31,23 @@ async function deepSeekChat(msg: ChatCompletionMessageParam[]) {
 }
 
 async function geminiChat(content: ContentListUnion, prompt: ContentUnion) {
-  return gemini.models
-    .generateContent({
-      model: config.gemini.model,
-      contents: content,
-      config: {
-        systemInstruction: prompt,
-        tools: [{ googleSearch: {} }],
-        ...config.gemini.config,
-      },
-    })
-    .then((v) => v.text)
-    .catch((_) => undefined);
+  for (let retry = config.gemini.retry; retry > 0; retry--) {
+    const resp = await gemini.models
+      .generateContent({
+        model: config.gemini.model,
+        contents: content,
+        config: {
+          systemInstruction: prompt,
+          tools: [{ googleSearch: {} }],
+          ...config.gemini.config,
+        },
+      })
+      .then((v) => v.text)
+      .catch((_) => undefined);
+    if (resp) return resp;
+    await sleep(config.gemini.retryDelay * 1000);
+  }
+  return undefined;
 }
 
 export { deepSeekChat, geminiChat };
