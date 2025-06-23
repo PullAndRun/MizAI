@@ -7,6 +7,7 @@ import {
   NCWebsocket,
   Structs,
   type GroupMessage,
+  type Receive,
   type SendMessageSegment,
 } from "node-napcat-ts";
 
@@ -91,7 +92,7 @@ function cmdText(msg: string, cmd: string[]) {
     (acc, cur) =>
       acc
         .replace(new RegExp(`(^\\s*${cur}\\s*)`, "g"), "")
-        .replace(new RegExp(`(\\[.+?\\])`, "g"), "")
+        .replace(/\[.*\]/g, "")
         .replace(/(\r+)/g, "\r")
         .replace(/\s+/g, " ")
         .trim(),
@@ -143,7 +144,7 @@ async function cmd(msg: string, event: GroupMessage, cmdList: commandList) {
 
 async function listener() {
   getClient().on("message.group", async (event) => {
-    const message = event.raw_message.replace(/\[.*?\]/g, "");
+    const message = event.raw_message.replace(/\[.*\]/g, "");
     if (!message.startsWith(config.bot.name)) {
       plugin.pick("复读=>无法调用")?.plugin(event);
       return;

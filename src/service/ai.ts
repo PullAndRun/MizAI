@@ -1,11 +1,9 @@
 import {
   GoogleGenAI,
-  type Content,
   type ContentListUnion,
-  type Part,
+  type ContentUnion,
 } from "@google/genai";
 import config from "@miz/ai/config/config.toml";
-import { fileTypeFromBuffer } from "file-type";
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
@@ -31,37 +29,11 @@ async function deepSeekChat(msg: ChatCompletionMessageParam[]) {
     .catch((_) => undefined);
 }
 
-async function explain(
-  bfs: Array<Buffer<ArrayBuffer>>,
-  prompt: string,
-  texts?: Content[]
-) {
-  const parts: Part[] = [];
-  for (const bf of bfs) {
-    const mime = await fileTypeFromBuffer(bf);
-    if (!mime) continue;
-    parts.push({
-      inlineData: {
-        mimeType: mime.mime,
-        data: bf.toBase64(),
-      },
-    });
-  }
-  if (!parts.length) return undefined;
-  const contents: ContentListUnion = [];
-  contents.push({
-    role: "user",
-    parts: parts,
-  });
-  if (texts && texts.length) {
-    for (const text of texts) {
-      contents.push(text);
-    }
-  }
+async function geminiChat(content: ContentListUnion, prompt: ContentUnion) {
   return gemini.models
     .generateContent({
       model: config.gemini.model,
-      contents: contents,
+      contents: content,
       config: {
         systemInstruction: prompt,
         tools: [{ googleSearch: {} }],
@@ -72,4 +44,4 @@ async function explain(
     .catch((_) => undefined);
 }
 
-export { deepSeekChat, explain };
+export { deepSeekChat, geminiChat };
