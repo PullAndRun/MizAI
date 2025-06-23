@@ -7,7 +7,6 @@ import {
   NCWebsocket,
   Structs,
   type GroupMessage,
-  type Receive,
   type SendMessageSegment,
 } from "node-napcat-ts";
 
