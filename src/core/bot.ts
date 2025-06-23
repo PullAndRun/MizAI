@@ -144,7 +144,6 @@ async function cmd(msg: string, event: GroupMessage, cmdList: commandList) {
 async function listener() {
   getClient().on("message.group", async (event) => {
     const message = event.raw_message.replace(/\[.*\]/g, "").trim();
-    console.log(message);
     if (!message.startsWith(config.bot.name)) {
       plugin.pick("复读=>无法调用")?.plugin(event);
       return;
