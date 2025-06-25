@@ -36,9 +36,9 @@ async function contextChat(event: GroupMessage) {
       user_id: number;
       role: string;
       nickname: string;
-      message: string;
       message_id: number;
     };
+    message: string;
     images: Part[];
   }[] = [];
   const gemini: ContentListUnion = [];
@@ -72,15 +72,19 @@ async function contextChat(event: GroupMessage) {
           role: message.sender.role,
           nickname: message.sender.card || message.sender.nickname,
           message_id: message.message_id,
-          message: texts.join(""),
         },
+        message: texts.join(""),
         images: images,
       });
     }
   }
   for (const message of messageList) {
     const parts: Part[] = [];
-    parts.push({ text: JSON.stringify(message.text) });
+    parts.push({
+      text: `群员信息：${JSON.stringify(message.text)}，聊天内容：${
+        message.message
+      }`,
+    });
     if (message.images.length) {
       parts.push(...message.images);
     }
