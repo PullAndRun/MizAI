@@ -90,10 +90,10 @@ function cmdText(msg: string, cmd: string[]) {
   return cmd.reduce(
     (acc, cur) =>
       acc
-        .replace(new RegExp(`(^\\s*${cur}\\s*)`, "g"), "")
         .replace(/\[.*\]/g, "")
         .replace(/(\r+)/g, "\r")
         .replace(/\s+/g, " ")
+        .replace(new RegExp(`(^\\s*${cur}\\s*)`, "g"), "")
         .trim(),
     msg
   );
@@ -141,15 +141,40 @@ async function cmd(msg: string, event: GroupMessage, cmdList: commandList) {
   ]);
 }
 
+async function botMessage(event: GroupMessage) {
+  const loginInfo = await getClient().get_login_info();
+  let rawMessage = "";
+  let isCall = false;
+  for (const msg of event.message) {
+    if (msg.type === "at" && msg.data.qq === loginInfo.user_id.toString()) {
+      isCall = true;
+    }
+    if (msg.type === "text") {
+      if (msg.data.text.trim().startsWith(config.bot.name)) {
+        isCall = true;
+      }
+      rawMessage = cmdText(msg.data.text, [config.bot.name]);
+    }
+    if (msg.type === "reply") {
+      const groupMessage = await getGroupMsg(msg.data.id);
+      if (!groupMessage) continue;
+      if (groupMessage.user_id === loginInfo.user_id) {
+        isCall = true;
+      }
+    }
+  }
+  if (isCall && rawMessage) return rawMessage;
+  return undefined;
+}
+
 async function listener() {
   getClient().on("message.group", async (event) => {
-    const message = event.raw_message.replace(/\[.*\]/g, "").trim();
-    if (!message.startsWith(config.bot.name)) {
+    const message = await botMessage(event);
+    if (!message) {
       plugin.pick("复读=>无法调用")?.plugin(event);
       return;
     }
-    const cmd = cmdText(message, [config.bot.name]);
-    const pickedPlugin = plugin.pick(cmd);
+    const pickedPlugin = plugin.pick(message);
     if (!pickedPlugin) {
       plugin.pick("聊天=>无法调用")?.plugin(event);
       return;
@@ -235,6 +260,7 @@ async function init() {
 }
 
 export {
+  botMessage,
   cmd,
   cmdText,
   forwardGroupMsg,
