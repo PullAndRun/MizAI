@@ -33,6 +33,14 @@ async function pushEarthquake() {
     }
   }
   if (!earthquakes.length) return;
+  for (const earthquake of earthquakes) {
+    await earthquakeModel.add(
+      earthquake.title,
+      earthquake.description,
+      earthquake.link,
+      earthquake.pubDate
+    );
+  }
   const groups = await getClient().get_group_list();
   for (const group of groups) {
     const findGroup = await groupModel.findOrAdd(group.group_id);
@@ -44,14 +52,6 @@ async function pushEarthquake() {
       await sleep(config.bot.sleep * 1000);
       await sendGroupMsg(group.group_id, [Structs.text(msg.text)]);
     }
-  }
-  for (const earthquake of earthquakes) {
-    await earthquakeModel.add(
-      earthquake.title,
-      earthquake.description,
-      earthquake.link,
-      earthquake.pubDate
-    );
   }
 }
 
