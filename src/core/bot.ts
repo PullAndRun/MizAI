@@ -150,7 +150,10 @@ async function botMessage(event: GroupMessage) {
       isCall = true;
     }
     if (msg.type === "text") {
-      if (msg.data.text.trim().startsWith(config.bot.name)) {
+      if (
+        msg.data.text.trim().startsWith(config.bot.name) ||
+        msg.data.text.trim().includes(config.bot.nick_name)
+      ) {
         isCall = true;
       }
       rawMessage = cmdText(msg.data.text, [config.bot.name]);
