@@ -1,6 +1,7 @@
 import type { ContentListUnion, Part } from "@google/genai";
 import config from "@miz/ai/config/config.toml";
 import {
+  botMessage,
   cmdText,
   getClient,
   getGroupMsg,
@@ -31,6 +32,7 @@ async function plugin(event: GroupMessage) {
 }
 
 async function contextChat(event: GroupMessage) {
+  const botMsg = await botMessage(event);
   const messageList: {
     text: {
       user_id: number;
@@ -47,7 +49,7 @@ async function contextChat(event: GroupMessage) {
   });
   const messages = history.messages.slice(
     history.messages.length - config.bot.history_length,
-    history.messages.length
+    history.messages.length - 1
   );
   for (const message of messages) {
     if (message.message_type === "group") {
@@ -89,10 +91,14 @@ async function contextChat(event: GroupMessage) {
       parts.push(...message.images);
     }
     gemini.push({
-      role: "user",
+      role: "model",
       parts: parts,
     });
   }
+  gemini.push({
+    role: "user",
+    parts: [{ text: botMsg }],
+  });
   const prompt = await aiModel.find("说中文");
   if (!prompt) {
     await sendGroupMsg(event.group_id, [
