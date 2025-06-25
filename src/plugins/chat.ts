@@ -112,7 +112,7 @@ async function contextChat(event: GroupMessage) {
   for (const text of chatText) {
     if (!text.text) continue;
     const reply = text.text.replace(/^(\n+)/g, "").replace(/\n+/g, "\n");
-    const match = reply.match(/聊天内容：\s*(.*)/);
+    const match = reply.match(/聊天内容：\s*([\s\S]*)/);
     if (!match) {
       await sendGroupMsg(event.group_id, [Structs.text(reply)]);
       await sleep(1000);
