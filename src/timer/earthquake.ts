@@ -9,7 +9,11 @@ import dayjs from "dayjs";
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";
 
+const lock = {
+  isPushing: false,
+};
 async function pushEarthquake() {
+  if (lock.isPushing) return;
   const earthquakeList = await fetchEarthquake(config.earthquake.level);
   if (!earthquakeList || !earthquakeList.length) return;
   const recentEarthquakeList = earthquakeList.filter(
@@ -33,14 +37,7 @@ async function pushEarthquake() {
     }
   }
   if (!earthquakes.length) return;
-  for (const earthquake of earthquakes) {
-    await earthquakeModel.add(
-      earthquake.title,
-      earthquake.description,
-      earthquake.link,
-      earthquake.pubDate
-    );
-  }
+  lock.isPushing = true;
   const groups = await getClient().get_group_list();
   for (const group of groups) {
     const findGroup = await groupModel.findOrAdd(group.group_id);
@@ -53,6 +50,15 @@ async function pushEarthquake() {
       await sendGroupMsg(group.group_id, [Structs.text(msg.text)]);
     }
   }
+  for (const earthquake of earthquakes) {
+    await earthquakeModel.add(
+      earthquake.title,
+      earthquake.description,
+      earthquake.link,
+      earthquake.pubDate
+    );
+  }
+  lock.isPushing = false;
 }
 
 function task() {
