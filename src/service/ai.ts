@@ -42,7 +42,10 @@ async function geminiChat(content: ContentListUnion, prompt: ContentUnion) {
           ...config.gemini.config,
         },
       })
-      .then((v) => v.text)
+      .then((v) => {
+        if (v.candidates) return v.candidates[0]?.content?.parts;
+        return undefined;
+      })
       .catch((_) => undefined);
     if (resp) return resp;
     await sleep(config.gemini.retryDelay * 1000);

@@ -10,6 +10,7 @@ import { urlToParts } from "@miz/ai/src/core/util";
 import * as aiModel from "@miz/ai/src/models/ai";
 import * as groupModel from "@miz/ai/src/models/group";
 import { deepSeekChat, geminiChat } from "@miz/ai/src/service/ai";
+import { sleep } from "bun";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
@@ -104,10 +105,13 @@ async function contextChat(event: GroupMessage) {
     ]);
     return;
   }
-  await sendGroupMsg(event.group_id, [
-    Structs.reply(event.message_id),
-    Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
-  ]);
+  for (const text of chatText) {
+    if (!text.text) continue;
+    await sendGroupMsg(event.group_id, [
+      Structs.text(text.text.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
+    ]);
+    await sleep(1000);
+  }
 }
 
 async function singleChat(event: GroupMessage) {
@@ -152,7 +156,6 @@ async function singleChat(event: GroupMessage) {
       });
     }
   }
-  let chatText: string | undefined | null = "";
   //如果有图就用gemini
   if (images.length) {
     const prompt = await aiModel.find("说中文");
@@ -167,7 +170,22 @@ async function singleChat(event: GroupMessage) {
       role: "user",
       parts: images,
     });
-    chatText = await geminiChat(gemini, prompt.prompt);
+    const chatText = await geminiChat(gemini, prompt.prompt);
+    if (!chatText) {
+      await sendGroupMsg(event.group_id, [
+        Structs.reply(event.message_id),
+        Structs.text("机器人cpu过热\n请稍候重试。"),
+      ]);
+      return;
+    }
+    for (const text of chatText) {
+      if (!text.text) continue;
+      await sendGroupMsg(event.group_id, [
+        Structs.reply(event.message_id),
+        Structs.text(text.text.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
+      ]);
+      await sleep(1000);
+    }
   }
   //如果没图就用deepseek
   if (!images.length) {
@@ -183,19 +201,19 @@ async function singleChat(event: GroupMessage) {
     if (prompt.name !== "默认") {
       deepseek.unshift({ role: "system", content: prompt.prompt });
     }
-    chatText = await deepSeekChat(deepseek);
-  }
-  if (!chatText) {
+    const chatText = await deepSeekChat(deepseek);
+    if (!chatText) {
+      await sendGroupMsg(event.group_id, [
+        Structs.reply(event.message_id),
+        Structs.text("机器人cpu过热\n请稍候重试。"),
+      ]);
+      return;
+    }
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text("机器人cpu过热\n请稍候重试。"),
+      Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
     ]);
-    return;
   }
-  await sendGroupMsg(event.group_id, [
-    Structs.reply(event.message_id),
-    Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
-  ]);
 }
 
 export { info, contextChat };

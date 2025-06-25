@@ -151,8 +151,9 @@ async function botMessage(event: GroupMessage) {
     }
     if (msg.type === "text") {
       if (
-        msg.data.text.trim().startsWith(config.bot.name) ||
-        msg.data.text.trim().includes(config.bot.nick_name)
+        (msg.data.text.trim().startsWith(config.bot.name) ||
+          msg.data.text.includes(config.bot.nick_name)) &&
+        event.sender.user_id !== loginInfo.user_id
       ) {
         isCall = true;
       }
