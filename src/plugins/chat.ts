@@ -69,7 +69,7 @@ async function contextChat(event: GroupMessage) {
         text: {
           user_id: message.user_id,
           role: message.sender.role,
-          nickname: message.sender.nickname,
+          nickname: message.sender.card || message.sender.nickname,
           message_id: message.message_id,
           message: texts.join(""),
         },
