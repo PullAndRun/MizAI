@@ -73,7 +73,7 @@ async function contextChat(event: GroupMessage) {
       if (message.type === "text") {
         content.push({
           type: "text",
-          text: `[message]\ntext=${message.data.text}`,
+          text: message.data.text,
         });
       }
       if (message.type === "image") {
