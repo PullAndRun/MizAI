@@ -42,7 +42,9 @@ function aiMessage(message: string) {
     .replace(/^(\n+)/g, "")
     .replace(/\n+/g, "\n")
     .replace(/\s*\*\s*/g, "*")
-    .replace(/\*+/g, "*");
+    .replace(/\*+/g, "*")
+    .replace(/\s*\#\s*/g, "#")
+    .replace(/\#+/g, "#");
 }
 
 export { aiMessage, parseJson, urlToGeminiImages, urlToOpenAIImages };
