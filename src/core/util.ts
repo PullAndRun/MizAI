@@ -41,9 +41,9 @@ function aiMessage(message: string) {
   return message
     .replace(/^(\n+)/g, "")
     .replace(/\n+/g, "\n")
-    .replace(/\s*\*\s*/g, "*")
+    .replace(/ *\* */g, "*")
     .replace(/\*+/g, " * ")
-    .replace(/\s*\#\s*/g, "#")
+    .replace(/ *\# */g, "#")
     .replace(/\#+/g, "#");
 }
 
