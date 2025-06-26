@@ -35,7 +35,7 @@ async function plugin(event: GroupMessage) {
 async function contextChat(event: GroupMessage) {
   const getHistorys = await getClient().get_group_msg_history({
     group_id: event.group_id,
-    count: config.bot.history_length,
+    count: config.gemini.history_length,
   });
   const historys = getHistorys.messages;
   const gemini: ChatCompletionMessageParam[] = [];
