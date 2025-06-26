@@ -2,6 +2,7 @@ import config from "@miz/ai/config/config.toml";
 import { sleep } from "bun";
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
+import { logger } from "../core/log";
 
 const deepseek = new OpenAI({
   apiKey: config.deepseek.key,
@@ -56,7 +57,7 @@ async function geminiChat(
       })
       .then((chatCompletion) => chatCompletion.choices[0]?.message.content)
       .catch((e) => {
-        console.log(e);
+        logger.error(e);
         return undefined;
       });
     if (resp) return resp;
