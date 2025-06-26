@@ -16,13 +16,17 @@ const info = {
 };
 
 async function plugin(event: GroupMessage) {
-  const msg = cmdText(event.raw_message, [config.bot.name]);
-  if (!msg) return;
-  // if (msg.includes(config.bot.nick_name)) {
-  //   await contextChat(event);
-  //   return;
-  // }
-  await singleChat(event);
+  await sendGroupMsg(event.group_id, [
+    Structs.reply(event.message_id),
+    Structs.text("ai聊天功能升级中，暂时下线。预计今天维护好。"),
+  ]);
+  // const msg = cmdText(event.raw_message, [config.bot.name]);
+  // if (!msg) return;
+  // // if (msg.includes(config.bot.nick_name)) {
+  // //   await contextChat(event);
+  // //   return;
+  // // }
+  // await singleChat(event);
 }
 
 // async function contextChat(event: GroupMessage) {
