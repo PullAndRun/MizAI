@@ -1,6 +1,7 @@
 import type { Part } from "@google/genai";
 import { urlToBuffer } from "@miz/ai/src/core/http";
 import { fileTypeFromBuffer } from "file-type";
+import type { ChatCompletionContentPartImage } from "openai/resources";
 
 function parseJson(str: string) {
   try {
@@ -10,7 +11,7 @@ function parseJson(str: string) {
   }
 }
 
-async function urlToParts(url: string) {
+async function urlToGeminiImages(url: string) {
   const image = await urlToBuffer(url);
   if (!image) return undefined;
   const mime = await fileTypeFromBuffer(image);
@@ -23,4 +24,17 @@ async function urlToParts(url: string) {
   };
 }
 
-export { parseJson, urlToParts };
+async function urlToOpenAIImages(url: string) {
+  const image = await urlToBuffer(url);
+  if (!image) return undefined;
+  const mime = await fileTypeFromBuffer(image);
+  if (!mime) return undefined;
+  return <ChatCompletionContentPartImage>{
+    type: "image_url",
+    image_url: {
+      url: `data:${mime.mime};base64,${image.toBase64()}`,
+    },
+  };
+}
+
+export { parseJson, urlToGeminiImages, urlToOpenAIImages };
