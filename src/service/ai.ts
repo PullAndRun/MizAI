@@ -55,7 +55,10 @@ async function geminiChat(
         ],
       })
       .then((chatCompletion) => chatCompletion.choices[0]?.message.content)
-      .catch((_) => undefined);
+      .catch((e) => {
+        console.log(e);
+        return undefined;
+      });
     if (resp) return resp;
     await sleep(config.gemini.sleep * 1000);
   }
