@@ -9,6 +9,7 @@ import { urlToOpenAIImages } from "@miz/ai/src/core/util";
 import * as aiModel from "@miz/ai/src/models/ai";
 import * as groupModel from "@miz/ai/src/models/group";
 import { deepSeekChat, geminiChat } from "@miz/ai/src/service/ai";
+import { sleep } from "bun";
 import { Structs, type GroupMessage, type Receive } from "node-napcat-ts";
 import type {
   ChatCompletionContentPart,
@@ -29,6 +30,7 @@ async function plugin(event: GroupMessage) {
     for (let retry = 0; retry < config.gemini.retry; retry++) {
       const context_chat = await contextChat(event);
       if (context_chat !== "no_reply") return;
+      await sleep(config.gemini.sleep * 1000);
     }
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
@@ -38,6 +40,7 @@ async function plugin(event: GroupMessage) {
   for (let retry = 0; retry < config.gemini.retry; retry++) {
     const single_chat = await singleChat(event);
     if (single_chat !== "no_reply") return;
+    await sleep(config.gemini.sleep * 1000);
   }
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
