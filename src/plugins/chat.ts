@@ -37,7 +37,7 @@ async function contextChat(event: GroupMessage) {
     group_id: event.group_id,
     count: config.bot.history_length,
   });
-  const historys = getHistorys.messages.slice(0, -1);
+  const historys = getHistorys.messages;
   const gemini: ChatCompletionMessageParam[] = [];
   for (const history of historys) {
     for (const message of history.message) {
@@ -75,12 +75,6 @@ async function contextChat(event: GroupMessage) {
       gemini.push({ role: "user", content: content });
     }
   }
-  gemini.push({
-    role: "user",
-    content: [
-      { type: "text", text: cmdText(event.raw_message, [config.bot.name]) },
-    ],
-  });
   const prompt = await aiModel.find("gemini");
   if (!prompt) {
     await sendGroupMsg(event.group_id, [
