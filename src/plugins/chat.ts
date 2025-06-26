@@ -5,7 +5,7 @@ import {
   getGroupMsg,
   sendGroupMsg,
 } from "@miz/ai/src/core/bot";
-import { urlToOpenAIImages } from "@miz/ai/src/core/util";
+import { aiMessage, urlToOpenAIImages } from "@miz/ai/src/core/util";
 import * as aiModel from "@miz/ai/src/models/ai";
 import * as groupModel from "@miz/ai/src/models/group";
 import { deepSeekChat, geminiChat } from "@miz/ai/src/service/ai";
@@ -103,7 +103,7 @@ async function contextChat(event: GroupMessage) {
   if (!chatText) return "no_reply";
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
+    Structs.text(aiMessage(chatText)),
   ]);
 }
 
@@ -174,7 +174,7 @@ async function singleChat(event: GroupMessage) {
     if (!chatText) return "no_reply";
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
+      Structs.text(aiMessage(chatText)),
     ]);
     return;
   }
@@ -196,7 +196,7 @@ async function singleChat(event: GroupMessage) {
   if (!chatText) return "no_reply";
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
+    Structs.text(aiMessage(chatText)),
   ]);
 }
 

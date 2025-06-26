@@ -37,4 +37,12 @@ async function urlToOpenAIImages(url: string) {
   };
 }
 
-export { parseJson, urlToGeminiImages, urlToOpenAIImages };
+function aiMessage(message: string) {
+  return message
+    .replace(/^(\n+)/g, "")
+    .replace(/\n+/g, "\n")
+    .replace(/\s*\*\s*/g, "*")
+    .replace(/\*+/g, "*");
+}
+
+export { aiMessage, parseJson, urlToGeminiImages, urlToOpenAIImages };
