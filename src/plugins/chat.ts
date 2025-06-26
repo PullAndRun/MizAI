@@ -26,10 +26,23 @@ async function plugin(event: GroupMessage) {
   const msg = cmdText(event.raw_message, [config.bot.name]);
   if (!msg) return;
   if (msg.includes(config.bot.nick_name)) {
-    await contextChat(event);
-    return;
+    for (let retry = 0; retry < config.gemini.retry; retry++) {
+      const context_chat = await contextChat(event);
+      if (context_chat !== "no_reply") return;
+    }
+    await sendGroupMsg(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text("机器人cpu过热\n请稍候重试。"),
+    ]);
   }
-  await singleChat(event);
+  for (let retry = 0; retry < config.gemini.retry; retry++) {
+    const single_chat = await singleChat(event);
+    if (single_chat !== "no_reply") return;
+  }
+  await sendGroupMsg(event.group_id, [
+    Structs.reply(event.message_id),
+    Structs.text("机器人cpu过热\n请稍候重试。"),
+  ]);
 }
 
 async function contextChat(event: GroupMessage) {
@@ -84,13 +97,7 @@ async function contextChat(event: GroupMessage) {
     return;
   }
   const chatText = await geminiChat(gemini, prompt.prompt);
-  if (!chatText) {
-    await sendGroupMsg(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.text("机器人cpu过热\n请稍候重试。"),
-    ]);
-    return;
-  }
+  if (!chatText) return "no_reply";
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
     Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
@@ -161,13 +168,7 @@ async function singleChat(event: GroupMessage) {
       return;
     }
     const chatText = await geminiChat(gemini, prompt.prompt);
-    if (!chatText) {
-      await sendGroupMsg(event.group_id, [
-        Structs.reply(event.message_id),
-        Structs.text("机器人cpu过热\n请稍候重试。"),
-      ]);
-      return;
-    }
+    if (!chatText) return "no_reply";
     await sendGroupMsg(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),
@@ -189,13 +190,7 @@ async function singleChat(event: GroupMessage) {
     return findPrompt.prompt;
   };
   const chatText = await deepSeekChat(deepseek, prompt());
-  if (!chatText) {
-    await sendGroupMsg(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.text("机器人cpu过热\n请稍候重试。"),
-    ]);
-    return;
-  }
+  if (!chatText) return "no_reply";
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
     Structs.text(chatText.replace(/^(\n+)/g, "").replace(/\n+/g, "\n")),

@@ -1,5 +1,4 @@
 import config from "@miz/ai/config/config.toml";
-import { sleep } from "bun";
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { logger } from "../core/log";
@@ -36,34 +35,29 @@ async function geminiChat(
   message: ChatCompletionMessageParam[],
   prompt?: string
 ) {
-  for (let retry = 0; retry < config.gemini.retry; retry++) {
-    const messages: ChatCompletionMessageParam[] = [];
-    if (prompt) {
-      messages.push({ role: "system", content: prompt });
-    }
-    messages.push(...message);
-    const resp = await gemini.chat.completions
-      .create({
-        messages: messages,
-        ...config.gemini.config,
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "googleSearch",
-            },
-          },
-        ],
-      })
-      .then((chatCompletion) => chatCompletion.choices[0]?.message.content)
-      .catch((e) => {
-        logger.error(e);
-        return undefined;
-      });
-    if (resp) return resp;
-    await sleep(config.gemini.sleep * 1000);
+  const messages: ChatCompletionMessageParam[] = [];
+  if (prompt) {
+    messages.push({ role: "system", content: prompt });
   }
-  return undefined;
+  messages.push(...message);
+  return gemini.chat.completions
+    .create({
+      messages: messages,
+      ...config.gemini.config,
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "googleSearch",
+          },
+        },
+      ],
+    })
+    .then((chatCompletion) => chatCompletion.choices[0]?.message.content)
+    .catch((e) => {
+      logger.error(e);
+      return undefined;
+    });
 }
 
 export { deepSeekChat, geminiChat };
