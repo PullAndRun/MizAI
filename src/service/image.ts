@@ -40,7 +40,7 @@ async function baiduSearch(text: string) {
   )
     .then(async (res) => {
       const resText = await res.text();
-      const text = resText.replaceAll(/\u0001/g, "");
+      const text = resText.replace(/\u0001|\\/g, "");
       return parseJson(text);
     })
     .catch((_) => undefined);
