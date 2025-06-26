@@ -29,6 +29,7 @@ async function urlToOpenAIImages(url: string) {
   if (!image) return undefined;
   const mime = await fileTypeFromBuffer(image);
   if (!mime) return undefined;
+  if (mime.mime === "image/gif") return undefined;
   return <ChatCompletionContentPartImage>{
     type: "image_url",
     image_url: {
