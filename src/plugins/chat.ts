@@ -63,6 +63,10 @@ async function geminiContent(history: WSSendReturn["get_msg"]) {
     type: "text",
     text: `sender's nickname: "${senderName}"`,
   });
+  userContent.push({
+    type: "text",
+    text: `my name is: "${senderName}"`,
+  });
   for (const message of history.message) {
     if (message.type === "reply") {
       const replyMsg = await getClient().get_msg({
