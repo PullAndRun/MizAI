@@ -62,18 +62,18 @@ async function contextChat(event: GroupMessage) {
         type: "text",
         text: `<meta>{type:"message_info",nickname:"${
           history.sender.card || history.sender.nickname
-        }",message_id:${history.message_id}}</meta>`,
+        }",message_id:${history.message_id}}`,
       });
       if (message.type === "reply") {
         content.push({
           type: "text",
-          text: `<meta>{type:"reply_message",reply_message_id:${message.data.id}}</meta>`,
+          text: `<meta>{type:"reply_message",reply_message_id:${message.data.id}}`,
         });
       }
       if (message.type === "text") {
         content.push({
           type: "text",
-          text: `<message>${message.data.text}</message>`,
+          text: message.data.text,
         });
       }
       if (message.type === "image") {
