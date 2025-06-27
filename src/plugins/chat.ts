@@ -54,31 +54,18 @@ async function plugin(event: GroupMessage) {
   ]);
 }
 
-async function geminiContent(history: WSSendReturn["get_msg"]) {
+async function geminiContent(messages: WSSendReturn["get_msg"]) {
   const gemini: ChatCompletionMessageParam[] = [];
   const userContent: ChatCompletionContentPart[] = [];
-  const systemContent: ChatCompletionContentPartText[] = [];
-  const senderName = history.sender.card || history.sender.nickname;
-  systemContent.push({
-    type: "text",
-    text: `you are "${senderName}"`,
-  });
-  for (const message of history.message) {
-    if (message.type === "reply") {
-      const replyMsg = await getClient().get_msg({
-        message_id: Number.parseFloat(message.data.id),
-      });
-      const replySenderName = replyMsg.sender.card || replyMsg.sender.nickname;
-      systemContent.push({
-        type: "text",
-        text: `this is reply message: from "${senderName}" to "${replySenderName}"`,
-      });
-    }
+  const senderName = messages.sender.card || messages.sender.nickname;
+  const messageList: string[] = [];
+  messageList.push(`This is a group message`);
+  messageList.push(`Sender's nickname: ${senderName}`);
+  messageList.push(`The following is the main text of the message:`);
+  messageList.push(`------start------`);
+  for (const message of messages.message) {
     if (message.type === "text") {
-      userContent.push({
-        type: "text",
-        text: message.data.text,
-      });
+      messageList.push(message.data.text);
     }
     if (message.type === "image") {
       const image = await urlToOpenAIImages(message.data.url);
@@ -87,11 +74,8 @@ async function geminiContent(history: WSSendReturn["get_msg"]) {
       }
     }
   }
-  systemContent.push({
-    type: "text",
-    text: `sender "${senderName}" is writing message`,
-  });
-  gemini.push({ role: "system", content: systemContent });
+  messageList.push(`------end------`);
+  userContent.push({ type: "text", text: messageList.join("\n") });
   gemini.push({ role: "user", content: userContent });
   return gemini;
 }
