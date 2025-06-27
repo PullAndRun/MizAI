@@ -56,10 +56,9 @@ async function contextChat(event: GroupMessage) {
   });
   const historys = getHistorys.messages;
   const gemini: ChatCompletionMessageParam[] = [];
-  const loginInfo = await getClient().get_login_info();
   for (const history of historys) {
     const userContent: ChatCompletionContentPart[] = [];
-    const assistantContent: ChatCompletionContentPartText[] = [];
+    const systemContent: ChatCompletionContentPartText[] = [];
     const senderName = history.sender.card || history.sender.nickname;
     for (const message of history.message) {
       if (message.type === "reply") {
@@ -68,17 +67,15 @@ async function contextChat(event: GroupMessage) {
         });
         const replySenderName =
           replyMsg.sender.card || replyMsg.sender.nickname;
-        if (history.sender.user_id !== loginInfo.user_id) {
-          assistantContent.push({
-            type: "text",
-            text: `${senderName} 引用了 ${replySenderName} 的消息`,
-          });
-        }
+        systemContent.push({
+          type: "text",
+          text: `${senderName} reply to ${replySenderName}`,
+        });
       }
       if (message.type === "text") {
         userContent.push({
           type: "text",
-          text: `${senderName} 说: ${message.data.text}`,
+          text: message.data.text,
         });
       }
       if (message.type === "image") {
@@ -86,14 +83,15 @@ async function contextChat(event: GroupMessage) {
         if (image) {
           userContent.push({
             type: "text",
-            text: `${senderName} 发送了图片`,
+            text: `${senderName} send image`,
           });
           userContent.push(image);
         }
       }
     }
-    if (assistantContent.length) {
-      gemini.push({ role: "assistant", content: assistantContent });
+    systemContent.push({ type: "text", text: `message sender:${senderName}` });
+    if (systemContent.length) {
+      gemini.push({ role: "system", content: systemContent });
     }
     if (userContent.length) {
       gemini.push({ role: "user", content: userContent });
