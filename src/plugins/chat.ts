@@ -14,6 +14,7 @@ import { Structs, type GroupMessage, type Receive } from "node-napcat-ts";
 import type {
   ChatCompletionContentPart,
   ChatCompletionContentPartImage,
+  ChatCompletionContentPartText,
   ChatCompletionMessageParam,
 } from "openai/resources.mjs";
 
@@ -56,38 +57,40 @@ async function contextChat(event: GroupMessage) {
   const historys = getHistorys.messages;
   const gemini: ChatCompletionMessageParam[] = [];
   for (const history of historys) {
+    const userContent: ChatCompletionContentPart[] = [];
+    const assistantContent: ChatCompletionContentPartText[] = [];
+    const senderName = history.sender.card || history.sender.nickname;
     for (const message of history.message) {
-      const content: ChatCompletionContentPart[] = [];
-      const senderName = history.sender.card || history.sender.nickname;
       if (message.type === "reply") {
         const replyMsg = await getClient().get_msg({
           message_id: Number.parseFloat(message.data.id),
         });
         const replySenderName =
           replyMsg.sender.card || replyMsg.sender.nickname;
-        content.push({
+        assistantContent.push({
           type: "text",
-          text: `群员 ${senderName} 引用了群员 ${replySenderName} 的群消息并说到：`,
+          text: `${senderName} 引用了 ${replySenderName} 的消息并说：`,
         });
       }
       if (message.type === "text") {
-        content.push({
+        userContent.push({
           type: "text",
-          text: `群员 ${senderName} 说：${message.data.text}`,
+          text: `${senderName} 说：${message.data.text}`,
         });
       }
       if (message.type === "image") {
         const image = await urlToOpenAIImages(message.data.url);
         if (image) {
-          content.push({
+          userContent.push({
             type: "text",
             text: `群员${senderName}发送了图片：`,
           });
-          content.push(image);
+          userContent.push(image);
         }
       }
-      gemini.push({ role: "user", content: content });
     }
+    gemini.push({ role: "assistant", content: assistantContent });
+    gemini.push({ role: "user", content: userContent });
   }
   const prompt = await aiModel.find("gemini");
   if (!prompt) {
