@@ -69,13 +69,13 @@ async function contextChat(event: GroupMessage) {
           replyMsg.sender.card || replyMsg.sender.nickname;
         assistantContent.push({
           type: "text",
-          text: `${senderName} 引用了 ${replySenderName} 的消息并说：`,
+          text: `${senderName} 引用了 ${replySenderName} 的消息`,
         });
       }
       if (message.type === "text") {
         userContent.push({
           type: "text",
-          text: `${senderName} 说：${message.data.text}`,
+          text: `${senderName} 说: ${message.data.text}`,
         });
       }
       if (message.type === "image") {
@@ -83,14 +83,18 @@ async function contextChat(event: GroupMessage) {
         if (image) {
           userContent.push({
             type: "text",
-            text: `群员${senderName}发送了图片：`,
+            text: `${senderName} 发送了图片`,
           });
           userContent.push(image);
         }
       }
     }
-    gemini.push({ role: "assistant", content: assistantContent });
-    gemini.push({ role: "user", content: userContent });
+    if (assistantContent.length) {
+      gemini.push({ role: "assistant", content: assistantContent });
+    }
+    if (userContent.length) {
+      gemini.push({ role: "user", content: userContent });
+    }
   }
   const prompt = await aiModel.find("gemini");
   if (!prompt) {
