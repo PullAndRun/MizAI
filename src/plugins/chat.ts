@@ -69,7 +69,7 @@ async function contextChat(event: GroupMessage) {
           replyMsg.sender.card || replyMsg.sender.nickname;
         systemContent.push({
           type: "text",
-          text: `${senderName} reply to ${replySenderName}`,
+          text: `member "${senderName}" reply to member "${replySenderName}"`,
         });
       }
       if (message.type === "text") {
@@ -83,13 +83,16 @@ async function contextChat(event: GroupMessage) {
         if (image) {
           userContent.push({
             type: "text",
-            text: `${senderName} send image`,
+            text: `member "${senderName}" send image`,
           });
           userContent.push(image);
         }
       }
     }
-    systemContent.push({ type: "text", text: `message sender:${senderName}` });
+    systemContent.push({
+      type: "text",
+      text: `member "${senderName}" send message`,
+    });
     if (systemContent.length) {
       gemini.push({ role: "system", content: systemContent });
     }
