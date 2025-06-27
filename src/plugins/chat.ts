@@ -60,20 +60,20 @@ async function contextChat(event: GroupMessage) {
       const content: ChatCompletionContentPart[] = [];
       content.push({
         type: "text",
-        text: `[metadata]\nnickname:"${
+        text: `<meta>{type:"message_info",nickname:"${
           history.sender.card || history.sender.nickname
-        }"\nmessage_id:${history.message_id}\n`,
+        }",message_id:${history.message_id}}</meta>`,
       });
       if (message.type === "reply") {
         content.push({
           type: "text",
-          text: `[reply_message]\nmessage_id:${message.data.id}\n`,
+          text: `<meta>{type:"reply_message",reply_message_id:${message.data.id}}</meta>`,
         });
       }
       if (message.type === "text") {
         content.push({
           type: "text",
-          text: `[message]\ntext:"${message.data.text}"\n`,
+          text: `<message>${message.data.text}</message>`,
         });
       }
       if (message.type === "image") {
