@@ -19,7 +19,6 @@ import {
 import type {
   ChatCompletionContentPart,
   ChatCompletionContentPartImage,
-  ChatCompletionContentPartText,
   ChatCompletionMessageParam,
 } from "openai/resources.mjs";
 
@@ -59,10 +58,10 @@ async function geminiContent(messages: WSSendReturn["get_msg"]) {
   const userContent: ChatCompletionContentPart[] = [];
   const senderName = messages.sender.card || messages.sender.nickname;
   const messageList: string[] = [];
+  messageList.push(`<metadata>`);
   messageList.push(`This is a group message`);
   messageList.push(`Sender's nickname: ${senderName}`);
-  messageList.push(`The following is the main text of the message:`);
-  messageList.push(`------start------`);
+  messageList.push(`</metadata>`);
   for (const message of messages.message) {
     if (message.type === "text") {
       messageList.push(message.data.text);
@@ -74,7 +73,6 @@ async function geminiContent(messages: WSSendReturn["get_msg"]) {
       }
     }
   }
-  messageList.push(`------end------`);
   userContent.push({ type: "text", text: messageList.join("\n") });
   gemini.push({ role: "user", content: userContent });
   return gemini;
@@ -105,7 +103,7 @@ async function contextChat(event: GroupMessage) {
   if (!chatText) return "no_reply";
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.text(aiMessage(chatText)),
+    Structs.text(aiMessage(chatText).replace(/^.*<\/metadata>\s*/g, "")),
   ]);
 }
 
