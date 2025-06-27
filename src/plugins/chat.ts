@@ -59,6 +59,7 @@ async function geminiContent(history: WSSendReturn["get_msg"]) {
   const userContent: ChatCompletionContentPart[] = [];
   const systemContent: ChatCompletionContentPartText[] = [];
   const senderName = history.sender.card || history.sender.nickname;
+  systemContent.push({ type: "text", text: `sender: "${senderName}"` });
   for (const message of history.message) {
     if (message.type === "reply") {
       const replyMsg = await getClient().get_msg({
@@ -67,7 +68,7 @@ async function geminiContent(history: WSSendReturn["get_msg"]) {
       const replySenderName = replyMsg.sender.card || replyMsg.sender.nickname;
       systemContent.push({
         type: "text",
-        text: `member "${senderName}" reply to member "${replySenderName}"`,
+        text: `this is reply message: from "${senderName}" to "${replySenderName}"`,
       });
     }
     if (message.type === "text") {
@@ -79,17 +80,13 @@ async function geminiContent(history: WSSendReturn["get_msg"]) {
     if (message.type === "image") {
       const image = await urlToOpenAIImages(message.data.url);
       if (image) {
-        userContent.push({
-          type: "text",
-          text: `member "${senderName}" send image`,
-        });
         userContent.push(image);
       }
     }
   }
   systemContent.push({
     type: "text",
-    text: `member "${senderName}" send message`,
+    text: `member "${senderName}" is writing message`,
   });
   if (systemContent.length) {
     gemini.push({ role: "system", content: systemContent });
