@@ -10,7 +10,12 @@ import * as aiModel from "@miz/ai/src/models/ai";
 import * as groupModel from "@miz/ai/src/models/group";
 import { deepSeekChat, geminiChat } from "@miz/ai/src/service/ai";
 import { sleep } from "bun";
-import { Structs, type GroupMessage, type Receive } from "node-napcat-ts";
+import {
+  Structs,
+  type GroupMessage,
+  type Receive,
+  type WSSendReturn,
+} from "node-napcat-ts";
 import type {
   ChatCompletionContentPart,
   ChatCompletionContentPartImage,
@@ -49,6 +54,52 @@ async function plugin(event: GroupMessage) {
   ]);
 }
 
+async function geminiContent(history: WSSendReturn["get_msg"]) {
+  const gemini: ChatCompletionMessageParam[] = [];
+  const userContent: ChatCompletionContentPart[] = [];
+  const systemContent: ChatCompletionContentPartText[] = [];
+  const senderName = history.sender.card || history.sender.nickname;
+  for (const message of history.message) {
+    if (message.type === "reply") {
+      const replyMsg = await getClient().get_msg({
+        message_id: Number.parseFloat(message.data.id),
+      });
+      const replySenderName = replyMsg.sender.card || replyMsg.sender.nickname;
+      systemContent.push({
+        type: "text",
+        text: `member "${senderName}" reply to member "${replySenderName}"`,
+      });
+    }
+    if (message.type === "text") {
+      userContent.push({
+        type: "text",
+        text: message.data.text,
+      });
+    }
+    if (message.type === "image") {
+      const image = await urlToOpenAIImages(message.data.url);
+      if (image) {
+        userContent.push({
+          type: "text",
+          text: `member "${senderName}" send image`,
+        });
+        userContent.push(image);
+      }
+    }
+  }
+  systemContent.push({
+    type: "text",
+    text: `member "${senderName}" send message`,
+  });
+  if (systemContent.length) {
+    gemini.push({ role: "system", content: systemContent });
+  }
+  if (userContent.length) {
+    gemini.push({ role: "user", content: userContent });
+  }
+  return gemini;
+}
+
 async function contextChat(event: GroupMessage) {
   const getHistorys = await getClient().get_group_msg_history({
     group_id: event.group_id,
@@ -56,50 +107,12 @@ async function contextChat(event: GroupMessage) {
   });
   const historys = getHistorys.messages;
   const gemini: ChatCompletionMessageParam[] = [];
-  for (const history of historys) {
-    const userContent: ChatCompletionContentPart[] = [];
-    const systemContent: ChatCompletionContentPartText[] = [];
-    const senderName = history.sender.card || history.sender.nickname;
-    for (const message of history.message) {
-      if (message.type === "reply") {
-        const replyMsg = await getClient().get_msg({
-          message_id: Number.parseFloat(message.data.id),
-        });
-        const replySenderName =
-          replyMsg.sender.card || replyMsg.sender.nickname;
-        systemContent.push({
-          type: "text",
-          text: `member "${senderName}" reply to member "${replySenderName}"`,
-        });
-      }
-      if (message.type === "text") {
-        userContent.push({
-          type: "text",
-          text: message.data.text,
-        });
-      }
-      if (message.type === "image") {
-        const image = await urlToOpenAIImages(message.data.url);
-        if (image) {
-          userContent.push({
-            type: "text",
-            text: `member "${senderName}" send image`,
-          });
-          userContent.push(image);
-        }
-      }
-    }
-    systemContent.push({
-      type: "text",
-      text: `member "${senderName}" send message`,
-    });
-    if (systemContent.length) {
-      gemini.push({ role: "system", content: systemContent });
-    }
-    if (userContent.length) {
-      gemini.push({ role: "user", content: userContent });
-    }
+  for (const history of historys.slice(0, -1)) {
+    const content = await geminiContent(history);
+    gemini.push(...content);
   }
+  const content = await geminiContent(event);
+  gemini.push(...content);
   const prompt = await aiModel.find("gemini");
   if (!prompt) {
     await sendGroupMsg(event.group_id, [
