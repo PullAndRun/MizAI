@@ -103,7 +103,7 @@ async function contextChat(event: GroupMessage) {
   if (!chatText) return "no_reply";
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.text(aiMessage(chatText).replace(/^.*<\/metadata>\s*/g, "")),
+    Structs.text(aiMessage(chatText).replace(/^[\s\S]*?<\/metadata>\s*/g, "")),
   ]);
 }
 
