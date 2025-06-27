@@ -59,7 +59,10 @@ async function geminiContent(history: WSSendReturn["get_msg"]) {
   const userContent: ChatCompletionContentPart[] = [];
   const systemContent: ChatCompletionContentPartText[] = [];
   const senderName = history.sender.card || history.sender.nickname;
-  systemContent.push({ type: "text", text: `sender: "${senderName}"` });
+  systemContent.push({
+    type: "text",
+    text: `sender's nickname: "${senderName}"`,
+  });
   for (const message of history.message) {
     if (message.type === "reply") {
       const replyMsg = await getClient().get_msg({
@@ -86,7 +89,7 @@ async function geminiContent(history: WSSendReturn["get_msg"]) {
   }
   systemContent.push({
     type: "text",
-    text: `member "${senderName}" is writing message`,
+    text: `sender "${senderName}" is writing message`,
   });
   gemini.push({ role: "system", content: systemContent });
   gemini.push({ role: "user", content: userContent });
