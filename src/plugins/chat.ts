@@ -56,6 +56,7 @@ async function contextChat(event: GroupMessage) {
   });
   const historys = getHistorys.messages;
   const gemini: ChatCompletionMessageParam[] = [];
+  const loginInfo = await getClient().get_login_info();
   for (const history of historys) {
     const userContent: ChatCompletionContentPart[] = [];
     const assistantContent: ChatCompletionContentPartText[] = [];
@@ -67,10 +68,12 @@ async function contextChat(event: GroupMessage) {
         });
         const replySenderName =
           replyMsg.sender.card || replyMsg.sender.nickname;
-        assistantContent.push({
-          type: "text",
-          text: `${senderName} 引用了 ${replySenderName} 的消息`,
-        });
+        if (history.sender.user_id !== loginInfo.user_id) {
+          assistantContent.push({
+            type: "text",
+            text: `${senderName} 引用了 ${replySenderName} 的消息`,
+          });
+        }
       }
       if (message.type === "text") {
         userContent.push({
