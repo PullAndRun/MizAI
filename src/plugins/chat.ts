@@ -88,12 +88,8 @@ async function geminiContent(history: WSSendReturn["get_msg"]) {
     type: "text",
     text: `member "${senderName}" is writing message`,
   });
-  if (systemContent.length) {
-    gemini.push({ role: "system", content: systemContent });
-  }
-  if (userContent.length) {
-    gemini.push({ role: "user", content: userContent });
-  }
+  gemini.push({ role: "system", content: systemContent });
+  gemini.push({ role: "user", content: userContent });
   return gemini;
 }
 
