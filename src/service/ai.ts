@@ -55,7 +55,7 @@ async function geminiChat(
     })
     .then((chatCompletion) => chatCompletion.choices[0]?.message.content)
     .catch((e) => {
-      logger.error(e);
+      logger.error("gemini错误:\n" + e);
       return undefined;
     });
 }
