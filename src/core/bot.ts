@@ -90,7 +90,7 @@ function cmdText(msg: string, cmd: string[]) {
   return cmd.reduce(
     (acc, cur) =>
       acc
-        .replace(/\[.*\]/g, "")
+        .replace(/\[.*?\]/g, "")
         .replace(/(\r+)/g, "\r")
         .replace(/\s+/g, " ")
         .replace(new RegExp(`(^\\s*${cur}\\s*)`, "g"), "")

@@ -154,6 +154,7 @@ async function singleChat(event: GroupMessage) {
         gemini.push(...receive.gemini);
         images.push(...receive.images);
       }
+      continue;
     }
     const receive = await receiveSplit(eventMsg);
     deepseek.push(...receive.deepseek);
