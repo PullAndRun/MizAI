@@ -144,18 +144,18 @@ async function singleChat(event: GroupMessage) {
   const deepseek: ChatCompletionMessageParam[] = [];
   const gemini: ChatCompletionMessageParam[] = [];
   const images: ChatCompletionContentPartImage[] = [];
-  for (const msg of event.message) {
-    if (msg.type === "reply") {
-      const message = await getGroupMsg(msg.data.id);
-      if (!message) continue;
-      for (const msg of message.message) {
-        const receive = await receiveSplit(msg);
+  for (const eventMsg of event.message) {
+    if (eventMsg.type === "reply") {
+      const replyMsgs = await getGroupMsg(eventMsg.data.id);
+      if (!replyMsgs) continue;
+      for (const replyMsg of replyMsgs.message) {
+        const receive = await receiveSplit(replyMsg);
         deepseek.push(...receive.deepseek);
         gemini.push(...receive.gemini);
         images.push(...receive.images);
       }
     }
-    const receive = await receiveSplit(msg);
+    const receive = await receiveSplit(eventMsg);
     deepseek.push(...receive.deepseek);
     gemini.push(...receive.gemini);
     images.push(...receive.images);
