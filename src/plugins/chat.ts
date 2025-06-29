@@ -63,16 +63,9 @@ async function geminiMessage(messages: WSSendReturn["get_msg"]) {
   const meta: string[] = [];
   meta.push(`This is a group message`);
   meta.push(`Sender's nickname: ${senderName}`);
-  meta.push(`message_id: ${messages.message_id}`);
   for (const message of messages.message) {
     if (message.type === "text") {
       text.push(message.data.text);
-    }
-    if (message.type === "reply") {
-      const msg = await getClient().get_msg({
-        message_id: Number.parseFloat(message.data.id),
-      });
-      meta.push(`this message is reply to message_id: ${msg.message_id}`);
     }
     if (message.type === "image") {
       const image = await urlToOpenAIImages(message.data.url);
