@@ -59,10 +59,13 @@ async function geminiMessage(messages: WSSendReturn["get_msg"]) {
   const message: ChatCompletionMessageParam[] = [];
   const content: ChatCompletionContentPart[] = [];
   const senderName = messages.sender.card || messages.sender.nickname;
+  const meta: string[] = [
+    `<metadata>`,
+    `This is a group message`,
+    `Sender's nickname: ${senderName}`,
+    `</metadata>`,
+  ];
   const text: string[] = [];
-  const meta: string[] = [];
-  meta.push(`This is a group message`);
-  meta.push(`Sender's nickname: ${senderName}`);
   for (const message of messages.message) {
     if (message.type === "text") {
       text.push(message.data.text);
@@ -74,10 +77,10 @@ async function geminiMessage(messages: WSSendReturn["get_msg"]) {
       }
     }
   }
-  meta.unshift(`<metadata>`);
-  meta.push(`</metadata>`);
-  text.unshift(...meta);
-  content.push({ type: "text", text: text.join("\n") });
+  content.push({
+    type: "text",
+    text: `${meta.join("\n")}\n${text.join("\n")}`,
+  });
   message.push({ role: "user", content: content });
   return message;
 }
