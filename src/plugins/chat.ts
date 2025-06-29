@@ -60,13 +60,19 @@ async function geminiMessage(messages: WSSendReturn["get_msg"]) {
   const content: ChatCompletionContentPart[] = [];
   const senderName = messages.sender.card || messages.sender.nickname;
   const text: string[] = [];
-  text.push(`<metadata>`);
-  text.push(`This is a group message`);
-  text.push(`Sender's nickname: ${senderName}`);
-  text.push(`</metadata>`);
+  const meta: string[] = [];
+  meta.push(`This is a group message`);
+  meta.push(`Sender's nickname: ${senderName}`);
+  meta.push(`message_id: ${messages.message_id}`);
   for (const message of messages.message) {
     if (message.type === "text") {
       text.push(message.data.text);
+    }
+    if (message.type === "reply") {
+      const msg = await getClient().get_msg({
+        message_id: Number.parseFloat(message.data.id),
+      });
+      meta.push(`this message is reply to message_id: ${msg.message_id}`);
     }
     if (message.type === "image") {
       const image = await urlToOpenAIImages(message.data.url);
@@ -75,6 +81,9 @@ async function geminiMessage(messages: WSSendReturn["get_msg"]) {
       }
     }
   }
+  meta.unshift(`<metadata>`);
+  meta.push(`</metadata>`);
+  text.unshift(...meta);
   content.push({ type: "text", text: text.join("\n") });
   message.push({ role: "user", content: content });
   return message;
@@ -110,7 +119,7 @@ async function groupChat(event: GroupMessage) {
   if (!chatText) return undefined;
   await sendGroupMsg(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.text(aiMessage(chatText).replace(/^[\s\S]*?<\/metadata>\s*/g, "")),
+    Structs.text(aiMessage(chatText)),
   ]);
   return chatText;
 }
