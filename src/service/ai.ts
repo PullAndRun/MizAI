@@ -53,7 +53,11 @@ async function geminiChat(
         },
       ],
     })
-    .then((chatCompletion) => chatCompletion.choices[0]?.message.content)
+    .then((chatCompletion) => {
+      const message = chatCompletion.choices[0]?.message.content;
+      if (!message || message.includes("tool_code")) return undefined;
+      return message;
+    })
     .catch((e) => {
       logger.error("gemini错误:\n" + e);
       return undefined;
