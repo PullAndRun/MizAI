@@ -18,6 +18,7 @@ import {
 } from "node-napcat-ts";
 import type {
   ChatCompletionContentPart,
+  ChatCompletionContentPartImage,
   ChatCompletionMessageParam,
 } from "openai/resources.mjs";
 
@@ -59,11 +60,11 @@ async function geminiMessage(messages: WSSendReturn["get_msg"]) {
   const message: ChatCompletionMessageParam[] = [];
   const content: ChatCompletionContentPart[] = [];
   const senderName = messages.sender.card || messages.sender.nickname;
+  const images: ChatCompletionContentPartImage[] = [];
   const meta: string[] = [
     `<metadata>`,
     `This is a group message`,
-    `Sender's nickname: "${senderName}"`,
-    `</metadata>`,
+    `Sender's name: "${senderName}"`,
   ];
   const text: string[] = [];
   for (const message of messages.message) {
@@ -73,13 +74,21 @@ async function geminiMessage(messages: WSSendReturn["get_msg"]) {
     if (message.type === "image") {
       const image = await urlToOpenAIImages(message.data.url);
       if (image) {
+        images.push(image);
         content.push(image);
       }
     }
   }
+  if (images.length) {
+    meta.push(`Sender sent some pictures.`);
+  }
+  meta.push(`</metadata>`);
+  if (text.length) {
+    text.unshift("");
+  }
   content.push({
     type: "text",
-    text: `${meta.join("\n")}\n${text.join("\n")}`,
+    text: `${meta.join("\n")}${text.join("\n")}`,
   });
   message.push({ role: "user", content: content });
   return message;
