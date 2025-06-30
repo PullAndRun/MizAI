@@ -86,6 +86,9 @@ async function geminiMessage(messages: WSSendReturn["get_msg"]) {
   if (text.length) {
     text.unshift("");
   }
+  if (!text.length && !images.length) {
+    return [];
+  }
   content.push({
     type: "text",
     text: `${meta.join("\n")}${text.join("\n")}`,
