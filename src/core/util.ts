@@ -26,15 +26,13 @@ async function urlToOpenAIImages(url: string) {
 
 function aiMessage(message: string) {
   return message
-    .replace(
-      /^(\n+)|^[\s\S]*?<\/metadata>\s*|\[没有引用\]|\[根据用户提供的聊天记录\]/g,
-      ""
-    )
+    .replace(/^(\n+)|^[\s\S]*?<\/metadata>\s*|\[[^\]]*?\]/g, "")
     .replace(/\n+/g, "\n")
     .replace(/ *\* */g, "*")
     .replace(/\*+/g, " * ")
     .replace(/ *\# */g, "#")
-    .replace(/\#+/g, "#");
+    .replace(/\#+/g, "#")
+    .trim();
 }
 
 export { aiMessage, parseJson, urlToOpenAIImages };
