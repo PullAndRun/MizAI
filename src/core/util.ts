@@ -26,7 +26,7 @@ async function urlToOpenAIImages(url: string) {
 
 function aiMessage(message: string) {
   return message
-    .replace(/^(\n+)|^[\s\S]*?<\/metadata>\s*/g, "")
+    .replace(/^(\n+)|^[\s\S]*?<\/metadata>\s*|\[[^\]]*?\]/g, "")
     .replace(/\n+/g, "\n")
     .replace(/ *\* */g, "*")
     .replace(/\*+/g, " * ")
