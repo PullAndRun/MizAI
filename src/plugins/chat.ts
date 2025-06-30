@@ -62,7 +62,7 @@ async function geminiMessage(messages: WSSendReturn["get_msg"]) {
   const meta: string[] = [
     `<metadata>`,
     `This is a group message`,
-    `Sender's nickname: ${senderName}`,
+    `Sender's nickname: "${senderName}"`,
     `</metadata>`,
   ];
   const text: string[] = [];
