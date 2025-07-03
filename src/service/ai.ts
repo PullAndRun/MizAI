@@ -41,6 +41,7 @@ async function geminiChat(message: ContentListUnion, prompt?: string) {
       contents: message,
       config: {
         systemInstruction: prompt,
+        tools: [{ googleSearch: {} }],
         ...config.gemini.config,
       },
     })
