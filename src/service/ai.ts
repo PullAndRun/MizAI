@@ -1,16 +1,19 @@
+import { GoogleGenAI, type ContentListUnion } from "@google/genai";
 import config from "@miz/ai/config/config.toml";
+import { logger } from "@miz/ai/src/core/log";
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
-import { logger } from "../core/log";
 
 const deepseek = new OpenAI({
   apiKey: config.deepseek.key,
   baseURL: config.deepseek.url,
 });
 
-const gemini = new OpenAI({
+const gemini = new GoogleGenAI({
   apiKey: config.gemini.key,
-  baseURL: config.gemini.url,
+  httpOptions: {
+    baseUrl: config.gemini.url,
+  },
 });
 
 async function deepSeekChat(
@@ -31,35 +34,18 @@ async function deepSeekChat(
     .catch((_) => undefined);
 }
 
-async function geminiChat(
-  message: ChatCompletionMessageParam[],
-  prompt?: string
-) {
-  const messages: ChatCompletionMessageParam[] = [];
-  if (prompt) {
-    messages.push({ role: "system", content: prompt });
-  }
-  messages.push(...message);
-  return gemini.chat.completions
-    .create({
-      messages: messages,
-      ...config.gemini.config,
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "googleSearch",
-          },
-        },
-      ],
-    })
-    .then((chatCompletion) => {
-      const message = chatCompletion.choices[0]?.message.content;
-      if (!message || message.includes("tool_code")) return undefined;
-      return message;
+async function geminiChat(message: ContentListUnion, prompt?: string) {
+  return gemini.models
+    .generateContent({
+      model: config.gemini.model,
+      contents: message,
+      config: {
+        systemInstruction: prompt,
+        ...config.gemini.config,
+      },
     })
     .catch((e) => {
-      logger.error("gemini错误:\n" + e);
+      logger.warn(e);
       return undefined;
     });
 }
