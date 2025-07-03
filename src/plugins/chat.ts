@@ -1,4 +1,8 @@
-import type { GenerateContentResponse, Part } from "@google/genai";
+import type {
+  ContentListUnion,
+  GenerateContentResponse,
+  Part,
+} from "@google/genai";
 import config from "@miz/ai/config/config.toml";
 import {
   cmdText,
@@ -10,6 +14,7 @@ import { aiMessage, urlToOpenAIImages } from "@miz/ai/src/core/util";
 import * as aiModel from "@miz/ai/src/models/ai";
 import * as groupModel from "@miz/ai/src/models/group";
 import { deepSeekChat, geminiChat } from "@miz/ai/src/service/ai";
+import { baiduSearch } from "@miz/ai/src/service/image";
 import { sleep } from "bun";
 import {
   Structs,
@@ -53,7 +58,7 @@ async function sendContext(
 ) {
   for (let retry = 0; retry < config.gemini.retry; retry++) {
     const message = await context(event);
-    if (message) return replyStatus.success;
+    if (message === replyStatus.success) return replyStatus.success;
     await sleep(config.gemini.sleep * 1000);
   }
   return replyStatus.no_reply;
@@ -106,7 +111,7 @@ async function groupChat(event: GroupMessage) {
     [{ role: "user", parts: part }],
     prompt.prompt
   );
-  return await sendGeminiMsg(event, chatText);
+  return await sendGeminiMsg(event, chatText, prompt.prompt);
 }
 
 async function singleChatContent(message: Receive[keyof Receive]) {
@@ -133,19 +138,70 @@ async function singleChatContent(message: Receive[keyof Receive]) {
   };
 }
 
+async function sendFunctionCall(
+  event: GroupMessage,
+  chat: GenerateContentResponse,
+  prompt?: string
+) {
+  if (!chat || !chat.text) return replyStatus.no_reply;
+  if (chat.functionCalls && chat.functionCalls.length) {
+    for (const functionCall of chat.functionCalls) {
+      if (functionCall.name === "get_image") {
+        let { imageName } = <{ imageName: string }>functionCall.args;
+        if (!imageName) continue;
+        const image = await baiduSearch(imageName);
+        if (!image) {
+          await sendGroupMsg(event.group_id, [
+            Structs.reply(event.message_id),
+            Structs.text(`没有找到 ${imageName} 的图片`),
+          ]);
+          continue;
+        }
+        const functionCallReply = await retryGeminiChat(
+          [
+            {
+              role: "user",
+              parts: [{ text: event.raw_message }],
+            },
+            {
+              role: "model",
+              parts: [{ text: aiMessage(chat.text) }],
+            },
+            {
+              role: "user",
+              parts: [
+                {
+                  functionResponse: {
+                    name: functionCall.name,
+                    response: { result: { imageName: imageName.toString() } },
+                  },
+                },
+              ],
+            },
+          ],
+          prompt
+        );
+        if (functionCallReply !== replyStatus.no_reply) {
+          await sendGroupMsg(event.group_id, [
+            Structs.reply(event.message_id),
+            Structs.image(image),
+            Structs.text(functionCallReply),
+          ]);
+        }
+      }
+    }
+  }
+  return replyStatus.success;
+}
+
 async function sendGeminiMsg(
   event: GroupMessage,
-  chatText: GenerateContentResponse | undefined
+  chat: GenerateContentResponse | undefined,
+  prompt?: string
 ) {
-  if (!chatText || !chatText.text || !chatText.candidates)
-    return replyStatus.no_reply;
-  for (const candidates of chatText.candidates) {
-    if (
-      !candidates.content ||
-      !candidates.content.parts ||
-      !candidates.content.parts.length
-    )
-      continue;
+  if (!chat || !chat.text || !chat.candidates) return replyStatus.no_reply;
+  for (const candidates of chat.candidates) {
+    if (!candidates.content || !candidates.content.parts) continue;
     for (const parts of candidates.content.parts) {
       const text = parts.text;
       if (!text) continue;
@@ -153,10 +209,21 @@ async function sendGeminiMsg(
         Structs.reply(event.message_id),
         Structs.text(aiMessage(text)),
       ]);
-      await sleep(config.bot.sleep);
+      await sleep(config.bot.sleep * 1000);
     }
   }
+  const functionCallReply = await sendFunctionCall(event, chat, prompt);
+  if (functionCallReply !== replyStatus.success) return replyStatus.no_reply;
   return replyStatus.success;
+}
+
+async function retryGeminiChat(context: ContentListUnion, prompt?: string) {
+  for (let retry = 0; retry < config.gemini.retry; retry++) {
+    const resp = await geminiChat(context, prompt);
+    if (resp && resp.text) return resp.text;
+    await sleep(config.bot.sleep * 1000);
+  }
+  return replyStatus.no_reply;
 }
 
 async function sendDeepSeekMsg(
@@ -197,7 +264,7 @@ async function singleChat(event: GroupMessage) {
       [{ role: "user", parts: gemini }],
       prompt.prompt
     );
-    return await sendGeminiMsg(event, chatText);
+    return await sendGeminiMsg(event, chatText, prompt.prompt);
   }
   //如果没图就用deepseek
   const group = await groupModel.findOrAdd(event.group_id);

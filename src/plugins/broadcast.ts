@@ -28,7 +28,7 @@ async function plugin(event: GroupMessage) {
   const groups = await getClient().get_group_list();
   for (const group of groups) {
     await sendGroupMsg(group.group_id, [Structs.text(msg)]);
-    sleep(config.bot.sleep);
+    sleep(config.bot.sleep * 1000);
   }
 }
 
