@@ -64,7 +64,7 @@ function functionDeclarations() {
       type: Type.OBJECT,
       properties: {
         imageName: {
-          type: Type.STRING,
+          type: Type.ARRAY,
           description: "供搜索的图片名称",
         },
       },

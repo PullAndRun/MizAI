@@ -9,7 +9,7 @@ function parseJson(str: string) {
   }
 }
 
-async function urlToOpenAIImages(url: string) {
+async function urlToBlob_2(url: string) {
   const image = await urlToBuffer(url);
   if (!image) return undefined;
   const mime = await fileTypeFromBuffer(image);
@@ -18,6 +18,16 @@ async function urlToOpenAIImages(url: string) {
   return {
     mimeType: mime.mime,
     data: image.toBase64(),
+  };
+}
+
+async function bufferToBlob_2(buffer: Buffer) {
+  const mime = await fileTypeFromBuffer(buffer);
+  if (!mime) return undefined;
+  if (mime.mime === "image/gif") return undefined;
+  return {
+    mimeType: mime.mime,
+    data: buffer.toBase64(),
   };
 }
 
@@ -32,4 +42,4 @@ function aiMessage(message: string) {
     .trim();
 }
 
-export { aiMessage, parseJson, urlToOpenAIImages };
+export { aiMessage, bufferToBlob_2, parseJson, urlToBlob_2 };
