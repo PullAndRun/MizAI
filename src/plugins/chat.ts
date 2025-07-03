@@ -153,6 +153,7 @@ async function sendGeminiMsg(
         Structs.reply(event.message_id),
         Structs.text(aiMessage(text)),
       ]);
+      await sleep(config.bot.sleep);
     }
   }
   return replyStatus.success;
