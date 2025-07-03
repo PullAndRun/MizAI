@@ -34,7 +34,6 @@ enum replyStatus {
 async function plugin(event: GroupMessage) {
   const msg = cmdText(event.raw_message, [config.bot.name]);
   if (!msg) return;
-  console.log(msg);
   if (event.raw_message.includes(config.bot.nick_name)) {
     const context = await sendContext(event, groupChat);
     if (context === replyStatus.success) return;
