@@ -35,7 +35,7 @@ function Pick(msg: string) {
   return plugins.find((p) => msg.startsWith(p.name));
 }
 
-function Plugins() {
+function ShowPlugin() {
   return plugins
     .map((v, i) => `${i + 1}、${v.name}\n${v.comment.join("\n")}`)
     .join("\n\n");
@@ -45,4 +45,4 @@ async function Init() {
   await Load();
 }
 
-export { Init, Pick, Plugins };
+export { Init, Pick, ShowPlugin };
