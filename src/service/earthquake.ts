@@ -1,10 +1,10 @@
-import config from "@miz/ai/config/config.toml";
+import Config from "@miz/ai/config/config.toml";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
 import dayjs from "dayjs";
 
-async function fetchEarthquake(level: number) {
-  const earthquake = await fetch(config.earthquake.url, {
+async function FetchEarthquake(level: number) {
+  const earthquake = await fetch(Config.Earthquake.url, {
     signal: AbortSignal.timeout(5000),
   })
     .then((res) => res.text())
@@ -38,7 +38,7 @@ async function fetchEarthquake(level: number) {
   return earthquakeItem;
 }
 
-function earthquakeMsg(earthquakeData: {
+function EarthquakeMsg(earthquakeData: {
   title: string;
   description: string;
   pubDate: string;
@@ -55,4 +55,4 @@ function earthquakeMsg(earthquakeData: {
   };
 }
 
-export { fetchEarthquake, earthquakeMsg };
+export { FetchEarthquake, EarthquakeMsg };

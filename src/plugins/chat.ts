@@ -1,5 +1,6 @@
 import type {
   ContentListUnion,
+  FunctionCall,
   GenerateContentResponse,
   Part,
 } from "@google/genai";
@@ -34,6 +35,11 @@ async function plugin(event: GroupMessage) {
   const msg = cmdText(event.raw_message, [config.bot.name]);
   if (!msg) return;
   if (event.raw_message.includes(config.bot.nick_name)) {
+    await sendGroupMsg(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text("AI重构中，预计今天(7月4日)上线"),
+    ]);
+    return;
     const context = await sendContext(event, groupChat);
     if (context) return;
   } else {
@@ -134,14 +140,13 @@ async function singleChatContent(message: Receive[keyof Receive]) {
   };
 }
 
-async function geminiFunctionCall(
+async function imageFunctionCall(
   event: GroupMessage,
   chat: GenerateContentResponse,
+  functionCall: FunctionCall,
   prompt?: string
 ) {
-  if (!chat.text || !chat.functionCalls || !chat.functionCalls[0])
-    return undefined;
-  const functionCall = chat.functionCalls[0];
+  if (!chat.text) return undefined;
   if (functionCall.name === "get_image") {
     let { imageName: imageNames } = <{ imageName: Array<string> }>(
       functionCall.args
@@ -183,6 +188,16 @@ async function geminiFunctionCall(
       ]);
     }
   }
+}
+
+async function geminiFunctionCall(
+  event: GroupMessage,
+  chat: GenerateContentResponse,
+  prompt?: string
+) {
+  if (!chat.functionCalls || !chat.functionCalls[0]) return undefined;
+  const functionCall = chat.functionCalls[0];
+  await imageFunctionCall(event, chat, functionCall, prompt);
 }
 
 async function sendGeminiMsg(

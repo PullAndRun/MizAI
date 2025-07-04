@@ -7,7 +7,7 @@ import {
 } from "typeorm";
 
 @Entity()
-@Index(["title", "description", "link", "pubDate"], { unique: true })
+@Index(["title", "description", "link", "pub_date"], { unique: true })
 class Earthquake extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -18,20 +18,20 @@ class Earthquake extends BaseEntity {
   @Column({ type: "text" })
   link: string;
   @Column({ type: "text" })
-  pubDate: string;
+  pub_date: string;
 }
 
 function find(
   title: string,
   description: string,
   link: string,
-  pubDate: string
+  pub_date: string
 ) {
   return Earthquake.findOneBy({
     title,
     description,
     link,
-    pubDate,
+    pub_date,
   });
 }
 
@@ -43,13 +43,13 @@ async function add(
   title: string,
   description: string,
   link: string,
-  pubDate: string
+  pub_date: string
 ) {
   const earthquake = new Earthquake();
   earthquake.title = title;
   earthquake.description = description;
   earthquake.link = link;
-  earthquake.pubDate = pubDate;
+  earthquake.pub_date = pub_date;
   await earthquake.save().catch((_) => undefined);
   return earthquake;
 }

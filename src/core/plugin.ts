@@ -1,4 +1,4 @@
-import { logger } from "@miz/ai/src/core/log";
+import { Logger } from "@miz/ai/src/core/log";
 import type { GroupMessage } from "node-napcat-ts";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
@@ -11,32 +11,38 @@ interface Plugin {
 
 const plugins: Plugin[] = [];
 
-async function load() {
-  const pluginDir = path.resolve("src/plugins");
-  const files = await readdir(pluginDir);
+async function Load() {
+  const pluginDirectory = path.resolve("src/plugins");
+  const files = await readdir(pluginDirectory);
   for (const file of files) {
     if (!file.endsWith(".js") && !file.endsWith(".ts")) continue;
-    const pluginPath = path.join(pluginDir, file);
+    const pluginPath = path.join(pluginDirectory, file);
     try {
       const { info } = await import(pluginPath);
       if (!info || !info.name || !info.plugin) continue;
       plugins.push(info);
     } catch (err) {
-      logger.error(
+      Logger.error(
         `加载插件失败\n->插件名: ${file}\n->错误:\n${JSON.stringify(err)}`
       );
     }
   }
   plugins.sort((a, b) => b.name.length - a.name.length);
-  logger.info(`成功加载 ${plugins.length} 个插件`);
+  Logger.info(`成功加载 ${plugins.length} 个插件`);
 }
 
-function pick(msg: string) {
+function Pick(msg: string) {
   return plugins.find((p) => msg.startsWith(p.name));
 }
 
-async function init() {
-  await load();
+function Plugins() {
+  return plugins
+    .map((v, i) => `${i + 1}、${v.name}\n${v.comment.join("\n")}`)
+    .join("\n\n");
 }
 
-export { init, pick, plugins };
+async function Init() {
+  await Load();
+}
+
+export { Init, Pick, Plugins };

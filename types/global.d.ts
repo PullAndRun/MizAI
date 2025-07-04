@@ -1,11 +1,11 @@
 import type { GroupMessage } from "node-napcat-ts";
 
 declare global {
-  type groupRole = "member" | "admin" | "owner" | "system";
-  declare type commandList = Array<{
-    cmd: string;
-    cmt: string;
+  type GroupRole = "member" | "admin" | "owner" | "system";
+  declare type InvokeParameterList = Array<{
+    command: string;
+    comment: string;
     role: groupRole;
-    plugin: (msg: string, event: GroupMessage) => Promise<void>;
+    plugin: (message: string, event: GroupMessage) => Promise<void>;
   }>;
 }

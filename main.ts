@@ -1,13 +1,13 @@
-import { init as bot } from "@miz/ai/src/core/bot";
-import { init as db } from "@miz/ai/src/core/db";
-import { init as plugin } from "@miz/ai/src/core/plugin";
-import { init as timer } from "@miz/ai/src/core/timer";
+import { Init as Bot } from "@miz/ai/src/core/bot";
+import { Init as Database } from "@miz/ai/src/core/db";
+import { Init as Plugin } from "@miz/ai/src/core/plugin";
+import { Init as Timer } from "@miz/ai/src/core/timer";
 
 async function init() {
-  await db();
-  await bot();
-  await plugin();
-  await timer();
+  await Database();
+  await Bot();
+  await Plugin();
+  await Timer();
 }
 
 init();

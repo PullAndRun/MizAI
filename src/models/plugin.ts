@@ -7,13 +7,13 @@ import {
 } from "typeorm";
 
 @Entity()
-@Index(["gid", "name"], { unique: true })
+@Index(["group_id", "name"], { unique: true })
 class Plugin extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
   //群号
   @Column({ type: "float" })
-  gid: number;
+  group_id: number;
   //插件名称
   @Column({ type: "text" })
   name: string;
@@ -22,42 +22,46 @@ class Plugin extends BaseEntity {
   enable: boolean;
 }
 
-function find(gid: number, name: string) {
+function find(group_id: number, name: string) {
   return Plugin.findOneBy({
-    gid,
+    group_id,
     name,
   });
 }
 
-async function add(gid: number, name: string, enable: boolean) {
+async function add(group_id: number, name: string, enable: boolean) {
   const plugin = new Plugin();
-  plugin.gid = gid;
+  plugin.group_id = group_id;
   plugin.name = name;
   plugin.enable = enable;
   await plugin.save().catch((_) => undefined);
   return plugin;
 }
 
-async function findOrAdd(gid: number, name: string, enable: boolean = true) {
-  const plugin = await find(gid, name);
+async function findOrAdd(
+  group_id: number,
+  name: string,
+  enable: boolean = true
+) {
+  const plugin = await find(group_id, name);
   if (!plugin) {
-    return add(gid, name, enable);
+    return add(group_id, name, enable);
   }
   return plugin;
 }
 
-async function update(gid: number, name: string, enable: boolean) {
-  const plugin = await find(gid, name);
+async function update(group_id: number, name: string, enable: boolean) {
+  const plugin = await find(group_id, name);
   if (!plugin) {
-    return add(gid, name, enable);
+    return add(group_id, name, enable);
   }
   plugin.enable = enable;
   await plugin.save().catch((_) => undefined);
   return plugin;
 }
 
-async function findByGid(gid: number) {
-  return Plugin.findBy({ gid });
+async function findByGid(group_id: number) {
+  return Plugin.findBy({ group_id });
 }
 
 export { findByGid, findOrAdd, Plugin, update };

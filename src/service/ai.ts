@@ -2,12 +2,12 @@ import {
   GoogleGenAI,
   Type,
   type ContentListUnion,
+  type ContentUnion,
   type FunctionDeclaration,
 } from "@google/genai";
 import config from "@miz/ai/config/config.toml";
 import { logger } from "@miz/ai/src/core/log";
 import OpenAI from "openai";
-import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
 const deepseek = new OpenAI({
   apiKey: config.deepseek.key,
@@ -22,38 +22,32 @@ const gemini = new GoogleGenAI({
 });
 
 async function deepSeekChat(
-  message: ChatCompletionMessageParam[],
-  prompt?: string
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
 ) {
-  const messages: ChatCompletionMessageParam[] = [];
-  if (prompt) {
-    messages.push({ role: "system", content: prompt });
-  }
-  messages.push(...message);
   return deepseek.chat.completions
     .create({
-      messages: messages,
+      messages,
       ...config.deepseek.config,
     })
-    .then((chatCompletion) => chatCompletion.choices[0]?.message.content)
     .catch((_) => undefined);
 }
 
-async function geminiChat(message: ContentListUnion, prompt?: string) {
+async function geminiChat(
+  contents: ContentListUnion,
+  systemInstruction?: ContentUnion | undefined,
+  functionDeclarations?: FunctionDeclaration[] | undefined
+) {
   return gemini.models
     .generateContent({
       model: config.gemini.model,
-      contents: message,
+      contents,
       config: {
-        systemInstruction: prompt,
-        tools: [{ functionDeclarations: functionDeclarations() }],
+        systemInstruction,
+        tools: [{ functionDeclarations }],
         ...config.gemini.config,
       },
     })
-    .catch((e) => {
-      logger.warn(e);
-      return undefined;
-    });
+    .catch((_) => undefined);
 }
 
 function functionDeclarations() {

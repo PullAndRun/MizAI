@@ -1,19 +1,19 @@
-import config from "@miz/ai/config/config.toml";
+import Config from "@miz/ai/config/config.toml";
 import dayjs from "dayjs";
 import path from "path";
 import { createLogger, format, transports } from "winston";
 
 const { combine, timestamp, printf } = format;
 
-const logDir = path.join(config.log.dir_name, dayjs().format("YYYY-MM-DD"));
+const logDir = path.join(Config.Log.dir_name, dayjs().format("YYYY-MM-DD"));
 
 const logFormat = printf(
   ({ level, message, timestamp }) =>
     `[${timestamp}] [${level.toUpperCase()}]: ${message}`
 );
 
-const logger = createLogger({
-  level: config.log.level,
+const Logger = createLogger({
+  level: Config.Log.level,
   format: combine(timestamp(), logFormat),
   transports: [
     new transports.Console(),
@@ -30,4 +30,4 @@ const logger = createLogger({
   ],
 });
 
-export { logger };
+export { Logger };
