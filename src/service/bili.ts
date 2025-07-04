@@ -1,19 +1,15 @@
-import config from "@miz/ai/config/config.toml";
-import { urlToBuffer } from "@miz/ai/src/core/http";
+import Config from "@miz/ai/config/config.toml";
+import { UrlToBuffer, UrlToJson, UrlToText } from "@miz/ai/src/core/http";
 import * as cheerio from "cheerio";
 import dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
 
-async function fetchDynamic(mid: number) {
-  const dynamic = await fetch(config.bili.dynamic + mid, {
-    signal: AbortSignal.timeout(5000),
-  })
-    .then((res) => res.text())
-    .catch((_) => undefined);
-  if (!dynamic) return undefined;
+async function Dynamic(memberID: number) {
+  const dynamicText = await UrlToText(Config.Bili.dynamic.url + memberID);
+  if (!dynamicText) return undefined;
   const parser = new XMLParser();
-  let dynamicObj = parser.parse(dynamic);
+  const dynamicJson = parser.parse(dynamicText);
   const dynamicSchema = z.object({
     rss: z.object({
       channel: z.object({
@@ -34,23 +30,21 @@ async function fetchDynamic(mid: number) {
       }),
     }),
   });
-  const dynamicData = dynamicSchema.safeParse(dynamicObj);
-  if (!dynamicData.success) return undefined;
-  const items = dynamicData.data.rss.channel.item.filter(
+  const dynamic = dynamicSchema.safeParse(dynamicJson);
+  if (!dynamic.success) return undefined;
+  const items = dynamic.data.rss.channel.item.filter(
     (v) => !v.description.toString().includes("直播间地址：")
   );
-  if (!items.length) return undefined;
-  const currentItem = items[0];
-  if (!currentItem) return undefined;
+  if (!items[0]) return undefined;
   const $ = cheerio.load(
-    currentItem.description
+    items[0].description
       .toString()
       .replace(/<br>/g, "\n")
       .replace(/图文地址：|视频地址：/g, "")
   );
   $("a").remove();
-  const titleReg =
-    currentItem.title
+  const title =
+    items[0].title
       .toString()
       .replace(/\[[^\]]*\]|\u3000+/g, " ")
       .trim()
@@ -58,38 +52,27 @@ async function fetchDynamic(mid: number) {
         /…$|\.{3}|[\x00-\x1F\x7F-\x9F]|[\u2000-\u200a\u202f\u2800\u200B\u200C\u200D\uFEFF]+/g,
         ""
       ) || "暂无";
-  const descriptionReg =
+  const description =
     $.text()
       .replace(/\n{2,}/g, "\n")
       .replace(/\[[^\]]*\]/g, " ")
       .replace(/^\n+|\n+$/g, "")
       .trim() || "暂无";
-  if (titleReg === "暂无" && descriptionReg === "暂无") return undefined;
-  const isTitleDescSame = descriptionReg
+  if (title === "暂无" && description === "暂无") return undefined;
+  const isTitleAndDescriptionSame = description
     ?.replace(/[\n \u3000+]+/g, "")
-    .includes(titleReg?.replace(/[ \u3000+]+/g, ""));
-  const title = isTitleDescSame ? "暂无" : titleReg;
-  const description = descriptionReg?.includes("\n")
-    ? "\n" + descriptionReg
-    : descriptionReg;
+    .includes(title?.replace(/[ \u3000+]+/g, ""));
   return {
-    ...currentItem,
-    image: dynamicData.data.rss.channel.image.url,
-    title: title,
-    description: description,
+    ...items[0],
+    image: dynamic.data.rss.channel.image.url,
+    title: isTitleAndDescriptionSame ? "暂无" : title,
+    description: description.includes("\n") ? "\n" + description : description,
   };
 }
 
-async function fetchUser(name: string) {
-  const user = await fetch(config.bili.user + name, {
-    signal: AbortSignal.timeout(5000),
-    headers: {
-      Cookie: config.bili.cookie,
-    },
-  })
-    .then((res) => res.json())
-    .catch((_) => undefined);
-  if (!user) return undefined;
+async function User(name: string) {
+  const userJson = await UrlToJson(Config.Bili.user + name);
+  if (!userJson) return undefined;
   const userSchema = z.object({
     data: z.object({
       result: z
@@ -103,36 +86,34 @@ async function fetchUser(name: string) {
         .min(1),
     }),
   });
-  const userData = userSchema.safeParse(user);
-  return userData.success ? userData.data.data.result[0] : undefined;
+  const user = userSchema.safeParse(userJson);
+  if (!user.success) return undefined;
+  return user.data.data.result[0];
 }
 
-async function fetchCard(mid: number) {
-  const user = await fetch(config.bili.card + mid, {
-    signal: AbortSignal.timeout(5000),
-  })
-    .then((res) => res.json())
-    .catch((_) => undefined);
-  if (!user) return undefined;
+async function Card(memberID: number) {
+  const cardJson = await UrlToJson(Config.Bili.card + memberID);
+  if (!cardJson) return undefined;
   const userSchema = z.object({
     data: z.object({
       card: z.object({ fans: z.number() }),
     }),
   });
-  const userData = userSchema.safeParse(user);
-  return userData.success ? userData.data.data.card : undefined;
+  const user = userSchema.safeParse(cardJson);
+  if (!user.success) return undefined;
+  return user.data.data.card;
 }
 
-async function fetchLive(mids: Array<number>) {
-  const live = await fetch(config.bili.live, {
+async function Live(memberID: Array<number>) {
+  const liveJson = await fetch(Config.Bili.live.url, {
     method: "post",
     signal: AbortSignal.timeout(5000),
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ uids: mids }),
+    body: JSON.stringify({ uids: memberID }),
   })
     .then((res) => res.json())
     .catch((_) => undefined);
-  if (!live) return undefined;
+  if (!liveJson) return undefined;
   const liveSchema = z.object({
     data: z.record(
       //主播uid
@@ -153,58 +134,57 @@ async function fetchLive(mids: Array<number>) {
       })
     ),
   });
-  const liveData = liveSchema.safeParse(live);
-  return liveData.success ? liveData.data.data : undefined;
+  const live = liveSchema.safeParse(liveJson);
+  if (!live.success) return undefined;
+  return live.data.data;
 }
 
-async function liveMsg(liveData: {
-  cover_from_user: string;
+async function LiveReply(live: {
+  coverFromUser: string;
   title: string;
-  uname: string;
-  live_time: number;
-  room_id: number;
+  name: string;
+  liveTime: number;
+  roomId: number;
 }) {
   const liveTime = () => {
-    if (liveData.live_time === 0) return "未开播";
-    return dayjs(liveData.live_time * 1000).format(
-      "YYYY年MM月DD日 HH点mm分ss秒"
-    );
+    if (live.liveTime === 0) return "未开播";
+    return dayjs(live.liveTime * 1000).format("YYYY年MM月DD日 HH点mm分ss秒");
   };
   return {
-    cover: await urlToBuffer(liveData.cover_from_user),
-    text: `🔥【直播进行时】🔥\n🎤 人气主播: "${liveData.uname}"\n📌 独家主题: ${
-      liveData.title
+    cover: await UrlToBuffer(live.coverFromUser),
+    text: `🔥【直播进行时】🔥\n🎤 人气主播: "${live.name}"\n📌 独家主题: ${
+      live.title
     }\n⏰ 开播日期: ${liveTime()}\n👉 立即观看不迷路: https://live.bilibili.com/${
-      liveData.room_id
+      live.roomId
     }`,
   };
 }
 
-async function liveEndMsg(liveData: {
-  cover_from_user: string;
-  uname: string;
+async function LiveEndReply(live: {
+  coverFromUser: string;
+  name: string;
   title: string;
   startTime: number;
   fans: number;
 }) {
   const liveTime = () => {
-    return dayjs().diff(dayjs(liveData.startTime * 1000), "minute");
+    return dayjs().diff(dayjs(live.startTime * 1000), "minute");
   };
   const fans = () => {
-    if (liveData.fans <= 0) return "";
-    return `\n🎉 本场直播将鸣谢 ${liveData.fans} 位新粉丝`;
+    if (live.fans <= 0) return "";
+    return `\n🎉 本场直播将鸣谢 ${live.fans} 位新粉丝`;
   };
   return {
-    cover: await urlToBuffer(liveData.cover_from_user),
+    cover: await UrlToBuffer(live.coverFromUser),
     text: `💤【本场直播即将进入尾声】💤\n⚡ 流量宠儿: "${
-      liveData.uname
+      live.name
     }"\n📌 独家主题: ${
-      liveData.title
+      live.title
     }${fans()}\n💕 感谢家人们 ${liveTime()} 分钟的暖心陪伴`,
   };
 }
 
-function dynamicMsg(dynamicData: {
+function DynamicReply(dynamicData: {
   link: string;
   title: string;
   description: string;
@@ -228,12 +208,4 @@ function dynamicMsg(dynamicData: {
   };
 }
 
-export {
-  dynamicMsg,
-  fetchCard,
-  fetchDynamic,
-  fetchLive,
-  fetchUser,
-  liveEndMsg,
-  liveMsg,
-};
+export { Card, Dynamic, DynamicReply, Live, LiveEndReply, LiveReply, User };

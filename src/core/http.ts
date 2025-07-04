@@ -12,6 +12,12 @@ async function UrlToBuffer(url: string) {
     .catch((_) => undefined);
 }
 
+async function UrlToText(url: string) {
+  return fetch(url, { signal: AbortSignal.timeout(5000) })
+    .then(async (res) => res.text())
+    .catch((_) => undefined);
+}
+
 async function BufferToBlob_2(buffer: Buffer) {
   const fileType = await fileTypeFromBuffer(buffer);
   if (!fileType) return undefined;
@@ -35,4 +41,4 @@ async function UrlToBlob_2(url: string) {
   return BufferToBlob_2(buffer);
 }
 
-export { BufferToBlob_2, UrlToBlob_2, UrlToBuffer, UrlToJson };
+export { BufferToBlob_2, UrlToBlob_2, UrlToBuffer, UrlToJson, UrlToText };
