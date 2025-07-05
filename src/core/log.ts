@@ -5,7 +5,7 @@ import { createLogger, format, transports } from "winston";
 
 const { combine, timestamp, printf } = format;
 
-const logDir = path.join(Config.Log.dir_name, dayjs().format("YYYY-MM-DD"));
+const logDir = path.join(Config.Log.dir, dayjs().format("YYYY-MM-DD"));
 
 const logFormat = printf(
   ({ level, message, timestamp }) =>

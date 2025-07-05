@@ -1,10 +1,11 @@
+import * as Config from "@miz/ai/config/config.toml";
+import { file } from "bun";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
-import { file } from "bun";
 
-async function joke() {
-  const jokeDir = path.resolve("resource/miHoYoJokes");
-  const files = await readdir(jokeDir, {
+async function Genshit() {
+  const dir = path.resolve(Config.Genshit.dir);
+  const files = await readdir(dir, {
     withFileTypes: true,
     recursive: true,
   });
@@ -15,9 +16,8 @@ async function joke() {
   const randomFile = jpgFiles[Math.floor(Math.random() * jpgFiles.length)];
   if (!randomFile) return;
   const filePath = path.resolve(randomFile.parentPath + "/" + randomFile.name);
-  const readFile = file(filePath);
-  const fileArrayBuffer = await readFile.arrayBuffer();
-  return Buffer.from(fileArrayBuffer);
+  const jpgFileBuffer = await file(filePath).arrayBuffer();
+  return Buffer.from(jpgFileBuffer);
 }
 
-export { joke };
+export { Genshit };

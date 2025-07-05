@@ -31,8 +31,8 @@ async function Load() {
   Logger.info(`成功加载 ${plugins.length} 个插件`);
 }
 
-function Pick(msg: string) {
-  return plugins.find((p) => msg.startsWith(p.name));
+function Pick(message: string) {
+  return plugins.find((p) => message.startsWith(p.name));
 }
 
 function ShowPlugin() {

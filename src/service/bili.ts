@@ -6,10 +6,10 @@ import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
 
 async function Dynamic(memberID: number) {
-  const dynamicText = await UrlToText(Config.Bili.dynamic.url + memberID);
-  if (!dynamicText) return undefined;
+  const dynamicXML = await UrlToText(Config.Bili.dynamic.url + memberID);
+  if (!dynamicXML) return undefined;
   const parser = new XMLParser();
-  const dynamicJson = parser.parse(dynamicText);
+  const dynamicJson = parser.parse(dynamicXML);
   const dynamicSchema = z.object({
     rss: z.object({
       channel: z.object({
@@ -32,19 +32,19 @@ async function Dynamic(memberID: number) {
   });
   const dynamic = dynamicSchema.safeParse(dynamicJson);
   if (!dynamic.success) return undefined;
-  const items = dynamic.data.rss.channel.item.filter(
+  const dynamicList = dynamic.data.rss.channel.item.filter(
     (v) => !v.description.toString().includes("直播间地址：")
   );
-  if (!items[0]) return undefined;
+  if (!dynamicList[0]) return undefined;
   const $ = cheerio.load(
-    items[0].description
+    dynamicList[0].description
       .toString()
       .replace(/<br>/g, "\n")
       .replace(/图文地址：|视频地址：/g, "")
   );
   $("a").remove();
   const title =
-    items[0].title
+    dynamicList[0].title
       .toString()
       .replace(/\[[^\]]*\]|\u3000+/g, " ")
       .trim()
@@ -63,7 +63,7 @@ async function Dynamic(memberID: number) {
     ?.replace(/[\n \u3000+]+/g, "")
     .includes(title?.replace(/[ \u3000+]+/g, ""));
   return {
-    ...items[0],
+    ...dynamicList[0],
     image: dynamic.data.rss.channel.image.url,
     title: isTitleAndDescriptionSame ? "暂无" : title,
     description: description.includes("\n") ? "\n" + description : description,
@@ -144,7 +144,7 @@ async function LiveReply(live: {
   title: string;
   name: string;
   liveTime: number;
-  roomId: number;
+  roomID: number;
 }) {
   const liveTime = () => {
     if (live.liveTime === 0) return "未开播";
@@ -155,7 +155,7 @@ async function LiveReply(live: {
     text: `🔥【直播进行时】🔥\n🎤 人气主播: "${live.name}"\n📌 独家主题: ${
       live.title
     }\n⏰ 开播日期: ${liveTime()}\n👉 立即观看不迷路: https://live.bilibili.com/${
-      live.roomId
+      live.roomID
     }`,
   };
 }

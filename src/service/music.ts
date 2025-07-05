@@ -1,25 +1,25 @@
-import config from "@miz/ai/config/config.toml";
+import Config from "@miz/ai/config/config.toml";
 import { cloudsearch, comment_new, song_detail } from "NeteaseCloudMusicApi";
 import { z } from "zod";
 
-async function pick(keyword: string) {
-  const id = await fetchID(keyword);
+async function NeteaseMusic(keyword: string) {
+  const id = await NameToID(keyword);
   if (!id) return undefined;
-  const song = await fetchSong(id);
-  if (!song) return undefined;
-  const comment = await fetchHotComment(id);
+  const detail = await IDToDetail(id);
+  if (!detail) return undefined;
+  const comment = await IDToHotComment(id);
   return {
-    albumPicture: song.al.picUrl || undefined,
+    albumPicture: detail.al.picUrl || undefined,
     comment,
-    url: `${config.music.netease}${id}`,
-    name: song.name,
-    singer: song.ar.map((singer) => singer.name).join("、"),
-    album: song.al.name,
+    url: `${Config.Music.netease.url}${id}`,
+    name: detail.name,
+    singer: detail.ar.map((singer) => singer.name).join("、"),
+    album: detail.al.name,
   };
 }
 
-async function fetchID(keyword: string) {
-  const searchSchema = z.object({
+async function NameToID(keyword: string) {
+  const musicSchema = z.object({
     status: z.number(),
     body: z.object({
       code: z.number(),
@@ -39,17 +39,16 @@ async function fetchID(keyword: string) {
     limit: 1,
   })
     .then((res) => {
-      const result = searchSchema.safeParse(res);
-      if (!result.success || !result.data.body.result.songs[0])
-        return undefined;
-      return result.data.body.result.songs[0].id;
+      const music = musicSchema.safeParse(res);
+      if (!music.success || !music.data.body.result.songs[0]) return undefined;
+      return music.data.body.result.songs[0].id;
     })
     .catch((_) => undefined);
   return id;
 }
 
-async function fetchSong(id: number) {
-  const songSchema = z.object({
+async function IDToDetail(id: number) {
+  const musicSchema = z.object({
     status: z.number(),
     body: z.object({
       code: z.number(),
@@ -64,19 +63,19 @@ async function fetchSong(id: number) {
         .min(1),
     }),
   });
-  const song = await song_detail({
+  const detail = await song_detail({
     ids: id.toString(),
   })
     .then((res) => {
-      const result = songSchema.safeParse(res);
-      if (!result.success) return undefined;
-      return result.data.body.songs[0];
+      const music = musicSchema.safeParse(res);
+      if (!music.success) return undefined;
+      return music.data.body.songs[0];
     })
     .catch((_) => undefined);
-  return song;
+  return detail;
 }
 
-async function fetchHotComment(id: number) {
+async function IDToHotComment(id: number) {
   const commentSchema = z.object({
     status: z.number(),
     body: z.object({
@@ -100,13 +99,13 @@ async function fetchHotComment(id: number) {
     sortType: 2,
   })
     .then((res) => {
-      const result = commentSchema.safeParse(res);
-      if (!result.success || !result.data.body.data.comments[0])
+      const comment = commentSchema.safeParse(res);
+      if (!comment.success || !comment.data.body.data.comments[0])
         return undefined;
-      return result.data.body.data.comments[0].content;
+      return comment.data.body.data.comments[0].content;
     })
     .catch((_) => undefined);
   return comment;
 }
 
-export { fetchHotComment, fetchID, fetchSong, pick };
+export { NeteaseMusic };

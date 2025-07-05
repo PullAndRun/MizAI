@@ -1,13 +1,11 @@
-import config from "@miz/ai/config/config.toml";
+import Config from "@miz/ai/config/config.toml";
 import { z } from "zod";
+import { UrlToJson } from "../core/http";
 
 const newsMap: Map<number, Array<string>> = new Map();
-async function fetchFinance() {
-  const finance = await fetch(config.news.finance, {
-    signal: AbortSignal.timeout(5000),
-  })
-    .then((resp) => resp.json())
-    .catch((_) => undefined);
+
+async function Finance() {
+  const financeJson = await UrlToJson(Config.news.finance.url);
   const financeSchema = z.object({
     Result: z.object({
       content: z.object({
@@ -24,9 +22,9 @@ async function fetchFinance() {
       }),
     }),
   });
-  const financeData = financeSchema.safeParse(finance);
-  if (!financeData.success) return undefined;
-  return financeData.data.Result.content.list
+  const finance = financeSchema.safeParse(financeJson);
+  if (!finance.success) return undefined;
+  return finance.data.Result.content.list
     .map((v) => {
       const content = v.content.items
         .map((vv) => {
@@ -45,12 +43,8 @@ async function fetchFinance() {
     .filter((res) => res !== undefined);
 }
 
-async function fetchHot() {
-  const hot = await fetch(config.news.hot, {
-    signal: AbortSignal.timeout(5000),
-  })
-    .then((res) => res.json())
-    .catch((_) => undefined);
+async function Hot() {
+  const hotJson = await UrlToJson(Config.News.hot.url);
   const hotSchema = z.object({
     data: z.object({
       cards: z
@@ -69,9 +63,9 @@ async function fetchHot() {
         .min(1),
     }),
   });
-  const hotData = hotSchema.safeParse(hot);
-  if (!hotData.success) return undefined;
-  return hotData.data.data.cards[0]?.content
+  const hot = hotSchema.safeParse(hotJson);
+  if (!hot.success) return undefined;
+  return hot.data.data.cards[0]?.content
     .map((res) => {
       if (!res.desc || !res.query) return undefined;
       return {
@@ -82,19 +76,19 @@ async function fetchHot() {
     .filter((res) => res !== undefined);
 }
 
-async function duplicate(
-  gid: number,
-  news: Array<{ title: string; content: string }>,
+async function Duplicate(
+  groupID: number,
+  newsList: Array<{ title: string; content: string }>,
   lines: number
 ) {
-  const newsItem = newsMap.get(gid) || [];
-  const newNews = news.filter(
-    (v, i) => !newsItem.includes(v.title) && i < lines
+  const oldNewsList = newsMap.get(groupID) || [];
+  const newNewsList = newsList.filter(
+    (v, i) => !oldNewsList.includes(v.title) && i < lines
   );
-  if (!newNews.length) return undefined;
-  const newNewsTitles = newNews.map((v) => v.title);
-  newsMap.set(gid, [...newsItem, ...newNewsTitles]);
-  return newNews;
+  if (!newNewsList.length) return undefined;
+  const newNewsTitlesList = newNewsList.map((v) => v.title);
+  newsMap.set(groupID, [...oldNewsList, ...newNewsTitlesList]);
+  return newNewsList;
 }
 
-export { duplicate, fetchFinance, fetchHot, newsMap };
+export { Duplicate, Finance, Hot, newsMap };

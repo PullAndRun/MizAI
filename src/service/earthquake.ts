@@ -1,18 +1,15 @@
 import Config from "@miz/ai/config/config.toml";
+import { UrlToText } from "@miz/ai/src/core/http";
+import dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
-import dayjs from "dayjs";
 
-async function FetchEarthquake(level: number) {
-  const earthquake = await fetch(Config.Earthquake.url, {
-    signal: AbortSignal.timeout(5000),
-  })
-    .then((res) => res.text())
-    .catch((_) => undefined);
-  if (!earthquake) return undefined;
+async function Earthquake(level: number) {
+  const earthquakeXML = await UrlToText(Config.Earthquake.url);
+  if (!earthquakeXML) return undefined;
   const parser = new XMLParser();
-  let earthquakeObj = parser.parse(earthquake);
-  const dynamicSchema = z.object({
+  const earthquakeJson = parser.parse(earthquakeXML);
+  const earthquakeSchema = z.object({
     rss: z.object({
       channel: z.object({
         item: z
@@ -28,17 +25,18 @@ async function FetchEarthquake(level: number) {
       }),
     }),
   });
-  const earthquakeData = dynamicSchema.safeParse(earthquakeObj);
-  if (!earthquakeData.success) return undefined;
-  const earthquakeItem = earthquakeData.data.rss.channel.item.filter((v) => {
+  const earthquake = earthquakeSchema.safeParse(earthquakeJson);
+  if (!earthquake.success) return undefined;
+  const earthquakeList = earthquake.data.rss.channel.item.filter((v) => {
+    //过滤出a.b级地震的a
     const earthquakeLevel = v.title.match(/\d+(?=\.\d+)/);
     return !(!earthquakeLevel || Number.parseFloat(earthquakeLevel[0]) < level);
   });
-  if (!earthquakeItem.length) return undefined;
-  return earthquakeItem;
+  if (!earthquakeList.length) return undefined;
+  return earthquakeList;
 }
 
-function EarthquakeMsg(earthquakeData: {
+function EarthquakeReply(earthquakeData: {
   title: string;
   description: string;
   pubDate: string;
@@ -55,4 +53,4 @@ function EarthquakeMsg(earthquakeData: {
   };
 }
 
-export { FetchEarthquake, EarthquakeMsg };
+export { Earthquake, EarthquakeReply };

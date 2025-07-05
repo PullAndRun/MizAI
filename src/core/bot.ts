@@ -37,14 +37,14 @@ function Client() {
 }
 
 async function SendGroupMessage(
-  group_id: number,
+  groupID: number,
   message: SendMessageSegment[]
 ) {
   return Client()
-    .send_group_msg({ group_id, message })
+    .send_group_msg({ group_id: groupID, message })
     .catch((e) => {
       Logger.warn(
-        `群消息发送失败\n->群号:${group_id}\n->原因:\n${JSON.stringify(
+        `群消息发送失败\n->群号:${groupID}\n->原因:\n${JSON.stringify(
           e
         )}\n->消息:\n${JSON.stringify(
           message.filter((v) => !!v && v.type === "text")
@@ -54,20 +54,20 @@ async function SendGroupMessage(
     });
 }
 
-async function GetMessage(message_id: number) {
+async function GetMessage(messageID: number) {
   return Client()
-    .get_msg({ message_id })
+    .get_msg({ message_id: messageID })
     .catch((_) => undefined);
 }
 
-async function ForwardGroupMsg(group_id: number, message_id: number) {
+async function ForwardGroupMsg(groupID: number, messageID: number) {
   return Client()
-    .forward_group_single_msg({ group_id, message_id })
+    .forward_group_single_msg({ group_id: groupID, message_id: messageID })
     .catch((e) => {
       Logger.warn(
-        `群消息转发失败\n->群号:${group_id}\n->原因:\n${JSON.stringify(
+        `群消息转发失败\n->群号:${groupID}\n->原因:\n${JSON.stringify(
           e
-        )}\n->消息id:\n${message_id}`
+        )}\n->消息id:\n${messageID}`
       );
       return undefined;
     });
