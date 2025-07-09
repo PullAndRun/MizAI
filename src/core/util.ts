@@ -21,7 +21,9 @@ function AIMessage(message: string) {
       .replace(/ *\# */g, "#")
       //多个#变"#"
       .replace(/\#+/g, "#")
-      //去除首位空白
+      //#*变*
+      .replace(/#\*/g, "*")
+      //去除首尾空白
       .trim()
   );
 }

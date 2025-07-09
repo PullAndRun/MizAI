@@ -1,29 +1,9 @@
-import type {
-  ContentListUnion,
-  FunctionCall,
-  GenerateContentResponse,
-  Part,
-} from "@google/genai";
 import Config from "@miz/ai/config/config.toml";
-import {
-  Client,
-  CommandText,
-  GetMessage,
-  SendGroupMessage,
-} from "@miz/ai/src/core/bot";
+import { CommandText, SendGroupMessage } from "@miz/ai/src/core/bot";
 import { AIMessage } from "@miz/ai/src/core/util";
-import * as aiModel from "@miz/ai/src/models/ai";
-import { Deepseek, Gemini } from "@miz/ai/src/service/ai";
-import { Baidu } from "@miz/ai/src/service/image";
-import { sleep } from "bun";
-import {
-  Structs,
-  type GroupMessage,
-  type Receive,
-  type WSSendReturn,
-} from "node-napcat-ts";
-import type { ChatCompletionContentPartText } from "openai/resources.mjs";
-import { BufferToBlob_2, UrlToBlob_2 } from "../core/http";
+import { Deepseek } from "@miz/ai/src/service/ai";
+import { Structs, type GroupMessage } from "node-napcat-ts";
+import type OpenAI from "openai";
 
 const info = {
   name: "聊天=>无法调用",
@@ -32,257 +12,47 @@ const info = {
 };
 
 async function Plugin(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [Config.Bot.name]);
-  if (!commandText) return;
-  if (event.raw_message.includes(Config.Bot.nickname)) {
-    const context = await sendContext(event, groupChat);
-    if (context) return;
-  } else {
-    const context = await sendContext(event, singleChat);
-    if (context) return;
+  const commandText = CommandText(event.raw_message, []);
+  if (commandText.startsWith(Config.Bot.name)) {
+    await DeepseekChat(event);
+    return;
   }
-  await SendGroupMessage(event.group_id, [
-    Structs.reply(event.message_id),
-    Structs.text("机器人cpu过热\n请稍候重试。"),
-  ]);
+  if (commandText.includes(Config.Bot.nickname)) {
+    await SendGroupMessage(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text(`迷子AI维护中，敬请期待。\n如需使用普通AI，请用bot+问题。`),
+    ]);
+    return;
+  }
 }
 
-async function sendContext(
-  event: GroupMessage,
-  context: (e: GroupMessage) => Promise<string | undefined>
-) {
-  for (let retry = 0; retry < Config.AI.retry; retry++) {
-    const message = await context(event);
-    if (message) return message;
-    await sleep(Config.Bot.message_delay * 1000);
-  }
-  return undefined;
-}
-
-async function groupChatContent(groupMessage: WSSendReturn["get_msg"]) {
-  const gemini: Part[] = [];
-  const messages = groupMessage.message;
-  const sender = groupMessage.sender.card || groupMessage.sender.nickname;
-  gemini.push({
-    text: [`Sender: ${sender}`].join("\n"),
-  });
-  for (const message of messages) {
+async function DeepseekChat(event: GroupMessage) {
+  const chatCompletionMessageParams: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
+    [];
+  for (const message of event.message) {
     if (message.type === "text") {
-      gemini.push({
-        text: CommandText(message.data.text, [Config.Bot.name]),
+      chatCompletionMessageParams.push({
+        role: "user",
+        content: [{ type: "text", text: message.data.text }],
       });
     }
-    if (message.type === "image") {
-      const image = await UrlToBlob_2(message.data.url);
-      if (image) {
-        gemini.push({ inlineData: image });
-      }
-    }
   }
-  return gemini;
-}
-
-async function groupChat(event: GroupMessage) {
-  const history = await Client().get_group_msg_history({
-    group_id: event.group_id,
-    count: Config.AI.history,
-  });
-  const messages = history.messages;
-  const part: Part[] = [];
-  for (const message of messages) {
-    const historyMsg = await groupChatContent(message);
-    part.push(...historyMsg);
+  const deepseek = await Deepseek(chatCompletionMessageParams);
+  if (!deepseek) {
+    await SendGroupMessage(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text(`机器人cpu过热\n请稍候重试。`),
+    ]);
+    return;
   }
-  const newMsgInHistory = messages.find(
-    (messages) => messages.message_id === event.message_id
-  );
-  if (!newMsgInHistory) {
-    const message = await groupChatContent(event);
-    part.push(...message);
+  for (const message of deepseek.choices) {
+    const content = message.message.content;
+    if (!content) continue;
+    await SendGroupMessage(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text(AIMessage(content)),
+    ]);
   }
-  const prompt = await aiModel.Find("gemini");
-  if (!prompt) return;
-  const chatText = await Gemini([{ role: "user", parts: part }], prompt.prompt);
-  await sendGeminiMsg(event, chatText, prompt.prompt);
-  if (!chatText || !chatText.text) return undefined;
-  return chatText.text;
-}
-
-async function singleChatContent(message: Receive[keyof Receive]) {
-  const deepseek: ChatCompletionContentPartText[] = [];
-  const gemini: Part[] = [];
-  if (message.type === "text") {
-    deepseek.push({
-      type: "text",
-      text: CommandText(message.data.text, [Config.Bot.name]),
-    });
-    gemini.push({
-      text: CommandText(message.data.text, [Config.Bot.name]),
-    });
-  }
-  if (message.type === "image") {
-    const image = await UrlToBlob_2(message.data.url);
-    if (image) {
-      gemini.push({ inlineData: image });
-    }
-  }
-  return {
-    deepseek,
-    gemini,
-  };
-}
-
-async function imageFunctionCall(
-  event: GroupMessage,
-  chat: GenerateContentResponse,
-  functionCall: FunctionCall,
-  prompt?: string
-) {
-  if (!chat.text) return undefined;
-  if (functionCall.name === "get_image") {
-    let { imageName: imageNames } = <{ imageName: Array<string> }>(
-      functionCall.args
-    );
-    if (!imageNames || !imageNames.length) return undefined;
-    for (const imageName of imageNames) {
-      const image = await Baidu(imageName);
-      if (!image) continue;
-      const reply = await retryGeminiChat(
-        [
-          {
-            role: "user",
-            parts: [{ text: event.raw_message }],
-          },
-          {
-            role: "model",
-            parts: [
-              { text: AIMessage(chat.text) },
-              {
-                inlineData: await BufferToBlob_2(image),
-              },
-              { text: `找到了 ${imageName} 的图片` },
-            ],
-          },
-        ],
-        prompt
-      );
-      if (!reply) {
-        await SendGroupMessage(event.group_id, [
-          Structs.reply(event.message_id),
-          Structs.image(image),
-        ]);
-        continue;
-      }
-      await SendGroupMessage(event.group_id, [
-        Structs.reply(event.message_id),
-        Structs.image(image),
-        Structs.text(reply),
-      ]);
-    }
-  }
-}
-
-async function geminiFunctionCall(
-  event: GroupMessage,
-  chat: GenerateContentResponse,
-  prompt?: string
-) {
-  if (!chat.functionCalls || !chat.functionCalls[0]) return undefined;
-  const functionCall = chat.functionCalls[0];
-  await imageFunctionCall(event, chat, functionCall, prompt);
-}
-
-async function sendGeminiMsg(
-  event: GroupMessage,
-  chat: GenerateContentResponse | undefined,
-  prompt?: string
-) {
-  if (!chat || !chat.text || !chat.candidates) return;
-  for (const candidates of chat.candidates) {
-    if (!candidates.content || !candidates.content.parts) continue;
-    for (const parts of candidates.content.parts) {
-      if (!parts.text) continue;
-      await SendGroupMessage(event.group_id, [
-        Structs.reply(event.message_id),
-        Structs.text(AIMessage(parts.text)),
-      ]);
-      await sleep(Config.Bot.message_delay * 1000);
-    }
-  }
-  await geminiFunctionCall(event, chat, prompt);
-}
-
-async function retryGeminiChat(context: ContentListUnion, prompt?: string) {
-  for (let retry = 0; retry < Config.AI.retry; retry++) {
-    const resp = await Gemini(context, prompt);
-    if (resp && resp.text) return AIMessage(resp.text);
-    await sleep(Config.Bot.message_delay * 1000);
-  }
-}
-
-async function sendDeepseekMsg(
-  event: GroupMessage,
-  chatText: string | null | undefined
-) {
-  if (!chatText) return;
-  await SendGroupMessage(event.group_id, [
-    Structs.reply(event.message_id),
-    Structs.text(AIMessage(chatText)),
-  ]);
-}
-
-async function singleChat(event: GroupMessage) {
-  const deepseek: ChatCompletionContentPartText[] = [];
-  const gemini: Part[] = [];
-  const pushPart = (receive: {
-    deepseek: ChatCompletionContentPartText[];
-    gemini: Part[];
-  }) => {
-    deepseek.push(...receive.deepseek);
-    gemini.push(...receive.gemini);
-  };
-  for (const eventMessage of event.message) {
-    if (eventMessage.type === "reply") {
-      const replyMessage = await GetMessage(
-        Number.parseFloat(eventMessage.data.id)
-      );
-      if (!replyMessage) continue;
-      for (const message of replyMessage.message) {
-        const receive = await singleChatContent(message);
-        pushPart(receive);
-      }
-      continue;
-    }
-    const receive = await singleChatContent(eventMessage);
-    pushPart(receive);
-  }
-  //如果有图就用gemini
-  if (deepseek.length !== gemini.length) {
-    const prompt = await aiModel.Find("gemini");
-    if (!prompt) {
-      await noPrompt(event);
-      return undefined;
-    }
-    const chatText = await Gemini(
-      [{ role: "user", parts: gemini }],
-      prompt.prompt
-    );
-    await sendGeminiMsg(event, chatText, prompt.prompt);
-    if (!chatText || !chatText.text) return undefined;
-    return chatText.text;
-  }
-  //如果没图就用deepseek
-  const chatText = await Deepseek([{ role: "user", content: deepseek }]);
-  await sendDeepseekMsg(event, chatText?.choices[0]?.message.content);
-  if (!chatText) return undefined;
-  return "";
-}
-
-async function noPrompt(event: GroupMessage) {
-  return SendGroupMessage(event.group_id, [
-    Structs.reply(event.message_id),
-    Structs.text(`未配置Prompt，请联系系统管理员`),
-  ]);
 }
 
 export { info };
