@@ -60,7 +60,7 @@ async function GetMessage(messageID: number) {
     .catch((_) => undefined);
 }
 
-async function ForwardGroupMsg(groupID: number, messageID: number) {
+async function ForwardGroupMessage(groupID: number, messageID: number) {
   return Client()
     .forward_group_single_msg({ group_id: groupID, message_id: messageID })
     .catch((e) => {
@@ -275,7 +275,7 @@ async function Init() {
 export {
   Client,
   CommandText,
-  ForwardGroupMsg,
+  ForwardGroupMessage,
   GetMessage,
   Init,
   Invoke,
