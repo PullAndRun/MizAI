@@ -1,17 +1,17 @@
-import { sendGroupMsg } from "@miz/ai/src/core/bot";
-import { help } from "@miz/ai/src/service/help";
+import { SendGroupMessage } from "@miz/ai/src/core/bot";
+import { ShowPlugin } from "@miz/ai/src/core/plugin";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
   name: "帮助",
-  comment: [`使用 "帮助" 命令查看机器人命令文档`],
-  plugin,
+  comment: [`使用 "帮助" 命令查看机器人使用说明`],
+  Plugin,
 };
 
-async function plugin(event: GroupMessage) {
-  await sendGroupMsg(event.group_id, [
+async function Plugin(event: GroupMessage) {
+  await SendGroupMessage(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.text(help()),
+    Structs.text(ShowPlugin()),
   ]);
 }
 

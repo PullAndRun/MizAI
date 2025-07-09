@@ -1,6 +1,6 @@
-import config from "@miz/ai/config/config.toml";
-import { cmd, cmdText, sendGroupMsg } from "@miz/ai/src/core/bot";
-import { duplicate, fetchFinance, fetchHot } from "@miz/ai/src/service/news";
+import Config from "@miz/ai/config/config.toml";
+import { CommandText, Invoke, SendGroupMessage } from "@miz/ai/src/core/bot";
+import { Duplicate, Finance, Hot } from "@miz/ai/src/service/news";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
@@ -9,64 +9,65 @@ const info = {
     `使用 "新闻 头条" 命令查看当前头条新闻`,
     `使用 "新闻 财经" 命令查看当前财经新闻`,
   ],
-  plugin,
+  Plugin,
 };
 
-async function plugin(event: GroupMessage) {
-  const msg = cmdText(event.raw_message, [config.bot.name, info.name]);
-  const cmdList: commandList = [
+async function Plugin(event: GroupMessage) {
+  const commandText = CommandText(event.raw_message, [
+    Config.Bot.name,
+    info.name,
+  ]);
+  const invokeParameterList: InvokeParameterList = [
     {
-      cmd: "头条",
-      cmt: `使用 "新闻 头条" 命令查看当前头条新闻`,
+      command: "头条",
+      comment: `使用 "新闻 头条" 命令查看当前头条新闻`,
       role: "member",
-      plugin: hotNews,
+      plugin: HotNews,
     },
     {
-      cmd: "财经",
-      cmt: `使用 "新闻 财经" 命令查看当前财经新闻`,
+      command: "财经",
+      comment: `使用 "新闻 财经" 命令查看当前财经新闻`,
       role: "member",
-      plugin: financeNews,
+      plugin: FinanceNews,
     },
   ];
-  await cmd(msg, event, cmdList);
+  await Invoke(event, commandText, invokeParameterList);
 }
 
-async function hotNews(_: string, event: GroupMessage) {
-  await sendNews(event, fetchHot, "热点新闻");
+async function HotNews(_: string, event: GroupMessage) {
+  await SendNews(event, Hot, "热点新闻");
 }
 
-async function financeNews(_: string, event: GroupMessage) {
-  await sendNews(event, fetchFinance, "财经新闻");
+async function FinanceNews(_: string, event: GroupMessage) {
+  await SendNews(event, Finance, "财经新闻");
 }
 
-async function sendNews(
+async function SendNews(
   event: GroupMessage,
-  fetchFunction: () => Promise<
-    Array<{ title: string; content: string }> | undefined
-  >,
+  News: () => Promise<Array<{ title: string; content: string }> | undefined>,
   newsType: string
 ) {
-  const news = await fetchFunction();
+  const news = await News();
   if (!news) {
-    await sendGroupMsg(event.group_id, [
+    await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(`获取${newsType}失败,请稍后再试。`),
     ]);
     return;
   }
-  const newNews = await duplicate(
+  const newNews = await Duplicate(
     event.group_id,
     news,
-    config.news.realtimeItems
+    Config.News.realtime.quantity
   );
   if (!newNews || !newNews.length) {
-    await sendGroupMsg(event.group_id, [
+    await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(`暂时没有新的${newsType}。`),
     ]);
     return;
   }
-  await sendGroupMsg(event.group_id, [
+  await SendGroupMessage(event.group_id, [
     Structs.reply(event.message_id),
     Structs.text(
       `为您播报${newsType}:\n\n` +

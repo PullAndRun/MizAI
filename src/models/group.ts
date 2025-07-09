@@ -15,43 +15,42 @@ class Group extends BaseEntity {
   active: boolean;
 }
 
-function find(group_id: number) {
+async function Find(group_id: number) {
   return Group.findOneBy({
     group_id,
-  });
+  }).catch((_) => undefined);
 }
 
-function findAll() {
-  return Group.find();
+async function FindAll() {
+  return Group.find().catch((_) => undefined);
 }
 
-async function add(group_id: number) {
+async function Add(group_id: number) {
   const group = new Group();
   group.group_id = group_id;
-  await group.save().catch((_) => undefined);
-  return group;
+  return group.save().catch((_) => undefined);
 }
 
-async function findOrAdd(group_id: number) {
-  const group = await find(group_id);
+async function FindOrAdd(group_id: number) {
+  const group = await Find(group_id);
   if (!group) {
-    return add(group_id);
+    return Add(group_id);
   }
   return group;
 }
 
-async function updatePrompt(group_id: number, prompt_name: string) {
-  const group = await findOrAdd(group_id);
-  group.prompt_name = prompt_name;
-  await group.save().catch((_) => undefined);
-  return group;
+async function Update(
+  group_id: number,
+  update: {
+    prompt_name?: string;
+    active?: boolean;
+  }
+) {
+  const group = await FindOrAdd(group_id);
+  if (!group) return undefined;
+  if (update.prompt_name !== undefined) group.prompt_name = update.prompt_name;
+  if (update.active !== undefined) group.active = update.active;
+  return group.save().catch((_) => undefined);
 }
 
-async function active(group_id: number, active: boolean) {
-  const group = await findOrAdd(group_id);
-  group.active = active;
-  await group.save().catch((_) => undefined);
-  return group;
-}
-
-export { active, findAll, findOrAdd, Group, updatePrompt };
+export { FindAll, FindOrAdd, Group, Update };

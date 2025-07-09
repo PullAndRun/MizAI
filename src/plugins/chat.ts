@@ -6,16 +6,15 @@ import type {
 } from "@google/genai";
 import config from "@miz/ai/config/config.toml";
 import {
-  cmdText,
-  getClient,
-  getGroupMsg,
-  sendGroupMsg,
+  Client,
+  CommandText,
+  GetMessage,
+  SendGroupMessage,
 } from "@miz/ai/src/core/bot";
-import { aiMessage, bufferToBlob_2, urlToBlob_2 } from "@miz/ai/src/core/util";
+import { AIMessage } from "@miz/ai/src/core/util";
 import * as aiModel from "@miz/ai/src/models/ai";
-import * as groupModel from "@miz/ai/src/models/group";
-import { deepSeekChat, geminiChat } from "@miz/ai/src/service/ai";
-import { baiduSearch } from "@miz/ai/src/service/image";
+import { Deepseek, Gemini } from "@miz/ai/src/service/ai";
+import { Baidu } from "@miz/ai/src/service/image";
 import { sleep } from "bun";
 import {
   Structs,
@@ -24,6 +23,7 @@ import {
   type WSSendReturn,
 } from "node-napcat-ts";
 import type { ChatCompletionContentPartText } from "openai/resources.mjs";
+import { BufferToBlob_2, UrlToBlob_2 } from "../core/http";
 
 const info = {
   name: "聊天=>无法调用",
@@ -32,21 +32,16 @@ const info = {
 };
 
 async function plugin(event: GroupMessage) {
-  const msg = cmdText(event.raw_message, [config.bot.name]);
-  if (!msg) return;
+  const commandText = CommandText(event.raw_message, [config.bot.name]);
+  if (!commandText) return;
   if (event.raw_message.includes(config.bot.nick_name)) {
-    await sendGroupMsg(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.text("AI重构中，预计今天(7月4日)上线"),
-    ]);
-    return;
     const context = await sendContext(event, groupChat);
     if (context) return;
   } else {
     const context = await sendContext(event, singleChat);
     if (context) return;
   }
-  await sendGroupMsg(event.group_id, [
+  await SendGroupMessage(event.group_id, [
     Structs.reply(event.message_id),
     Structs.text("机器人cpu过热\n请稍候重试。"),
   ]);
@@ -74,11 +69,11 @@ async function groupChatContent(groupMessage: WSSendReturn["get_msg"]) {
   for (const message of messages) {
     if (message.type === "text") {
       gemini.push({
-        text: cmdText(message.data.text, [config.bot.name]),
+        text: CommandText(message.data.text, [config.bot.name]),
       });
     }
     if (message.type === "image") {
-      const image = await urlToBlob_2(message.data.url);
+      const image = await UrlToBlob_2(message.data.url);
       if (image) {
         gemini.push({ inlineData: image });
       }
@@ -88,7 +83,7 @@ async function groupChatContent(groupMessage: WSSendReturn["get_msg"]) {
 }
 
 async function groupChat(event: GroupMessage) {
-  const history = await getClient().get_group_msg_history({
+  const history = await Client().get_group_msg_history({
     group_id: event.group_id,
     count: config.gemini.history_length,
   });
@@ -105,12 +100,9 @@ async function groupChat(event: GroupMessage) {
     const message = await groupChatContent(event);
     part.push(...message);
   }
-  const prompt = await aiModel.find("gemini");
+  const prompt = await aiModel.Find("gemini");
   if (!prompt) return;
-  const chatText = await geminiChat(
-    [{ role: "user", parts: part }],
-    prompt.prompt
-  );
+  const chatText = await Gemini([{ role: "user", parts: part }], prompt.prompt);
   await sendGeminiMsg(event, chatText, prompt.prompt);
   if (!chatText || !chatText.text) return undefined;
   return chatText.text;
@@ -122,14 +114,14 @@ async function singleChatContent(message: Receive[keyof Receive]) {
   if (message.type === "text") {
     deepseek.push({
       type: "text",
-      text: cmdText(message.data.text, [config.bot.name]),
+      text: CommandText(message.data.text, [config.bot.name]),
     });
     gemini.push({
-      text: cmdText(message.data.text, [config.bot.name]),
+      text: CommandText(message.data.text, [config.bot.name]),
     });
   }
   if (message.type === "image") {
-    const image = await urlToBlob_2(message.data.url);
+    const image = await UrlToBlob_2(message.data.url);
     if (image) {
       gemini.push({ inlineData: image });
     }
@@ -153,7 +145,7 @@ async function imageFunctionCall(
     );
     if (!imageNames || !imageNames.length) return undefined;
     for (const imageName of imageNames) {
-      const image = await baiduSearch(imageName);
+      const image = await Baidu(imageName);
       if (!image) continue;
       const reply = await retryGeminiChat(
         [
@@ -164,9 +156,9 @@ async function imageFunctionCall(
           {
             role: "model",
             parts: [
-              { text: aiMessage(chat.text) },
+              { text: AIMessage(chat.text) },
               {
-                inlineData: await bufferToBlob_2(image),
+                inlineData: await BufferToBlob_2(image),
               },
               { text: `找到了 ${imageName} 的图片` },
             ],
@@ -175,13 +167,13 @@ async function imageFunctionCall(
         prompt
       );
       if (!reply) {
-        await sendGroupMsg(event.group_id, [
+        await SendGroupMessage(event.group_id, [
           Structs.reply(event.message_id),
           Structs.image(image),
         ]);
         continue;
       }
-      await sendGroupMsg(event.group_id, [
+      await SendGroupMessage(event.group_id, [
         Structs.reply(event.message_id),
         Structs.image(image),
         Structs.text(reply),
@@ -210,9 +202,9 @@ async function sendGeminiMsg(
     if (!candidates.content || !candidates.content.parts) continue;
     for (const parts of candidates.content.parts) {
       if (!parts.text) continue;
-      await sendGroupMsg(event.group_id, [
+      await SendGroupMessage(event.group_id, [
         Structs.reply(event.message_id),
-        Structs.text(aiMessage(parts.text)),
+        Structs.text(AIMessage(parts.text)),
       ]);
       await sleep(config.bot.sleep * 1000);
     }
@@ -222,8 +214,8 @@ async function sendGeminiMsg(
 
 async function retryGeminiChat(context: ContentListUnion, prompt?: string) {
   for (let retry = 0; retry < config.gemini.retry; retry++) {
-    const resp = await geminiChat(context, prompt);
-    if (resp && resp.text) return aiMessage(resp.text);
+    const resp = await Gemini(context, prompt);
+    if (resp && resp.text) return AIMessage(resp.text);
     await sleep(config.bot.sleep * 1000);
   }
 }
@@ -233,9 +225,9 @@ async function sendDeepseekMsg(
   chatText: string | null | undefined
 ) {
   if (!chatText) return;
-  await sendGroupMsg(event.group_id, [
+  await SendGroupMessage(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.text(aiMessage(chatText)),
+    Structs.text(AIMessage(chatText)),
   ]);
 }
 
@@ -251,7 +243,9 @@ async function singleChat(event: GroupMessage) {
   };
   for (const eventMessage of event.message) {
     if (eventMessage.type === "reply") {
-      const replyMessage = await getGroupMsg(eventMessage.data.id);
+      const replyMessage = await GetMessage(
+        Number.parseFloat(eventMessage.data.id)
+      );
       if (!replyMessage) continue;
       for (const message of replyMessage.message) {
         const receive = await singleChatContent(message);
@@ -264,12 +258,12 @@ async function singleChat(event: GroupMessage) {
   }
   //如果有图就用gemini
   if (deepseek.length !== gemini.length) {
-    const prompt = await aiModel.find("gemini");
+    const prompt = await aiModel.Find("gemini");
     if (!prompt) {
       await noPrompt(event);
       return undefined;
     }
-    const chatText = await geminiChat(
+    const chatText = await Gemini(
       [{ role: "user", parts: gemini }],
       prompt.prompt
     );
@@ -278,23 +272,14 @@ async function singleChat(event: GroupMessage) {
     return chatText.text;
   }
   //如果没图就用deepseek
-  const group = await groupModel.findOrAdd(event.group_id);
-  const prompt = await aiModel.find(group.prompt);
-  if (!prompt) {
-    await noPrompt(event);
-    return undefined;
-  }
-  const chatText = await deepSeekChat(
-    [{ role: "user", content: deepseek }],
-    prompt.name === "默认" ? undefined : prompt.prompt
-  );
-  await sendDeepseekMsg(event, chatText);
+  const chatText = await Deepseek([{ role: "user", content: deepseek }]);
+  await sendDeepseekMsg(event, chatText?.choices[0]?.message.content);
   if (!chatText) return undefined;
-  return chatText;
+  return "";
 }
 
 async function noPrompt(event: GroupMessage) {
-  return sendGroupMsg(event.group_id, [
+  return SendGroupMessage(event.group_id, [
     Structs.reply(event.message_id),
     Structs.text(`未配置Prompt，请联系系统管理员`),
   ]);

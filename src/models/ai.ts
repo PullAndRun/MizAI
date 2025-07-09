@@ -12,20 +12,19 @@ class Ai extends BaseEntity {
   prompt: string;
 }
 
-function find(name: string) {
-  return Ai.findOneBy({ name });
+async function Find(name: string) {
+  return Ai.findOneBy({ name }).catch((_) => undefined);
 }
 
-function count() {
-  return Ai.count();
+async function Count() {
+  return Ai.count().catch((_) => undefined);
 }
 
-async function add(name: string, prompt: string) {
+async function Add(name: string, prompt: string) {
   const ai = new Ai();
   ai.name = name;
   ai.prompt = prompt;
-  await ai.save().catch((_) => undefined);
-  return ai;
+  return ai.save().catch((_) => undefined);
 }
 
-export { add, Ai, count, find };
+export { Add, Ai, Count, Find };

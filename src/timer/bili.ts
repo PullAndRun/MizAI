@@ -1,115 +1,137 @@
-import config from "@miz/ai/config/config.toml";
-import { getClient, sendGroupMsg } from "@miz/ai/src/core/bot";
-import { urlToBuffer } from "@miz/ai/src/core/http";
-import * as biliModel from "@miz/ai/src/models/bili";
-import * as groupModel from "@miz/ai/src/models/group";
-import * as pluginModel from "@miz/ai/src/models/plugin";
+import Config from "@miz/ai/config/config.toml";
+import { Client, SendGroupMessage } from "@miz/ai/src/core/bot";
+import { UrlToBuffer } from "@miz/ai/src/core/http";
+import * as BiliModel from "@miz/ai/src/models/bili";
+import * as GroupModel from "@miz/ai/src/models/group";
+import * as PluginModel from "@miz/ai/src/models/plugin";
 import {
-  dynamicMsg,
-  fetchCard,
-  fetchDynamic,
-  fetchLive,
-  liveEndMsg,
-  liveMsg,
+  Card,
+  Dynamic,
+  DynamicReply,
+  Live,
+  LiveEndReply,
+  LiveStartReply,
 } from "@miz/ai/src/service/bili";
 import { sleep } from "bun";
 import dayjs from "dayjs";
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";
 
-async function pushLiveNotifications() {
-  const groups = await getClient().get_group_list();
-  const biliFindAll = await biliModel.findAll();
-  if (!biliFindAll.length) return;
-  const mids = biliFindAll.map((v) => v.mid);
-  const lives = await fetchLive(mids);
-  if (!lives) return;
+async function PushLiveNotifications() {
+  const groups = await Client().get_group_list();
+  const biliFindAll = await BiliModel.FindAll();
+  if (!groups.length || !biliFindAll || !biliFindAll.length) return;
+  const memberIDs = biliFindAll.map((v) => v.member_id);
+  const live = await Live(memberIDs);
+  if (!live) return;
   for (const group of groups) {
-    const findGroup = await groupModel.findOrAdd(group.group_id);
-    if (!findGroup.active) continue;
-    const lock = await pluginModel.findOrAdd(group.group_id, "直播推送", true);
-    if (!lock.enable) continue;
-    const vtbs = biliFindAll.filter((v) => v.gid === group.group_id);
-    if (!vtbs.length) continue;
-    for (const vtb of vtbs) {
-      const user = lives[vtb.mid];
+    const findGroup = await GroupModel.FindOrAdd(group.group_id);
+    if (!findGroup || !findGroup.active) continue;
+    const lock = await PluginModel.FindOrAdd(group.group_id, "直播推送", true);
+    if (!lock || !lock.enable) continue;
+    const vtubers = biliFindAll.filter((v) => v.group_id === group.group_id);
+    if (!vtubers.length) continue;
+    for (const vtuber of vtubers) {
+      const user = live[vtuber.member_id];
       if (!user) continue;
-      if (user.live_status !== 1 && vtb.isLive) {
-        const card = await fetchCard(vtb.mid);
-        const fans = () => {
-          if (!card || !vtb.fans) return 0;
-          return card.fans - vtb.fans;
+      if (user.live_status !== 1 && vtuber.is_live) {
+        const card = await Card(vtuber.member_id);
+        const fansChange = () => {
+          if (!card || !vtuber.fans) return 0;
+          return card.fans - vtuber.fans;
         };
-        const msg = await liveEndMsg({
-          cover_from_user: user.cover_from_user,
-          uname: user.uname,
+        const liveEndReply = await LiveEndReply({
+          coverFromUser: user.cover_from_user,
+          name: user.uname,
           title: user.title,
-          startTime: vtb.liveTime,
-          fans: fans(),
+          startTime: vtuber.live_time,
+          fans: fansChange(),
         });
-        await sendGroupMsg(group.group_id, [
-          msg.cover && Structs.image(msg.cover),
-          Structs.text(msg.text),
+        await SendGroupMessage(group.group_id, [
+          liveEndReply.cover && Structs.image(liveEndReply.cover),
+          Structs.text(liveEndReply.text),
         ]);
-        await biliModel.updateLiveStatus(vtb.gid, vtb.mid, vtb.rid, false);
-        await biliModel.updateLiveTime(vtb.gid, vtb.mid, vtb.rid, 0);
+        await BiliModel.Update(
+          vtuber.group_id,
+          vtuber.member_id,
+          vtuber.room_id,
+          {
+            is_live: false,
+            live_time: 0,
+          }
+        );
         continue;
       }
       if (
         user.live_status !== 1 ||
         user.live_time === 0 ||
         dayjs().diff(dayjs(user.live_time * 1000), "minute") >=
-          config.bili.liveDelay
+          Config.Bili.live.delay
       )
         continue;
-      const msg = await liveMsg(user);
-      await sendGroupMsg(group.group_id, [
-        msg.cover && Structs.image(msg.cover),
-        Structs.text(msg.text),
+      const liveStartReply = await LiveStartReply({
+        coverFromUser: user.cover_from_user,
+        title: user.title,
+        name: user.uname,
+        liveTime: user.live_time,
+        roomID: user.room_id,
+      });
+      await SendGroupMessage(group.group_id, [
+        liveStartReply.cover && Structs.image(liveStartReply.cover),
+        Structs.text(liveStartReply.text),
       ]);
-      const card = await fetchCard(vtb.mid);
-      if (card) {
-        await biliModel.updateFans(vtb.gid, vtb.mid, vtb.rid, card.fans);
-      }
-      await biliModel.updateLiveStatus(vtb.gid, vtb.mid, vtb.rid, true);
-      await biliModel.updateLiveTime(vtb.gid, vtb.mid, vtb.rid, user.live_time);
+      const card = await Card(vtuber.member_id);
+      const fans = () => {
+        if (!card) return 0;
+        return card.fans;
+      };
+      await BiliModel.Update(
+        vtuber.group_id,
+        vtuber.member_id,
+        vtuber.room_id,
+        {
+          fans: fans(),
+          is_live: true,
+          live_time: user.live_time,
+        }
+      );
     }
   }
 }
 
-async function pushDynamicNotifications() {
-  const groups = await getClient().get_group_list();
-  const biliFindAll = await biliModel.findAll();
-  if (!biliFindAll.length) return;
+async function PushDynamicNotifications() {
+  const groups = await Client().get_group_list();
+  const biliFindAll = await BiliModel.FindAll();
+  if (!groups.length || !biliFindAll || !biliFindAll.length) return;
   for (const group of groups) {
-    const findGroup = await groupModel.findOrAdd(group.group_id);
-    if (!findGroup.active) continue;
-    const lock = await pluginModel.findOrAdd(group.group_id, "动态推送", true);
-    if (!lock.enable) continue;
-    const vtbs = biliFindAll.filter((v) => v.gid === group.group_id);
-    if (!vtbs.length) continue;
-    for (const vtb of vtbs) {
-      const dynamic = await fetchDynamic(vtb.mid);
+    const findGroup = await GroupModel.FindOrAdd(group.group_id);
+    if (!findGroup || !findGroup.active) continue;
+    const lock = await PluginModel.FindOrAdd(group.group_id, "动态推送", true);
+    if (!lock || !lock.enable) continue;
+    const vtubers = biliFindAll.filter((v) => v.group_id === group.group_id);
+    if (!vtubers.length) continue;
+    for (const vtuber of vtubers) {
+      const dynamic = await Dynamic(vtuber.member_id);
       if (!dynamic) continue;
       if (
         dayjs().diff(dayjs(dynamic.pubDate), "minute") >=
-        config.bili.dynamicDelay
+        Config.Bili.dynamic.delay
       )
         continue;
-      const msg = dynamicMsg(dynamic);
-      const msgImage = await urlToBuffer(dynamic.image);
-      await sleep(config.bili.sleep * 1000);
-      await sendGroupMsg(group.group_id, [
-        msgImage && Structs.image(msgImage),
-        Structs.text(msg.text),
+      const dynamicReply = DynamicReply(dynamic);
+      const imageBuffer = await UrlToBuffer(dynamic.image);
+      await SendGroupMessage(group.group_id, [
+        imageBuffer && Structs.image(imageBuffer),
+        Structs.text(dynamicReply.text),
       ]);
+      await sleep(Config.Bot.message_delay * 1000);
     }
   }
 }
 
-function task() {
-  schedule.scheduleJob(config.bili.liveSpec, pushLiveNotifications);
-  schedule.scheduleJob(config.bili.dynamicSpec, pushDynamicNotifications);
+function Task() {
+  schedule.scheduleJob(Config.Bili.live.spec, PushLiveNotifications);
+  schedule.scheduleJob(Config.Bili.dynamic.spec, PushDynamicNotifications);
 }
 
-export { task };
+export { Task };

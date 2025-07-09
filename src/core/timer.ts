@@ -10,9 +10,9 @@ async function Load() {
     if (!file.endsWith(".js") && !file.endsWith(".ts")) continue;
     const timerPath = path.join(timerDirectory, file);
     try {
-      const { task } = await import(timerPath);
-      if (task) {
-        task();
+      const { Task } = await import(timerPath);
+      if (Task) {
+        Task();
         count += 1;
       }
     } catch (err) {

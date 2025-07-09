@@ -6,7 +6,7 @@ import path from "node:path";
 interface Plugin {
   name: string;
   comment: Array<string>;
-  plugin: (event: GroupMessage) => Promise<void>;
+  Plugin: (event: GroupMessage) => Promise<void>;
 }
 
 const plugins: Plugin[] = [];

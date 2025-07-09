@@ -21,7 +21,7 @@ class Earthquake extends BaseEntity {
   pub_date: string;
 }
 
-function find(
+async function Find(
   title: string,
   description: string,
   link: string,
@@ -32,14 +32,14 @@ function find(
     description,
     link,
     pub_date,
-  });
+  }).catch((_) => undefined);
 }
 
-function count() {
-  return Earthquake.count();
+async function Count() {
+  return Earthquake.count().catch((_) => undefined);
 }
 
-async function add(
+async function Add(
   title: string,
   description: string,
   link: string,
@@ -50,8 +50,7 @@ async function add(
   earthquake.description = description;
   earthquake.link = link;
   earthquake.pub_date = pub_date;
-  await earthquake.save().catch((_) => undefined);
-  return earthquake;
+  return earthquake.save().catch((_) => undefined);
 }
 
-export { add, count, Earthquake, find };
+export { Add, Count, Earthquake, Find };

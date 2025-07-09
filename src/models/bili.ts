@@ -34,41 +34,35 @@ class Bili extends BaseEntity {
   is_live: boolean;
 }
 
-function find(group_id: number, member_id: number, room_id: number) {
+async function Find(group_id: number, member_id: number, room_id: number) {
   return Bili.findOneBy({
     group_id,
     member_id,
     room_id,
-  });
+  }).catch((_) => undefined);
 }
 
-async function updateFans(
+async function Update(
   group_id: number,
   member_id: number,
   room_id: number,
-  fans: number
+  update: {
+    name?: string;
+    live_time?: number;
+    fans?: number;
+    is_live?: boolean;
+  }
 ) {
-  const bili = await find(group_id, member_id, room_id);
+  const bili = await Find(group_id, member_id, room_id);
   if (!bili) return undefined;
-  bili.fans = fans;
-  await bili.save().catch((_) => undefined);
-  return bili;
+  if (update.name !== undefined) bili.name = update.name;
+  if (update.live_time !== undefined) bili.live_time = update.live_time;
+  if (update.fans !== undefined) bili.fans = update.fans;
+  if (update.is_live !== undefined) bili.is_live = update.is_live;
+  return bili.save().catch((_) => undefined);
 }
 
-async function updateLiveStatus(
-  group_id: number,
-  member_id: number,
-  room_id: number,
-  is_live: boolean
-) {
-  const bili = await find(group_id, member_id, room_id);
-  if (!bili) return undefined;
-  bili.is_live = is_live;
-  await bili.save().catch((_) => undefined);
-  return bili;
-}
-
-async function add(
+async function Add(
   name: string,
   group_id: number,
   member_id: number,
@@ -79,63 +73,43 @@ async function add(
   bili.group_id = group_id;
   bili.member_id = member_id;
   bili.room_id = room_id;
-  await bili.save().catch((_) => undefined);
-  return bili;
+  return bili.save().catch((_) => undefined);
 }
 
-async function findOrAdd(
+async function FindOrAdd(
   name: string,
   group_id: number,
   member_id: number,
   room_id: number
 ) {
-  const bili = await find(group_id, member_id, room_id);
+  const bili = await Find(group_id, member_id, room_id);
   if (!bili) {
-    return add(name, group_id, member_id, room_id);
+    return Add(name, group_id, member_id, room_id);
   }
   return bili;
 }
 
-async function remove(group_id: number, name: string) {
-  const bili = await Bili.findOneBy({ group_id, name });
+async function RemoveUploader(group_id: number, name: string) {
+  const bili = await Bili.findOneBy({ group_id, name }).catch((_) => undefined);
   if (!bili) return undefined;
-  await bili.remove().catch((_) => undefined);
-  return bili;
+  return bili.remove().catch((_) => undefined);
 }
 
-async function updateLiveTime(
-  group_id: number,
-  member_id: number,
-  room_id: number,
-  live_time: number
-) {
-  const bili = await find(group_id, member_id, room_id);
-  if (!bili) return undefined;
-  bili.live_time = live_time;
-  await bili.save().catch((_) => undefined);
-  return bili;
-}
-
-async function removeGroup(group_id: number) {
-  const biliList = await Bili.find({ where: { group_id } });
+async function RemoveGroup(group_id: number) {
+  const biliList = await Bili.find({ where: { group_id } }).catch(
+    (_) => undefined
+  );
   if (!biliList) return undefined;
+  const removeList = [];
   for (const bili of biliList) {
-    await bili.remove();
+    const removeGroup = await bili.remove().catch((_) => undefined);
+    removeList.push(removeGroup);
   }
-  return biliList;
+  return removeList.filter((v) => !!v);
 }
 
-async function findAll() {
-  return Bili.find();
+async function FindAll() {
+  return Bili.find().catch((_) => undefined);
 }
 
-export {
-  Bili,
-  findAll,
-  findOrAdd,
-  remove,
-  removeGroup,
-  updateFans,
-  updateLiveStatus,
-  updateLiveTime,
-};
+export { Bili, FindAll, FindOrAdd, RemoveGroup, RemoveUploader, Update };

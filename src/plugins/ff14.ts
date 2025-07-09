@@ -1,6 +1,6 @@
-import config from "@miz/ai/config/config.toml";
-import { cmd, cmdText, sendGroupMsg } from "@miz/ai/src/core/bot";
-import { searchBoard } from "@miz/ai/src/service/ff14";
+import Config from "@miz/ai/config/config.toml";
+import { CommandText, Invoke, SendGroupMessage } from "@miz/ai/src/core/bot";
+import { TradingBoard } from "@miz/ai/src/service/ff14";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
@@ -8,26 +8,29 @@ const info = {
   comment: [
     `使用 "ff14 板子 [猫|猪|狗|鸟] [商品名]" 命令进行最终幻想14交易板商品查询`,
   ],
-  plugin,
+  Plugin,
 };
 
-async function plugin(event: GroupMessage) {
-  const msg = cmdText(event.raw_message, [config.bot.name, info.name]);
-  const cmdList: commandList = [
+async function Plugin(event: GroupMessage) {
+  const commandText = CommandText(event.raw_message, [
+    Config.Bot.name,
+    info.name,
+  ]);
+  const invokeParameterList: InvokeParameterList = [
     {
-      cmd: "板子",
-      cmt: `使用 "ff14 板子 [猫|猪|狗|鸟] [商品名]" 命令进行最终幻想14交易板商品查询`,
+      command: "板子",
+      comment: `使用 "ff14 板子 [猫|猪|狗|鸟] [商品名]" 命令进行最终幻想14交易板商品查询`,
       role: "member",
-      plugin: board,
+      plugin: Board,
     },
   ];
-  await cmd(msg, event, cmdList);
+  await Invoke(event, commandText, invokeParameterList);
 }
 
-async function board(msg: string, event: GroupMessage) {
-  const [region, goods] = msg.split(" ");
+async function Board(message: string, event: GroupMessage) {
+  const [region, goods] = message.split(" ");
   if (!region || !goods) {
-    await sendGroupMsg(event.group_id, [
+    await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(
         `命令错误。请使用 "ff14 板子 [猫|猪|狗|鸟] [商品名]" 命令进行最终幻想14交易板商品查询。`
@@ -35,10 +38,10 @@ async function board(msg: string, event: GroupMessage) {
     ]);
     return;
   }
-  const result = await searchBoard(region, goods);
-  await sendGroupMsg(event.group_id, [
+  const tradingBoard = await TradingBoard(region, goods);
+  await SendGroupMessage(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.text(result),
+    Structs.text(tradingBoard),
   ]);
 }
 

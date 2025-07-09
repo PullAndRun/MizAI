@@ -2,7 +2,7 @@ import Config from "@miz/ai/config/config.toml";
 import { Logger } from "@miz/ai/src/core/log";
 import * as AIModel from "@miz/ai/src/models/ai";
 import * as EarthquakeModel from "@miz/ai/src/models/earthquake";
-import { FetchEarthquake } from "@miz/ai/src/service/earthquake";
+import { Earthquake } from "@miz/ai/src/service/earthquake";
 import { DataSource } from "typeorm";
 
 const dataSource = new DataSource({
@@ -11,11 +11,11 @@ const dataSource = new DataSource({
 
 async function SetDefaultData() {
   //初始化地震数据库的数据
-  const earthquakeCount = await EarthquakeModel.count();
-  const fetchEarthquake = await FetchEarthquake(Config.Earthquake.level);
+  const earthquakeCount = await EarthquakeModel.Count();
+  const fetchEarthquake = await Earthquake(Config.Earthquake.level);
   if (!earthquakeCount && fetchEarthquake && fetchEarthquake.length) {
     for (const earthquake of fetchEarthquake) {
-      await EarthquakeModel.add(
+      await EarthquakeModel.Add(
         earthquake.title,
         earthquake.description,
         earthquake.link,
@@ -27,11 +27,11 @@ async function SetDefaultData() {
     );
   }
   //初始化ai数据库的数据
-  const aiCount = await AIModel.count();
+  const aiCount = await AIModel.Count();
   if (!aiCount) {
-    await AIModel.add("默认", "");
-    await AIModel.add("gemini", "");
-    Logger.info(`初始化了ai数据库,增加了 ${await AIModel.count()} 条数据`);
+    await AIModel.Add("默认", "");
+    await AIModel.Add("gemini", "");
+    Logger.info(`初始化了ai数据库,增加了 ${await AIModel.Count()} 条数据`);
   }
 }
 

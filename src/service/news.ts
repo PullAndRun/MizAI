@@ -1,11 +1,11 @@
 import Config from "@miz/ai/config/config.toml";
+import { UrlToJson } from "@miz/ai/src/core/http";
 import { z } from "zod";
-import { UrlToJson } from "../core/http";
 
 const newsMap: Map<number, Array<string>> = new Map();
 
 async function Finance() {
-  const financeJson = await UrlToJson(Config.news.finance.url);
+  const financeJson = await UrlToJson(Config.News.finance.url);
   const financeSchema = z.object({
     Result: z.object({
       content: z.object({

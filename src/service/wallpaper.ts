@@ -6,7 +6,7 @@ const imageInfo: { image: Buffer<ArrayBuffer> | undefined; copyright: string } =
   { image: undefined, copyright: "" };
 
 async function Wallpaper() {
-  const imageJson = await UrlToJson(Config.wallpaper.url);
+  const imageJson = await UrlToJson(Config.Wallpaper.url);
   const imageSchema = z.object({
     url: z.string(),
     copyright: z.string(),

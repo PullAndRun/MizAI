@@ -1,24 +1,7 @@
-import Config from "@miz/ai/config/config.toml";
 import { cloudsearch, comment_new, song_detail } from "NeteaseCloudMusicApi";
 import { z } from "zod";
 
-async function NeteaseMusic(keyword: string) {
-  const id = await NameToID(keyword);
-  if (!id) return undefined;
-  const detail = await IDToDetail(id);
-  if (!detail) return undefined;
-  const comment = await IDToHotComment(id);
-  return {
-    albumPicture: detail.al.picUrl || undefined,
-    comment,
-    url: `${Config.Music.netease.url}${id}`,
-    name: detail.name,
-    singer: detail.ar.map((singer) => singer.name).join("、"),
-    album: detail.al.name,
-  };
-}
-
-async function NameToID(keyword: string) {
+async function ID(keyword: string) {
   const musicSchema = z.object({
     status: z.number(),
     body: z.object({
@@ -47,7 +30,7 @@ async function NameToID(keyword: string) {
   return id;
 }
 
-async function IDToDetail(id: number) {
+async function Detail(id: number) {
   const musicSchema = z.object({
     status: z.number(),
     body: z.object({
@@ -75,7 +58,7 @@ async function IDToDetail(id: number) {
   return detail;
 }
 
-async function IDToHotComment(id: number) {
+async function HotComment(id: number) {
   const commentSchema = z.object({
     status: z.number(),
     body: z.object({
@@ -108,4 +91,4 @@ async function IDToHotComment(id: number) {
   return comment;
 }
 
-export { NeteaseMusic };
+export { Detail, HotComment, ID };

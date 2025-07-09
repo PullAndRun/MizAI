@@ -71,7 +71,7 @@ async function Dynamic(memberID: number) {
 }
 
 async function User(name: string) {
-  const userJson = await UrlToJson(Config.Bili.user + name);
+  const userJson = await UrlToJson(Config.Bili.user.url + name);
   if (!userJson) return undefined;
   const userSchema = z.object({
     data: z.object({
@@ -92,7 +92,7 @@ async function User(name: string) {
 }
 
 async function Card(memberID: number) {
-  const cardJson = await UrlToJson(Config.Bili.card + memberID);
+  const cardJson = await UrlToJson(Config.Bili.card.url + memberID);
   if (!cardJson) return undefined;
   const userSchema = z.object({
     data: z.object({
@@ -139,7 +139,7 @@ async function Live(memberID: Array<number>) {
   return live.data.data;
 }
 
-async function LiveReply(live: {
+async function LiveStartReply(live: {
   coverFromUser: string;
   title: string;
   name: string;
@@ -208,4 +208,12 @@ function DynamicReply(dynamicData: {
   };
 }
 
-export { Card, Dynamic, DynamicReply, Live, LiveEndReply, LiveReply, User };
+export {
+  Card,
+  Dynamic,
+  DynamicReply,
+  Live,
+  LiveEndReply,
+  LiveStartReply,
+  User,
+};

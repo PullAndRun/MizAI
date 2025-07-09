@@ -22,46 +22,44 @@ class Plugin extends BaseEntity {
   enable: boolean;
 }
 
-function find(group_id: number, name: string) {
+async function Find(group_id: number, name: string) {
   return Plugin.findOneBy({
     group_id,
     name,
-  });
+  }).catch((_) => undefined);
 }
 
-async function add(group_id: number, name: string, enable: boolean) {
+async function Add(group_id: number, name: string, enable: boolean = true) {
   const plugin = new Plugin();
   plugin.group_id = group_id;
   plugin.name = name;
   plugin.enable = enable;
-  await plugin.save().catch((_) => undefined);
+  return plugin.save().catch((_) => undefined);
+}
+
+async function FindOrAdd(group_id: number, name: string, enable: boolean) {
+  const plugin = await Find(group_id, name);
+  if (!plugin) {
+    return Add(group_id, name, enable);
+  }
   return plugin;
 }
 
-async function findOrAdd(
+async function Update(
   group_id: number,
   name: string,
-  enable: boolean = true
+  update: { enable?: boolean }
 ) {
-  const plugin = await find(group_id, name);
+  const plugin = await Find(group_id, name);
   if (!plugin) {
-    return add(group_id, name, enable);
+    return Add(group_id, name);
   }
-  return plugin;
+  if (update.enable !== undefined) plugin.enable = update.enable;
+  return plugin.save().catch((_) => undefined);
 }
 
-async function update(group_id: number, name: string, enable: boolean) {
-  const plugin = await find(group_id, name);
-  if (!plugin) {
-    return add(group_id, name, enable);
-  }
-  plugin.enable = enable;
-  await plugin.save().catch((_) => undefined);
-  return plugin;
+async function FindByGroupID(group_id: number) {
+  return Plugin.findBy({ group_id }).catch((_) => undefined);
 }
 
-async function findByGid(group_id: number) {
-  return Plugin.findBy({ group_id });
-}
-
-export { findByGid, findOrAdd, Plugin, update };
+export { FindByGroupID, FindOrAdd, Plugin, Update };

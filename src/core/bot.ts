@@ -38,10 +38,10 @@ function Client() {
 
 async function SendGroupMessage(
   groupID: number,
-  message: SendMessageSegment[]
+  message: (SendMessageSegment | undefined)[]
 ) {
   return Client()
-    .send_group_msg({ group_id: groupID, message })
+    .send_group_msg({ group_id: groupID, message: message.filter((v) => !!v) })
     .catch((e) => {
       Logger.warn(
         `群消息发送失败\n->群号:${groupID}\n->原因:\n${JSON.stringify(
@@ -73,7 +73,6 @@ async function ForwardGroupMsg(groupID: number, messageID: number) {
     });
 }
 
-//获取命令体，不要用来获取聊天正文。
 function CommandText(message: string, commands: string[]) {
   const cleanedMessage = message
     //删除所有方括号内容
@@ -183,17 +182,18 @@ async function Listener() {
       callBot = false;
     }
     if (!callBot) {
-      Pick("复读=>无法调用")?.plugin(event);
+      Pick("复读=>无法调用")?.Plugin(event);
       return;
     }
     const message = messageList.filter((v) => !!v).join("");
     if (!message) return;
     const plugin = Pick(message);
     if (!plugin) {
-      Pick("聊天=>无法调用")?.plugin(event);
+      Pick("聊天=>无法调用")?.Plugin(event);
       return;
     }
-    const lock = await PluginModel.findOrAdd(event.group_id, plugin.name, true);
+    const lock = await PluginModel.FindOrAdd(event.group_id, plugin.name, true);
+    if (!lock) return;
     if (!lock.enable) {
       await SendGroupMessage(event.group_id, [
         Structs.reply(event.message_id),
@@ -201,17 +201,16 @@ async function Listener() {
       ]);
       return;
     }
-    plugin.plugin(event);
+    plugin.Plugin(event);
   });
   Client().on("request.group.invite", async (event) => {
     await event.quick_action(true);
-    await GroupModel.active(event.group_id, true);
+    await GroupModel.Update(event.group_id, { active: true });
     Logger.warn(`机器人加入了群 ${event.group_id}`);
   });
   Client().on("notice.group_increase", async (event) => {
-    const lock = await PluginModel.findOrAdd(event.group_id, "入群推送", true);
-    if (!lock.enable) return;
-    if (event.user_id === loginInfo.user_id) return;
+    const lock = await PluginModel.FindOrAdd(event.group_id, "入群推送", true);
+    if (!lock || !lock.enable || event.user_id === loginInfo.user_id) return;
     const member = await Client().get_group_member_info({
       group_id: event.group_id,
       user_id: event.user_id,
@@ -224,7 +223,7 @@ async function Listener() {
     ]);
   });
   Client().on("notice.group_decrease.kick_me", async (event) => {
-    await GroupModel.active(event.group_id, false);
+    await GroupModel.Update(event.group_id, { active: false });
     Logger.warn(`机器人被移出了群 ${event.group_id}`);
   });
   Client().on("notice.group_decrease", async (event) => {
@@ -233,11 +232,11 @@ async function Listener() {
         Structs.text(`监测到系统管理员退群。${Config.Bot.nickname} 跟随退群。`),
       ]);
       await Client().set_group_leave({ group_id: event.group_id });
-      await GroupModel.active(event.group_id, false);
+      await GroupModel.Update(event.group_id, { active: false });
       return;
     }
-    const lock = await PluginModel.findOrAdd(event.group_id, "退群推送", false);
-    if (!lock.enable) return;
+    const lock = await PluginModel.FindOrAdd(event.group_id, "退群推送", false);
+    if (!lock || !lock.enable) return;
     const strangerInfo = await Client().get_stranger_info({
       user_id: event.user_id,
     });
@@ -254,15 +253,16 @@ async function Listener() {
 async function GroupInit() {
   const qqGroupList = await Client().get_group_list();
   for (const group of qqGroupList) {
-    await GroupModel.active(group.group_id, true);
+    await GroupModel.Update(group.group_id, { active: true });
   }
-  const dbGroupList = await GroupModel.findAll();
+  const dbGroupList = await GroupModel.FindAll();
+  if (!dbGroupList) return;
   const leaveGroupList = dbGroupList.filter(
     (dbGroup) =>
       !!!qqGroupList.find((qqGroup) => dbGroup.group_id === qqGroup.group_id)
   );
   for (const leaveGroup of leaveGroupList) {
-    await GroupModel.active(leaveGroup.group_id, false);
+    await GroupModel.Update(leaveGroup.group_id, { active: false });
   }
 }
 

@@ -4,7 +4,7 @@ import { ToJson } from "@miz/ai/src/core/util";
 import { z } from "zod";
 
 async function Suyanw(text: string) {
-  const imageJson = await UrlToJson(Config.image.suyanw + text);
+  const imageJson = await UrlToJson(Config.Image.suyanw.url + text);
   const imageSchema = z.object({
     data: z
       .array(
