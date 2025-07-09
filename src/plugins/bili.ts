@@ -1,10 +1,5 @@
 import Config from "@miz/ai/config/config.toml";
-import {
-  Client,
-  CommandText,
-  Invoke,
-  SendGroupMessage,
-} from "@miz/ai/src/core/bot";
+import { CommandText, Invoke, SendGroupMessage } from "@miz/ai/src/core/bot";
 import { UrlToBuffer } from "@miz/ai/src/core/http";
 import * as BiliModel from "@miz/ai/src/models/bili";
 import {

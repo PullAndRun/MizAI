@@ -26,16 +26,16 @@ function AIReply(message: string) {
       //多个#变"#"
       .replace(/\#+/g, "#")
       //#*变*
-      .replace(/#\*/g, "*")
+      .replace(/ *#\*/g, "## *")
       //去除首尾空白
       .trim()
   );
 }
 
-function DeepseekPartText(text: string) {
+function AIPartText(text: string) {
   return text
     .trim()
     .replace(new RegExp(`(^\\s*${Config.Bot.name}\\s*)`, "g"), "");
 }
 
-export { AIReply, DeepseekPartText, ToJson };
+export { AIPartText, AIReply, ToJson };

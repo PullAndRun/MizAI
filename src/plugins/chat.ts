@@ -4,7 +4,7 @@ import {
   GetMessage,
   SendGroupMessage,
 } from "@miz/ai/src/core/bot";
-import { AIReply, DeepseekPartText } from "@miz/ai/src/core/util";
+import { AIPartText, AIReply } from "@miz/ai/src/core/util";
 import { Deepseek } from "@miz/ai/src/service/ai";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 import type OpenAI from "openai";
@@ -41,9 +41,7 @@ async function DeepseekChat(event: GroupMessage) {
         if (message.type === "text") {
           chatCompletionMessageParams.push({
             role: "user",
-            content: [
-              { type: "text", text: DeepseekPartText(message.data.text) },
-            ],
+            content: [{ type: "text", text: AIPartText(message.data.text) }],
           });
         }
       }
@@ -52,7 +50,7 @@ async function DeepseekChat(event: GroupMessage) {
     if (message.type === "text") {
       chatCompletionMessageParams.push({
         role: "user",
-        content: [{ type: "text", text: DeepseekPartText(message.data.text) }],
+        content: [{ type: "text", text: AIPartText(message.data.text) }],
       });
     }
   }
