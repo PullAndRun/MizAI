@@ -4,7 +4,7 @@ import type {
   GenerateContentResponse,
   Part,
 } from "@google/genai";
-import config from "@miz/ai/config/config.toml";
+import Config from "@miz/ai/config/config.toml";
 import {
   Client,
   CommandText,
@@ -28,13 +28,13 @@ import { BufferToBlob_2, UrlToBlob_2 } from "../core/http";
 const info = {
   name: "聊天=>无法调用",
   comment: [`内置AI聊天功能`],
-  plugin,
+  Plugin,
 };
 
-async function plugin(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [config.bot.name]);
+async function Plugin(event: GroupMessage) {
+  const commandText = CommandText(event.raw_message, [Config.Bot.name]);
   if (!commandText) return;
-  if (event.raw_message.includes(config.bot.nick_name)) {
+  if (event.raw_message.includes(Config.Bot.nickname)) {
     const context = await sendContext(event, groupChat);
     if (context) return;
   } else {
@@ -51,10 +51,10 @@ async function sendContext(
   event: GroupMessage,
   context: (e: GroupMessage) => Promise<string | undefined>
 ) {
-  for (let retry = 0; retry < config.gemini.retry; retry++) {
+  for (let retry = 0; retry < Config.AI.retry; retry++) {
     const message = await context(event);
     if (message) return message;
-    await sleep(config.gemini.sleep * 1000);
+    await sleep(Config.Bot.message_delay * 1000);
   }
   return undefined;
 }
@@ -69,7 +69,7 @@ async function groupChatContent(groupMessage: WSSendReturn["get_msg"]) {
   for (const message of messages) {
     if (message.type === "text") {
       gemini.push({
-        text: CommandText(message.data.text, [config.bot.name]),
+        text: CommandText(message.data.text, [Config.Bot.name]),
       });
     }
     if (message.type === "image") {
@@ -85,7 +85,7 @@ async function groupChatContent(groupMessage: WSSendReturn["get_msg"]) {
 async function groupChat(event: GroupMessage) {
   const history = await Client().get_group_msg_history({
     group_id: event.group_id,
-    count: config.gemini.history_length,
+    count: Config.AI.history,
   });
   const messages = history.messages;
   const part: Part[] = [];
@@ -114,10 +114,10 @@ async function singleChatContent(message: Receive[keyof Receive]) {
   if (message.type === "text") {
     deepseek.push({
       type: "text",
-      text: CommandText(message.data.text, [config.bot.name]),
+      text: CommandText(message.data.text, [Config.Bot.name]),
     });
     gemini.push({
-      text: CommandText(message.data.text, [config.bot.name]),
+      text: CommandText(message.data.text, [Config.Bot.name]),
     });
   }
   if (message.type === "image") {
@@ -206,17 +206,17 @@ async function sendGeminiMsg(
         Structs.reply(event.message_id),
         Structs.text(AIMessage(parts.text)),
       ]);
-      await sleep(config.bot.sleep * 1000);
+      await sleep(Config.Bot.message_delay * 1000);
     }
   }
   await geminiFunctionCall(event, chat, prompt);
 }
 
 async function retryGeminiChat(context: ContentListUnion, prompt?: string) {
-  for (let retry = 0; retry < config.gemini.retry; retry++) {
+  for (let retry = 0; retry < Config.AI.retry; retry++) {
     const resp = await Gemini(context, prompt);
     if (resp && resp.text) return AIMessage(resp.text);
-    await sleep(config.bot.sleep * 1000);
+    await sleep(Config.Bot.message_delay * 1000);
   }
 }
 

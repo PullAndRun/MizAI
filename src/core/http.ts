@@ -1,19 +1,19 @@
 import { fileTypeFromBuffer } from "file-type";
 
-async function UrlToJson(url: string) {
-  return fetch(url, { signal: AbortSignal.timeout(5000) })
-    .then((res) => res.json())
+async function UrlToJson(url: string, headers?: Bun.HeadersInit) {
+  return fetch(url, { signal: AbortSignal.timeout(5000), headers })
+    .then(async (res) => res.json())
     .catch((_) => undefined);
 }
 
-async function UrlToBuffer(url: string) {
-  return fetch(url, { signal: AbortSignal.timeout(5000) })
+async function UrlToBuffer(url: string, headers?: Bun.HeadersInit) {
+  return fetch(url, { signal: AbortSignal.timeout(5000), headers })
     .then(async (res) => Buffer.from(await res.arrayBuffer()))
     .catch((_) => undefined);
 }
 
-async function UrlToText(url: string) {
-  return fetch(url, { signal: AbortSignal.timeout(5000) })
+async function UrlToText(url: string, headers?: Bun.HeadersInit) {
+  return fetch(url, { signal: AbortSignal.timeout(5000), headers })
     .then(async (res) => res.text())
     .catch((_) => undefined);
 }

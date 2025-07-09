@@ -19,7 +19,7 @@ async function Load() {
     const pluginPath = path.join(pluginDirectory, file);
     try {
       const { info } = await import(pluginPath);
-      if (!info || !info.name || !info.plugin) continue;
+      if (!info || !info.name || !info.Plugin) continue;
       plugins.push(info);
     } catch (err) {
       Logger.error(

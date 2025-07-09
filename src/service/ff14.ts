@@ -60,7 +60,7 @@ async function TradingBoard(region: string, goods: string) {
       )
     );
   }
-  return `您查询的: ${goods} 商品价目如下:\n${goodsList.join("\n")}`;
+  return `您查询的: ${goods} 商品价目如下\n${goodsList.join("\n")}`;
 }
 
 async function SearchGoods(region: string, goods: string) {

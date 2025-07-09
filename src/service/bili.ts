@@ -71,7 +71,9 @@ async function Dynamic(memberID: number) {
 }
 
 async function User(name: string) {
-  const userJson = await UrlToJson(Config.Bili.user.url + name);
+  const userJson = await UrlToJson(Config.Bili.user.url + name, {
+    Cookie: Config.Bili.cookie,
+  });
   if (!userJson) return undefined;
   const userSchema = z.object({
     data: z.object({
