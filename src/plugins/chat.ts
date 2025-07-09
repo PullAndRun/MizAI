@@ -1,6 +1,10 @@
 import Config from "@miz/ai/config/config.toml";
-import { CommandText, SendGroupMessage } from "@miz/ai/src/core/bot";
-import { AIMessage } from "@miz/ai/src/core/util";
+import {
+  CommandText,
+  GetMessage,
+  SendGroupMessage,
+} from "@miz/ai/src/core/bot";
+import { AIReply, DeepseekPartText } from "@miz/ai/src/core/util";
 import { Deepseek } from "@miz/ai/src/service/ai";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 import type OpenAI from "openai";
@@ -30,10 +34,25 @@ async function DeepseekChat(event: GroupMessage) {
   const chatCompletionMessageParams: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
     [];
   for (const message of event.message) {
+    if (message.type === "reply") {
+      const getMessage = await GetMessage(Number.parseFloat(message.data.id));
+      if (!getMessage) continue;
+      for (const message of getMessage.message) {
+        if (message.type === "text") {
+          chatCompletionMessageParams.push({
+            role: "user",
+            content: [
+              { type: "text", text: DeepseekPartText(message.data.text) },
+            ],
+          });
+        }
+      }
+      continue;
+    }
     if (message.type === "text") {
       chatCompletionMessageParams.push({
         role: "user",
-        content: [{ type: "text", text: message.data.text }],
+        content: [{ type: "text", text: DeepseekPartText(message.data.text) }],
       });
     }
   }
@@ -50,7 +69,7 @@ async function DeepseekChat(event: GroupMessage) {
     if (!content) continue;
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text(AIMessage(content)),
+      Structs.text(AIReply(content)),
     ]);
   }
 }

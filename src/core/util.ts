@@ -1,3 +1,5 @@
+import Config from "@miz/ai/config/config.toml";
+
 function ToJson(text: string) {
   try {
     return JSON.parse(text);
@@ -6,9 +8,11 @@ function ToJson(text: string) {
   }
 }
 
-function AIMessage(message: string) {
+function AIReply(message: string) {
   return (
     message
+      //移除think标签
+      .replace(/[\S\s]*?<\/think>/g, "")
       //移除开头的换行
       .replace(/^(\n+)/g, "")
       //合并多个换行为单个
@@ -28,4 +32,10 @@ function AIMessage(message: string) {
   );
 }
 
-export { AIMessage, ToJson };
+function DeepseekPartText(text: string) {
+  return text
+    .trim()
+    .replace(new RegExp(`(^\\s*${Config.Bot.name}\\s*)`, "g"), "");
+}
+
+export { AIReply, DeepseekPartText, ToJson };
