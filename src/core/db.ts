@@ -29,7 +29,6 @@ async function SetDefaultData() {
   //初始化ai数据库的数据
   const aiCount = await AIModel.Count();
   if (!aiCount) {
-    await AIModel.Add("默认", "");
     await AIModel.Add("gemini", "");
     Logger.info(`初始化了ai数据库,增加了 ${await AIModel.Count()} 条数据`);
   }

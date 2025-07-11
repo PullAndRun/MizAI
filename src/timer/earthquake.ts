@@ -12,6 +12,7 @@ import schedule from "node-schedule";
 const lock = {
   isPushing: false,
 };
+
 async function PushEarthquake() {
   if (lock.isPushing) return;
   const earthquakeList = await Earthquake(Config.Earthquake.level);
