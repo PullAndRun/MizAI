@@ -94,6 +94,21 @@ function CommandText(message: string, commands: string[]) {
     .trim();
 }
 
+function RawText(message: string, commands: string[]) {
+  //删除所有方括号内容
+  const cleanedMessage = message.replace(/\[.*?\]/g, "");
+  return commands
+    .reduce(
+      (acc, cur) =>
+        acc
+          .trim()
+          //删除以当前命令开头(含前后空格)的部分
+          .replace(new RegExp(`(^\\s*${cur}\\s*)`, "g"), ""),
+      cleanedMessage
+    )
+    .trim();
+}
+
 async function Invoke(
   event: GroupMessage,
   message: string,
@@ -279,5 +294,6 @@ export {
   GetMessage,
   Init,
   Invoke,
+  RawText,
   SendGroupMessage,
 };

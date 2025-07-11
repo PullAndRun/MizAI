@@ -1,5 +1,10 @@
 import Config from "@miz/ai/config/config.toml";
-import { Client, CommandText, SendGroupMessage } from "@miz/ai/src/core/bot";
+import {
+  Client,
+  CommandText,
+  RawText,
+  SendGroupMessage,
+} from "@miz/ai/src/core/bot";
 import { sleep } from "bun";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
@@ -29,9 +34,10 @@ async function Plugin(event: GroupMessage) {
 
     return;
   }
+  const rawText = RawText(event.raw_message, [Config.Bot.name, info.name]);
   const groups = await Client().get_group_list();
   for (const group of groups) {
-    await SendGroupMessage(group.group_id, [Structs.text(commandText)]);
+    await SendGroupMessage(group.group_id, [Structs.text(rawText)]);
     sleep(Config.Bot.message_delay * 1000);
   }
 }
