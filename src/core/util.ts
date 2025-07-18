@@ -15,8 +15,8 @@ function AIReply(message: string) {
       .replace(/[\S\s]*?<\/think>/g, "")
       //移除开头的换行
       .replace(/^(\n+)/g, "")
-      //合并多个换行为单个
-      .replace(/\n+/g, "\n\n")
+      //超过3个换行符，变成2个
+      .replace(/\n{3,}/g, "\n\n")
       //移除*两侧空格
       .replace(/ *\* */g, "*")
       //多个*变" * "
