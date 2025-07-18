@@ -119,27 +119,13 @@ async function GeminiFunctionCall(event: GroupMessage) {
     for (const functionCall of gemini.functionCalls) {
       if (functionCall.name === "get_images") {
         const images = await FunctionCallGetImages(event, functionCall);
-        if (!images) {
-          content.push({
-            role: "user",
-            parts: [
-              {
-                functionResponse: {
-                  name: functionCall.name,
-                  response: { image_name: [] },
-                },
-              },
-            ],
-          });
-          continue;
-        }
         content.push({
           role: "user",
           parts: [
             {
               functionResponse: {
                 name: functionCall.name,
-                response: { image_name: images },
+                response: { image_name: images || [] },
               },
             },
           ],
@@ -147,27 +133,13 @@ async function GeminiFunctionCall(event: GroupMessage) {
       }
       if (functionCall.name === "get_music") {
         const music = await FunctionCallGetMuisc(event, functionCall);
-        if (!music) {
-          content.push({
-            role: "user",
-            parts: [
-              {
-                functionResponse: {
-                  name: functionCall.name,
-                  response: { music_name: "" },
-                },
-              },
-            ],
-          });
-          continue;
-        }
         content.push({
           role: "user",
           parts: [
             {
               functionResponse: {
                 name: functionCall.name,
-                response: { music_name: music },
+                response: { music_name: music || "" },
               },
             },
           ],
