@@ -16,7 +16,7 @@ function AIReply(message: string) {
       //移除开头的换行
       .replace(/^(\n+)/g, "")
       //合并多个换行为单个
-      .replace(/\n+/g, "\n")
+      .replace(/\n+/g, "\n\n")
       //移除*两侧空格
       .replace(/ *\* */g, "*")
       //多个*变" * "
