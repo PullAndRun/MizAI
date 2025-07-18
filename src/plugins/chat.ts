@@ -102,7 +102,7 @@ async function GeminiContent(event: GroupMessage | WSSendReturn["get_msg"]) {
 async function GeminiFunctionCall(event: GroupMessage) {
   let content = await GeminiContent(event);
   for (let retry = 0; retry < Config.AI.retry; retry++) {
-    const gemini = await Gemini(content, undefined, {
+    const gemini = await Gemini(content, `你将扮演${Config.Bot.nickname}`, {
       tools: [{ functionDeclarations: FunctionDeclarations() }],
       toolConfig: {
         functionCallingConfig: { mode: FunctionCallingConfigMode.ANY },
