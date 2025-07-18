@@ -27,6 +27,8 @@ function AIReply(message: string) {
       .replace(/\#+/g, "#")
       //#*变*
       .replace(/ *#\*/g, "## *")
+      //\n\n * \n\n变\n\n
+      .replace(/\n\n +\* +\n\n/g, "\n\n")
       //去除首尾空白
       .trim()
   );
