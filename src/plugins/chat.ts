@@ -11,11 +11,10 @@ import {
   GetMessage,
   SendGroupMessage,
 } from "@miz/ai/src/core/bot";
-import { BufferToBlob_2, UrlToBlob_2 } from "@miz/ai/src/core/http";
+import { UrlToBlob_2 } from "@miz/ai/src/core/http";
 import { AIPartText, AIReply } from "@miz/ai/src/core/util";
 import * as AIModel from "@miz/ai/src/models/ai.ts";
 import { Deepseek, FunctionDeclarations, Gemini } from "@miz/ai/src/service/ai";
-import { Baidu } from "@miz/ai/src/service/image";
 import { HotComment, ID } from "@miz/ai/src/service/music";
 import {
   Structs,
@@ -117,20 +116,6 @@ async function GeminiFunctionCall(event: GroupMessage) {
       content.push(candidate.content);
     }
     for (const functionCall of gemini.functionCalls) {
-      if (functionCall.name === "get_images") {
-        const images = await FunctionCallGetImages(event, functionCall);
-        content.push({
-          role: "user",
-          parts: [
-            {
-              functionResponse: {
-                name: functionCall.name,
-                response: { image_name: images || [] },
-              },
-            },
-          ],
-        });
-      }
       if (functionCall.name === "get_music") {
         const music = await FunctionCallGetMuisc(event, functionCall);
         content.push({
@@ -248,57 +233,6 @@ async function FunctionCallGetMuisc(
     Structs.text(hotComment),
   ]);
   return musicName;
-}
-
-async function FunctionCallGetImages(
-  event: GroupMessage,
-  functionCall: FunctionCall
-) {
-  const get_images_schema = z.object({
-    args: z.object({
-      image_name: z.array(z.string()).min(1),
-    }),
-  });
-  const image = get_images_schema.safeParse(functionCall);
-  if (!image.success) return undefined;
-  for (let imageName of image.data.args.image_name.filter(
-    (_, i) => i < Config.AI.imageCount
-  )) {
-    const imageBuffer = await Baidu(imageName);
-    if (!imageBuffer) return undefined;
-    const blob_2 = await BufferToBlob_2(imageBuffer);
-    if (!blob_2) return undefined;
-    const gemini = await Gemini(
-      [
-        {
-          role: "user",
-          parts: [{ text: "简略分析图像,100字以内" }, { inlineData: blob_2 }],
-        },
-      ],
-      undefined,
-      { tools: [{ googleSearch: {} }] }
-    );
-    if (!gemini) return undefined;
-    const texts = () => {
-      if (!gemini.candidates || !gemini.candidates.length)
-        return [Structs.text("")];
-      const text: string[] = [];
-      for (const candidate of gemini.candidates) {
-        if (!candidate.content || !candidate.content.parts) continue;
-        for (const part of candidate.content.parts) {
-          if (!part.text) continue;
-          text.push(AIReply(part.text));
-        }
-      }
-      return text.map((v) => Structs.text(v));
-    };
-    await SendGroupMessage(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.image(imageBuffer),
-      ...texts(),
-    ]);
-  }
-  return image.data.args.image_name.slice(0, Config.AI.imageCount);
 }
 
 async function DeepseekChat(event: GroupMessage) {

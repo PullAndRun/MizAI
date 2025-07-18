@@ -52,21 +52,6 @@ async function Gemini(
 }
 
 function FunctionDeclarations() {
-  const getImages: FunctionDeclaration = {
-    name: "get_images",
-    description:
-      "解析用户请求并调用图片搜索功能。返回图片名称。用户让你找图、搜图、作图、用户想看图等类似需求，都应使用图片搜索功能。",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        image_name: {
-          type: Type.ARRAY,
-          description: "图片名称。",
-        },
-      },
-      required: ["image_name"],
-    },
-  };
   const getMuisc: FunctionDeclaration = {
     name: "get_music",
     description:
@@ -82,7 +67,7 @@ function FunctionDeclarations() {
       required: ["music_name"],
     },
   };
-  const getGroupChatHistory = {
+  const getGroupChatHistory: FunctionDeclaration = {
     name: "require_chat_history",
     description:
       "判断是否需要读取群聊记录来回答当前问题，当问题涉及之前的讨论内容、需要上下文理解、或包含模糊指代时返回true",
@@ -97,7 +82,7 @@ function FunctionDeclarations() {
       required: ["need_history"],
     },
   };
-  return [getImages, getGroupChatHistory, getMuisc];
+  return [getGroupChatHistory, getMuisc];
 }
 
 export { Deepseek, FunctionDeclarations, Gemini };
