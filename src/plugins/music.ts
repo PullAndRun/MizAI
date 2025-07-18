@@ -32,13 +32,7 @@ async function Plugin(event: GroupMessage) {
   const message = await SendGroupMessage(event.group_id, [
     Structs.music("163", id),
   ]);
-  if (!message) {
-    await SendGroupMessage(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.text(`这首歌听不了，情换首歌听。`),
-    ]);
-    return;
-  }
+  if (!message) return;
   const hotComment = await HotComment(id);
   if (!hotComment) return;
   await SendGroupMessage(event.group_id, [

@@ -16,6 +16,7 @@ import { AIPartText, AIReply } from "@miz/ai/src/core/util";
 import * as AIModel from "@miz/ai/src/models/ai.ts";
 import { Deepseek, FunctionDeclarations, Gemini } from "@miz/ai/src/service/ai";
 import { Baidu } from "@miz/ai/src/service/image";
+import { HotComment, ID } from "@miz/ai/src/service/music";
 import {
   Structs,
   type GroupMessage,
@@ -144,6 +145,34 @@ async function GeminiFunctionCall(event: GroupMessage) {
           ],
         });
       }
+      if (functionCall.name === "get_music") {
+        const music = await FunctionCallGetMuisc(event, functionCall);
+        if (!music) {
+          content.push({
+            role: "user",
+            parts: [
+              {
+                functionResponse: {
+                  name: functionCall.name,
+                  response: { music_name: "" },
+                },
+              },
+            ],
+          });
+          continue;
+        }
+        content.push({
+          role: "user",
+          parts: [
+            {
+              functionResponse: {
+                name: functionCall.name,
+                response: { music_name: music },
+              },
+            },
+          ],
+        });
+      }
       if (functionCall.name === "require_chat_history") {
         const historyContent = await FunctionCallGetChatHistory(event);
         const filteContent = historyContent.filter((historyContent) => {
@@ -219,6 +248,34 @@ async function GeminiChat(event: GroupMessage) {
     }
     break;
   }
+}
+
+async function FunctionCallGetMuisc(
+  event: GroupMessage,
+  functionCall: FunctionCall
+) {
+  const get_music_schema = z.object({
+    args: z.object({
+      music_name: z.string(),
+    }),
+  });
+  const music = get_music_schema.safeParse(functionCall);
+  if (!music.success) return undefined;
+  const musicName = music.data.args.music_name;
+  const id = await ID(musicName);
+  if (!id) return undefined;
+  const message = await SendGroupMessage(event.group_id, [
+    Structs.music("163", id),
+  ]);
+
+  if (!message) return musicName;
+  const hotComment = await HotComment(id);
+  if (!hotComment) return musicName;
+  await SendGroupMessage(event.group_id, [
+    Structs.reply(message.message_id),
+    Structs.text(hotComment),
+  ]);
+  return musicName;
 }
 
 async function FunctionCallGetImages(

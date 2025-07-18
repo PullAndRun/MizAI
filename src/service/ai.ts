@@ -67,6 +67,21 @@ function FunctionDeclarations() {
       required: ["image_name"],
     },
   };
+  const getMuisc: FunctionDeclaration = {
+    name: "get_music",
+    description:
+      "解析用户请求并调用音乐搜索功能。返回音乐名称。音乐名称可能包含歌手名称。",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        music_name: {
+          type: Type.STRING,
+          description: "音乐名称。",
+        },
+      },
+      required: ["music_name"],
+    },
+  };
   const getGroupChatHistory = {
     name: "require_chat_history",
     description:
@@ -82,7 +97,7 @@ function FunctionDeclarations() {
       required: ["need_history"],
     },
   };
-  return [getImages, getGroupChatHistory];
+  return [getImages, getGroupChatHistory, getMuisc];
 }
 
 export { Deepseek, FunctionDeclarations, Gemini };
