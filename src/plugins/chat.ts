@@ -117,14 +117,28 @@ async function GeminiFunctionCall(event: GroupMessage) {
     }
     for (const functionCall of gemini.functionCalls) {
       if (functionCall.name === "get_images") {
-        await FunctionCallGetImages(event, functionCall);
+        const images = await FunctionCallGetImages(event, functionCall);
+        if (!images) {
+          content.push({
+            role: "user",
+            parts: [
+              {
+                functionResponse: {
+                  name: functionCall.name,
+                  response: { image_name: [] },
+                },
+              },
+            ],
+          });
+          continue;
+        }
         content.push({
           role: "user",
           parts: [
             {
               functionResponse: {
                 name: functionCall.name,
-                response: functionCall.args,
+                response: { image_name: images },
               },
             },
           ],
@@ -218,7 +232,9 @@ async function FunctionCallGetImages(
   });
   const image = get_images_schema.safeParse(functionCall);
   if (!image.success) return undefined;
-  for (let imageName of image.data.args.image_name) {
+  for (let imageName of image.data.args.image_name.filter(
+    (_, i) => i < Config.AI.imageCount
+  )) {
     const imageBuffer = await Baidu(imageName);
     if (!imageBuffer) return undefined;
     const blob_2 = await BufferToBlob_2(imageBuffer);
@@ -253,7 +269,7 @@ async function FunctionCallGetImages(
       ...texts(),
     ]);
   }
-  return image.data.args.image_name;
+  return image.data.args.image_name.slice(0, Config.AI.imageCount);
 }
 
 async function DeepseekChat(event: GroupMessage) {

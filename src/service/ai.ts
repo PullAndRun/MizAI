@@ -54,7 +54,8 @@ async function Gemini(
 function FunctionDeclarations() {
   const getImages: FunctionDeclaration = {
     name: "get_images",
-    description: "解析用户请求并调用图片搜索功能。返回图片名称。",
+    description:
+      "解析用户请求并调用图片搜索功能。返回图片名称。用户让你找图、搜图、作图、用户想看图等类似需求，都应使用图片搜索功能。",
     parameters: {
       type: Type.OBJECT,
       properties: {
