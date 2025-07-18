@@ -1,17 +1,27 @@
-import type { Content, FunctionCall } from "@google/genai";
+import {
+  FunctionCallingConfigMode,
+  type Content,
+  type FunctionCall,
+  type Part,
+} from "@google/genai";
 import Config from "@miz/ai/config/config.toml";
 import {
+  Client,
   CommandText,
   GetMessage,
   SendGroupMessage,
 } from "@miz/ai/src/core/bot";
-import { BufferToBlob_2 } from "@miz/ai/src/core/http";
+import { BufferToBlob_2, UrlToBlob_2 } from "@miz/ai/src/core/http";
 import { AIPartText, AIReply } from "@miz/ai/src/core/util";
 import * as AIModel from "@miz/ai/src/models/ai.ts";
 import { Deepseek, FunctionDeclarations, Gemini } from "@miz/ai/src/service/ai";
 import { Baidu } from "@miz/ai/src/service/image";
-import { sleep } from "bun";
-import { Structs, type GroupMessage } from "node-napcat-ts";
+import {
+  Structs,
+  type GroupMessage,
+  type Receive,
+  type WSSendReturn,
+} from "node-napcat-ts";
 import type OpenAI from "openai";
 import { z } from "zod";
 const info = {
@@ -26,53 +36,85 @@ async function Plugin(event: GroupMessage) {
     await DeepseekChat(event);
     return;
   }
-  if (commandText.includes(Config.Bot.nickname)) {
-    await GeminiChat(event);
-    return;
-  }
+  await GeminiChat(event);
 }
 
-async function GeminiChat(event: GroupMessage) {
-  const content: Content[] = [];
-  for (const message of event.message) {
+async function GeminiParts(messages: Receive[keyof Receive][]) {
+  const parts: Part[] = [];
+  for (const message of messages) {
     if (message.type === "text") {
-      content.push({ role: "user", parts: [{ text: message.data.text }] });
+      parts.push({ text: message.data.text });
     }
-  }
-  const prompt = await AIModel.Find("gemini");
-  if (!prompt) {
-    await SendGroupMessage(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.text(`系统未录入迷子AI人格，请联系管理员。`),
-    ]);
-    return;
-  }
-  let count = Config.AI.count;
-  while (true) {
-    if (count === 0) break;
-    const gemini = await Gemini(content, prompt.prompt, [
-      { functionDeclarations: FunctionDeclarations() },
-    ]);
-    if (!gemini) {
-      await SendGroupMessage(event.group_id, [
-        Structs.reply(event.message_id),
-        Structs.text(`机器人cpu过热\n请稍候重试。`),
-      ]);
-      return;
-    }
-    if (!gemini.candidates) continue;
-    for (const candidate of gemini.candidates) {
-      if (!candidate.content || !candidate.content.parts) continue;
-      content.push(candidate.content);
-      for (const part of candidate.content.parts) {
-        if (!part.text) continue;
-        await SendGroupMessage(event.group_id, [
-          Structs.reply(event.message_id),
-          Structs.text(AIReply(part.text)),
-        ]);
+    if (message.type === "image") {
+      const urlToBlob_2 = await UrlToBlob_2(message.data.url);
+      if (!urlToBlob_2) {
+        parts.push({ text: `暂不支持的图片类型。` });
+        continue;
       }
+      parts.push({ inlineData: urlToBlob_2 });
     }
+  }
+  return parts;
+}
+
+async function GeminiContent(event: GroupMessage | WSSendReturn["get_msg"]) {
+  const content: Content[] = [];
+  const meta = (sender: string) => {
+    return [
+      `<metadata>`,
+      `This is a group message`,
+      `Sender's name: "${sender}"`,
+      `</metadata>`,
+    ];
+  };
+  for (const message of event.message) {
+    if (message.type === "reply") {
+      const getMessage = await GetMessage(Number.parseFloat(message.data.id));
+      if (!getMessage) continue;
+      const geminiParts = await GeminiParts(getMessage.message);
+      if (!geminiParts.length) continue;
+      content.push({
+        role: "user",
+        parts: [
+          {
+            text: meta(
+              getMessage.sender.card || getMessage.sender.nickname
+            ).join("\n"),
+          },
+          ...geminiParts,
+        ],
+      });
+    }
+  }
+  const geminiParts = await GeminiParts(event.message);
+  if (geminiParts.length) {
+    content.push({
+      role: "user",
+      parts: [
+        { text: meta(event.sender.card || event.sender.nickname).join("\n") },
+        ...geminiParts,
+      ],
+    });
+  }
+  return content;
+}
+
+async function GeminiFunctionCall(event: GroupMessage) {
+  let content = await GeminiContent(event);
+  for (let retry = 0; retry < Config.AI.retry; retry++) {
+    const gemini = await Gemini(content, undefined, {
+      tools: [{ functionDeclarations: FunctionDeclarations() }],
+      toolConfig: {
+        functionCallingConfig: { mode: FunctionCallingConfigMode.ANY },
+      },
+      temperature: 0,
+    });
+    if (!gemini || !gemini.candidates) continue;
     if (!gemini.functionCalls || !gemini.functionCalls.length) break;
+    for (const candidate of gemini.candidates) {
+      if (!candidate.content) continue;
+      content.push(candidate.content);
+    }
     for (const functionCall of gemini.functionCalls) {
       if (functionCall.name === "get_images") {
         await FunctionCallGetImages(event, functionCall);
@@ -88,42 +130,81 @@ async function GeminiChat(event: GroupMessage) {
           ],
         });
       }
-      if (functionCall.name === "search") {
-        const search_results = await FunctionCallGoogleSearch(functionCall);
+      if (functionCall.name === "require_chat_history") {
+        const historyContent = await FunctionCallGetChatHistory(event);
+        const filteContent = historyContent.filter((historyContent) => {
+          for (const ct of content) {
+            if (
+              JSON.stringify(ct.parts) === JSON.stringify(historyContent.parts)
+            )
+              return false;
+          }
+          return true;
+        });
+        content.unshift(...filteContent);
         content.push({
           role: "user",
           parts: [
             {
               functionResponse: {
                 name: functionCall.name,
-                response: { search_results: search_results || "搜索失败" },
+                response: functionCall.args,
               },
             },
           ],
         });
       }
     }
-    count--;
   }
+  return content;
 }
 
-async function FunctionCallGoogleSearch(functionCall: FunctionCall) {
-  const search_schema = z.object({
-    args: z.object({ search_queries: z.string() }),
+async function FunctionCallGetChatHistory(event: GroupMessage) {
+  const content: Content[] = [];
+  const history = await Client().get_group_msg_history({
+    group_id: event.group_id,
+    count: Config.AI.history,
   });
-  const search = search_schema.safeParse(functionCall);
-  if (!search.success) return undefined;
-  const gemini = await Gemini(
-    {
-      role: "user",
-      parts: [{ text: search.data.args.search_queries }],
-    },
-    undefined,
-    [{ googleSearch: {} }],
-    { temperature: 0 }
-  );
-  if (!gemini) return undefined;
-  return gemini.text;
+  for (const messages of history.messages) {
+    const historyContent = await GeminiContent(messages);
+    content.push(...historyContent);
+  }
+  return content;
+}
+
+async function GeminiChat(event: GroupMessage) {
+  const content = await GeminiFunctionCall(event);
+  const prompt = await AIModel.Find("gemini");
+  if (!prompt) {
+    await SendGroupMessage(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text(`系统未录入迷子AI人格，请联系管理员。`),
+    ]);
+    return;
+  }
+  for (let retry = 0; retry < Config.AI.retry; retry++) {
+    const gemini = await Gemini(content, prompt.prompt, {
+      tools: [{ googleSearch: {} }],
+    });
+    if (
+      !gemini ||
+      !gemini.candidates ||
+      !gemini.candidates.length ||
+      !gemini.text
+    )
+      continue;
+    for (const candidate of gemini.candidates) {
+      if (!candidate.content || !candidate.content.parts) continue;
+      for (const part of candidate.content.parts) {
+        if (!part.text) continue;
+        await SendGroupMessage(event.group_id, [
+          Structs.reply(event.message_id),
+          Structs.text(part.text),
+        ]);
+      }
+    }
+    break;
+  }
 }
 
 async function FunctionCallGetImages(
@@ -132,16 +213,16 @@ async function FunctionCallGetImages(
 ) {
   const get_images_schema = z.object({
     args: z.object({
-      image_name: z.string(),
-      image_quantity: z.number(),
+      image_name: z.array(z.string()).min(1),
     }),
   });
   const image = get_images_schema.safeParse(functionCall);
-  if (!image.success) return;
-  for (let i = 0; i < image.data.args.image_quantity; i++) {
-    const imageBuffer = await Baidu(image.data.args.image_name);
-    if (!imageBuffer) continue;
+  if (!image.success) return undefined;
+  for (let imageName of image.data.args.image_name) {
+    const imageBuffer = await Baidu(imageName);
+    if (!imageBuffer) return undefined;
     const blob_2 = await BufferToBlob_2(imageBuffer);
+    if (!blob_2) return undefined;
     const gemini = await Gemini(
       [
         {
@@ -150,10 +231,12 @@ async function FunctionCallGetImages(
         },
       ],
       undefined,
-      [{ googleSearch: {} }]
+      { tools: [{ googleSearch: {} }] }
     );
+    if (!gemini) return undefined;
     const texts = () => {
-      if (!gemini || !gemini.candidates) return [Structs.text("")];
+      if (!gemini.candidates || !gemini.candidates.length)
+        return [Structs.text("")];
       const text: string[] = [];
       for (const candidate of gemini.candidates) {
         if (!candidate.content || !candidate.content.parts) continue;
@@ -169,8 +252,8 @@ async function FunctionCallGetImages(
       Structs.image(imageBuffer),
       ...texts(),
     ]);
-    await sleep(Config.Bot.message_delay * 1000);
   }
+  return image.data.args.image_name;
 }
 
 async function DeepseekChat(event: GroupMessage) {

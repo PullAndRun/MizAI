@@ -1,12 +1,10 @@
 import {
-  FunctionCallingConfigMode,
   GoogleGenAI,
   Type,
   type ContentListUnion,
   type ContentUnion,
   type FunctionDeclaration,
   type GenerateContentConfig,
-  type ToolListUnion,
 } from "@google/genai";
 import Config from "@miz/ai/config/config.toml";
 import OpenAI from "openai";
@@ -38,7 +36,6 @@ async function Deepseek(
 async function Gemini(
   contents: ContentListUnion,
   systemInstruction?: ContentUnion | undefined,
-  tools?: ToolListUnion | undefined,
   config?: GenerateContentConfig
 ) {
   return gemini.models
@@ -47,11 +44,7 @@ async function Gemini(
       contents,
       config: {
         systemInstruction,
-        toolConfig: {
-          functionCallingConfig: { mode: FunctionCallingConfigMode.ANY },
-        },
         ...Config.Gemini.config,
-        tools,
         ...config,
       },
     })
@@ -61,39 +54,34 @@ async function Gemini(
 function FunctionDeclarations() {
   const getImages: FunctionDeclaration = {
     name: "get_images",
-    description: "Get image name and quantity.",
+    description: "解析用户请求并调用图片搜索功能。返回图片名称。",
     parameters: {
       type: Type.OBJECT,
       properties: {
-        image_quantity: {
-          type: Type.NUMBER,
-          description: `Image quantity from 1 to ${Config.AI.max_image}, 1 is default quantity and ${Config.AI.max_image} is max quantity. If quantity is greater than ${Config.AI.max_image}, quantity is ${Config.AI.max_image}.`,
-        },
         image_name: {
-          type: Type.STRING,
-          minLength: "1",
-          description: "Image name. Translate to Chinese.",
+          type: Type.ARRAY,
+          description: "图片名称。",
         },
       },
-      required: ["image_name", "image_quantity"],
+      required: ["image_name"],
     },
   };
-  const search: FunctionDeclaration = {
-    name: "search",
+  const getGroupChatHistory = {
+    name: "require_chat_history",
     description:
-      "When the model is unable to provide accurate answers, it automatically triggers a search engine to generate search queries.",
+      "判断是否需要读取群聊记录来回答当前问题，当问题涉及之前的讨论内容、需要上下文理解、或包含模糊指代时返回true",
     parameters: {
       type: Type.OBJECT,
       properties: {
-        search_queries: {
-          type: Type.STRING,
-          description: "search queries. Translate to Chinese.",
+        need_history: {
+          type: Type.BOOLEAN,
+          description: "当且仅当必须通过查看历史消息才能正确回答问题时为true",
         },
       },
-      required: ["search_queries"],
+      required: ["need_history"],
     },
   };
-  return [getImages, search];
+  return [getImages, getGroupChatHistory];
 }
 
 export { Deepseek, FunctionDeclarations, Gemini };
