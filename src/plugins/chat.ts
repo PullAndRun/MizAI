@@ -199,7 +199,7 @@ async function GeminiChat(event: GroupMessage) {
         if (!part.text) continue;
         await SendGroupMessage(event.group_id, [
           Structs.reply(event.message_id),
-          Structs.text(part.text),
+          Structs.text(AIReply(part.text)),
         ]);
       }
     }
