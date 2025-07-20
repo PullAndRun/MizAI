@@ -100,7 +100,7 @@ async function GeminiContent(event: GroupMessage | WSSendReturn["get_msg"]) {
 }
 
 async function GeminiFunctionCall(event: GroupMessage) {
-  let content = await GeminiContent(event);
+  const content = await GeminiContent(event);
   for (let retry = 0; retry < Config.AI.retry; retry++) {
     const gemini = await Gemini(content, `你将扮演${Config.Bot.nickname}`, {
       tools: [{ functionDeclarations: FunctionDeclarations() }],
@@ -131,17 +131,12 @@ async function GeminiFunctionCall(event: GroupMessage) {
         });
       }
       if (functionCall.name === "require_chat_history") {
-        const historyContent = await FunctionCallGetChatHistory(event);
-        const filteContent = historyContent.filter((historyContent) => {
-          for (const ct of content) {
-            if (
-              JSON.stringify(ct.parts) === JSON.stringify(historyContent.parts)
-            )
-              return false;
-          }
-          return true;
-        });
-        content.unshift(...filteContent);
+        const historyContent = await FunctionCallGetChatHistory(
+          event,
+          content,
+          Config.AI.history
+        );
+        content.unshift(...historyContent);
         content.push({
           role: "user",
           parts: [
@@ -159,21 +154,36 @@ async function GeminiFunctionCall(event: GroupMessage) {
   return content;
 }
 
-async function FunctionCallGetChatHistory(event: GroupMessage) {
-  const content: Content[] = [];
-  const history = await Client().get_group_msg_history({
+async function FunctionCallGetChatHistory(
+  event: GroupMessage,
+  content: Content[],
+  count: number
+) {
+  const historyContent: Content[] = [];
+  if (count === 0) return content;
+  const chatHistory = await Client().get_group_msg_history({
     group_id: event.group_id,
-    count: Config.AI.history,
+    count,
   });
-  for (const messages of history.messages) {
-    const historyContent = await GeminiContent(messages);
-    content.push(...historyContent);
+  for (const messages of chatHistory.messages) {
+    const hc = await GeminiContent(messages);
+    historyContent.push(...hc);
   }
-  return content;
+  return historyContent.filter((hc) => {
+    for (const ct of content) {
+      return JSON.stringify(ct.parts) !== JSON.stringify(hc.parts);
+    }
+  });
 }
 
 async function GeminiChat(event: GroupMessage) {
   const content = await GeminiFunctionCall(event);
+  const normalHistoryContent = await FunctionCallGetChatHistory(
+    event,
+    content,
+    Config.AI.chatHistory
+  );
+  content.unshift(...normalHistoryContent);
   const prompt = await AIModel.Find("gemini");
   if (!prompt) {
     await SendGroupMessage(event.group_id, [
