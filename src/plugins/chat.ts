@@ -171,8 +171,9 @@ async function FunctionCallGetChatHistory(
   }
   return historyContent.filter((hc) => {
     for (const ct of content) {
-      return JSON.stringify(ct.parts) !== JSON.stringify(hc.parts);
+      if (JSON.stringify(ct.parts) === JSON.stringify(hc.parts)) return false;
     }
+    return true;
   });
 }
 
