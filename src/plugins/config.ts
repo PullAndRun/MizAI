@@ -37,7 +37,7 @@ async function AI(message: string, event: GroupMessage) {
   const invokeParameterList: InvokeParameterList = [
     {
       command: "自定义",
-      comment: `\n使用 "设置 人格 自定义 [人格内容]" 命令修改变更AI人格。\n自定义AI人格需要以 "迷子是" 开头，AI人格限定200字以内。`,
+      comment: `\n使用 "设置 人格 自定义 [人格内容]" 命令自定义AI人格。\n自定义AI人格需要以 "迷子是" 开头，AI人格限定200字以内。`,
       role: "member",
       plugin: CustomPrompt,
     },
