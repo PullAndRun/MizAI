@@ -13,7 +13,8 @@ import {
 } from "@miz/ai/src/core/bot";
 import { UrlToBlob_2 } from "@miz/ai/src/core/http";
 import { AIPartText, AIReply } from "@miz/ai/src/core/util";
-import * as AIModel from "@miz/ai/src/models/ai.ts";
+import * as AIModel from "@miz/ai/src/models/ai";
+import * as GroupModel from "@miz/ai/src/models/group";
 import { Deepseek, FunctionDeclarations, Gemini } from "@miz/ai/src/service/ai";
 import { HotComment, ID } from "@miz/ai/src/service/music";
 import {
@@ -24,6 +25,7 @@ import {
 } from "node-napcat-ts";
 import type OpenAI from "openai";
 import { z } from "zod";
+
 const info = {
   name: "聊天=>无法调用",
   comment: [`内置AI聊天功能`],
@@ -185,7 +187,15 @@ async function GeminiChat(event: GroupMessage) {
     Config.AI.chatHistory
   );
   content.unshift(...normalHistoryContent);
-  const prompt = await AIModel.Find("gemini");
+  const promptName = await GroupModel.Find(event.group_id);
+  if (!promptName) {
+    await SendGroupMessage(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text(`系统未录入迷子AI人格，请联系管理员。`),
+    ]);
+    return;
+  }
+  const prompt = await AIModel.Find(promptName.prompt_name);
   if (!prompt) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),

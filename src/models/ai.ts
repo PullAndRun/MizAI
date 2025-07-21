@@ -27,4 +27,13 @@ async function Add(name: string, prompt: string) {
   return ai.save().catch((_) => undefined);
 }
 
-export { Add, Ai, Count, Find };
+async function Update(name: string, prompt: string) {
+  const ai = await Find(name);
+  if (!ai) {
+    return Add(name, prompt);
+  }
+  ai.prompt = prompt;
+  ai.save().catch((_) => undefined);
+}
+
+export { Add, Ai, Count, Find, Update };

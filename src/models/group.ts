@@ -53,4 +53,4 @@ async function Update(
   return group.save().catch((_) => undefined);
 }
 
-export { FindAll, FindOrAdd, Group, Update };
+export { Find, FindAll, FindOrAdd, Group, Update };
