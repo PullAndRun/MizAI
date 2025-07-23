@@ -1,7 +1,7 @@
 import { GetMessage, SendGroupMessage } from "@miz/ai/src/core/bot";
 import { UrlToBuffer } from "@miz/ai/src/core/http";
 import { Exif } from "@miz/ai/src/service/exif";
-import { Structs, type GroupMessage } from "node-napcat-ts";
+import { Structs, type GroupMessage, type NodeSegment } from "node-napcat-ts";
 
 const info = {
   name: "exif",
@@ -17,7 +17,7 @@ async function Plugin(event: GroupMessage) {
     ]);
     return;
   }
-  const exifs: string[] = [];
+  const nodeSegment: NodeSegment[] = [];
   const urls: string[] = [];
   for (const message of event.message) {
     if (message.type === "reply") {
@@ -37,19 +37,21 @@ async function Plugin(event: GroupMessage) {
     const imageBuffer = await UrlToBuffer(url);
     if (!imageBuffer) continue;
     const exif = await Exif(imageBuffer);
-    exifs.push(exif.join("\n"));
+    nodeSegment.push(
+      Structs.customNode([
+        Structs.image(imageBuffer),
+        Structs.text(exif.join("\n")),
+      ])
+    );
   }
-  const exifList = exifs.map((v, i) => {
-    return Structs.customNode([Structs.text(`第 ${i + 1} 张:\n${v}`)]);
-  });
-  if (!exifList.length) {
+  if (!nodeSegment.length) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.sender.user_id),
       Structs.text(`请确认消息内包含图片`),
     ]);
     return;
   }
-  await SendGroupMessage(event.group_id, exifList);
+  await SendGroupMessage(event.group_id, nodeSegment);
 }
 
 export { info };
