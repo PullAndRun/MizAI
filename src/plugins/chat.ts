@@ -1,30 +1,20 @@
 import {
   FunctionCallingConfigMode,
   type Content,
-  type FunctionCall,
   type Part,
 } from "@google/genai";
 import Config from "@miz/ai/config/config.toml";
 import {
-  Client,
   CommandText,
   GetMessage,
   SendGroupMessage,
 } from "@miz/ai/src/core/bot";
+import { ChatHistory, Music } from "@miz/ai/src/core/functionCall";
 import { UrlToBlob_2 } from "@miz/ai/src/core/http";
-import { AIPartText, AIReply } from "@miz/ai/src/core/util";
-import * as AIModel from "@miz/ai/src/models/ai";
-import * as GroupModel from "@miz/ai/src/models/group";
+import { AIPartText, AIReply, GroupPrompt } from "@miz/ai/src/core/util";
 import { Deepseek, FunctionDeclarations, Gemini } from "@miz/ai/src/service/ai";
-import { HotComment, ID } from "@miz/ai/src/service/music";
-import {
-  Structs,
-  type GroupMessage,
-  type Receive,
-  type WSSendReturn,
-} from "node-napcat-ts";
+import { Structs, type GroupMessage, type WSSendReturn } from "node-napcat-ts";
 import type OpenAI from "openai";
-import { z } from "zod";
 
 const info = {
   name: "聊天=>无法调用",
@@ -41,9 +31,25 @@ async function Plugin(event: GroupMessage) {
   await GeminiChat(event);
 }
 
-async function GeminiParts(messages: Receive[keyof Receive][]) {
+async function GeminiGroupContent(
+  event:
+    | GroupMessage
+    | WSSendReturn["get_msg"]
+    | {
+        message: Array<{ type: "text"; data: { text: string } }>;
+        sender: { card?: string; nickname?: string };
+      }
+) {
   const parts: Part[] = [];
-  for (const message of messages) {
+  const meta = (sender: string) => {
+    return [
+      `<metadata>`,
+      `This is a group message`,
+      `Sender's name: "${sender}"`,
+      `</metadata>`,
+    ];
+  };
+  for (const message of event.message) {
     if (message.type === "text") {
       parts.push({ text: message.data.text });
     }
@@ -55,54 +61,41 @@ async function GeminiParts(messages: Receive[keyof Receive][]) {
       }
       parts.push({ inlineData: urlToBlob_2 });
     }
-  }
-  return parts;
-}
-
-async function GeminiContent(event: GroupMessage | WSSendReturn["get_msg"]) {
-  const content: Content[] = [];
-  const meta = (sender: string) => {
-    return [
-      `<metadata>`,
-      `This is a group message`,
-      `Sender's name: "${sender}"`,
-      `</metadata>`,
-    ];
-  };
-  for (const message of event.message) {
     if (message.type === "reply") {
       const getMessage = await GetMessage(Number.parseFloat(message.data.id));
       if (!getMessage) continue;
-      const geminiParts = await GeminiParts(getMessage.message);
-      if (!geminiParts.length) continue;
-      content.push({
-        role: "user",
-        parts: [
-          {
-            text: meta(
-              getMessage.sender.card || getMessage.sender.nickname
-            ).join("\n"),
-          },
-          ...geminiParts,
-        ],
-      });
+      const replyParts = await GeminiGroupContent(getMessage);
+      if (!replyParts) continue;
+      parts.push(...replyParts.parts);
     }
   }
-  const geminiParts = await GeminiParts(event.message);
-  if (geminiParts.length) {
-    content.push({
-      role: "user",
-      parts: [
-        { text: meta(event.sender.card || event.sender.nickname).join("\n") },
-        ...geminiParts,
-      ],
-    });
-  }
-  return content;
+  if (!parts.length) return undefined;
+  return {
+    role: "user",
+    parts: [
+      {
+        text: `${meta(
+          event.sender.card || event.sender.nickname || "无名氏"
+        ).join("\n")}`,
+      },
+      ...parts,
+    ],
+  };
 }
 
-async function GeminiFunctionCall(event: GroupMessage) {
-  const content = await GeminiContent(event);
+async function GeminiChat(event: GroupMessage) {
+  const content: Content[] = [];
+  const geminiGroupContent = await GeminiGroupContent(event);
+  if (!geminiGroupContent) return;
+  content.push(geminiGroupContent);
+  const groupPrompt = await GroupPrompt(event.group_id);
+  if (!prompt) {
+    await SendGroupMessage(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text(`系统未录入迷子AI人格，请联系管理员。`),
+    ]);
+    return;
+  }
   for (let retry = 0; retry < Config.AI.retry; retry++) {
     const gemini = await Gemini(content, `你将扮演${Config.Bot.nickname}`, {
       tools: [{ functionDeclarations: FunctionDeclarations() }],
@@ -112,99 +105,54 @@ async function GeminiFunctionCall(event: GroupMessage) {
       temperature: 0,
     });
     if (!gemini || !gemini.candidates) continue;
-    if (!gemini.functionCalls || !gemini.functionCalls.length) break;
     for (const candidate of gemini.candidates) {
-      if (!candidate.content) continue;
-      content.push(candidate.content);
+      if (!candidate.content || !candidate.content.parts) continue;
+      const partList: Part[] = [];
+      for (const parts of candidate.content.parts) {
+        if (parts.functionCall) {
+          partList.push(parts);
+        }
+      }
+      if (partList.length) {
+        content.push({ role: "model", parts: partList });
+      }
     }
+    if (!gemini.functionCalls || !gemini.functionCalls.length) break;
+    const partList: Part[] = [];
     for (const functionCall of gemini.functionCalls) {
       if (functionCall.name === "get_music") {
-        const music = await FunctionCallGetMuisc(event, functionCall);
-        content.push({
-          role: "user",
-          parts: [
-            {
-              functionResponse: {
-                name: functionCall.name,
-                response: { music_name: music || "" },
-              },
-            },
-          ],
+        const music = await Music(event, functionCall);
+        partList.push({
+          functionResponse: {
+            name: functionCall.name,
+            response: { music_name: music || "" },
+          },
         });
       }
       if (functionCall.name === "require_chat_history") {
-        const historyContent = await FunctionCallGetChatHistory(
+        const chatHistory = await ChatHistory(
           event,
           content,
           Config.AI.history
         );
-        content.unshift(...historyContent);
-        content.push({
-          role: "user",
-          parts: [
-            {
-              functionResponse: {
-                name: functionCall.name,
-                response: functionCall.args,
-              },
-            },
-          ],
+        content.unshift(...chatHistory);
+        partList.push({
+          functionResponse: {
+            name: functionCall.name,
+            response: functionCall.args,
+          },
         });
       }
     }
-  }
-  return content;
-}
-
-async function FunctionCallGetChatHistory(
-  event: GroupMessage,
-  content: Content[],
-  count: number
-) {
-  const historyContent: Content[] = [];
-  if (count === 0) return content;
-  const chatHistory = await Client().get_group_msg_history({
-    group_id: event.group_id,
-    count,
-  });
-  for (const messages of chatHistory.messages) {
-    const hc = await GeminiContent(messages);
-    historyContent.push(...hc);
-  }
-  return historyContent.filter((hc) => {
-    for (const ct of content) {
-      if (JSON.stringify(ct.parts) === JSON.stringify(hc.parts)) return false;
+    if (partList.length) {
+      content.push({
+        role: "user",
+        parts: partList,
+      });
     }
-    return true;
-  });
-}
-
-async function GeminiChat(event: GroupMessage) {
-  const content = await GeminiFunctionCall(event);
-  const normalHistoryContent = await FunctionCallGetChatHistory(
-    event,
-    content,
-    Config.AI.chatHistory
-  );
-  content.unshift(...normalHistoryContent);
-  const promptName = await GroupModel.Find(event.group_id);
-  if (!promptName) {
-    await SendGroupMessage(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.text(`系统未录入迷子AI人格，请联系管理员。`),
-    ]);
-    return;
-  }
-  const prompt = await AIModel.Find(promptName.prompt_name);
-  if (!prompt) {
-    await SendGroupMessage(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.text(`系统未录入迷子AI人格，请联系管理员。`),
-    ]);
-    return;
   }
   for (let retry = 0; retry < Config.AI.retry; retry++) {
-    const gemini = await Gemini(content, prompt.prompt, {
+    const gemini = await Gemini(content, groupPrompt, {
       tools: [{ googleSearch: {} }],
     });
     if (
@@ -226,34 +174,6 @@ async function GeminiChat(event: GroupMessage) {
     }
     break;
   }
-}
-
-async function FunctionCallGetMuisc(
-  event: GroupMessage,
-  functionCall: FunctionCall
-) {
-  const get_music_schema = z.object({
-    args: z.object({
-      music_name: z.string(),
-    }),
-  });
-  const music = get_music_schema.safeParse(functionCall);
-  if (!music.success) return undefined;
-  const musicName = music.data.args.music_name;
-  const id = await ID(musicName);
-  if (!id) return undefined;
-  const message = await SendGroupMessage(event.group_id, [
-    Structs.music("163", id),
-  ]);
-
-  if (!message) return musicName;
-  const hotComment = await HotComment(id);
-  if (!hotComment) return musicName;
-  await SendGroupMessage(event.group_id, [
-    Structs.reply(message.message_id),
-    Structs.text(hotComment),
-  ]);
-  return musicName;
 }
 
 async function DeepseekChat(event: GroupMessage) {
@@ -298,4 +218,4 @@ async function DeepseekChat(event: GroupMessage) {
   }
 }
 
-export { info };
+export { GeminiGroupContent, info };

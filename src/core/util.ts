@@ -1,4 +1,6 @@
 import Config from "@miz/ai/config/config.toml";
+import * as AIModel from "@miz/ai/src/models/ai";
+import * as GroupModel from "@miz/ai/src/models/group";
 
 function ToJson(text: string) {
   try {
@@ -40,4 +42,12 @@ function AIPartText(text: string) {
     .replace(new RegExp(`(^\\s*${Config.Bot.name}\\s*)`, "g"), "");
 }
 
-export { AIPartText, AIReply, ToJson };
+async function GroupPrompt(groupID: number) {
+  const promptName = await GroupModel.Find(groupID);
+  if (!promptName) return undefined;
+  const prompt = await AIModel.Find(promptName.prompt_name);
+  if (!prompt) return undefined;
+  return prompt.prompt;
+}
+
+export { AIPartText, AIReply, GroupPrompt, ToJson };
