@@ -105,6 +105,7 @@ async function GeminiChat(event: GroupMessage) {
       temperature: 0,
     });
     if (!gemini || !gemini.candidates) continue;
+    if (!gemini.functionCalls || !gemini.functionCalls.length) break;
     for (const candidate of gemini.candidates) {
       if (!candidate.content || !candidate.content.parts) continue;
       const partList: Part[] = [];
@@ -117,7 +118,6 @@ async function GeminiChat(event: GroupMessage) {
         content.push({ role: "model", parts: partList });
       }
     }
-    if (!gemini.functionCalls || !gemini.functionCalls.length) break;
     const partList: Part[] = [];
     for (const functionCall of gemini.functionCalls) {
       if (functionCall.name === "get_music") {
