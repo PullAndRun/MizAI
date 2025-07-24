@@ -108,15 +108,7 @@ async function GeminiChat(event: GroupMessage) {
     if (!gemini.functionCalls || !gemini.functionCalls.length) break;
     for (const candidate of gemini.candidates) {
       if (!candidate.content || !candidate.content.parts) continue;
-      const partList: Part[] = [];
-      for (const parts of candidate.content.parts) {
-        if (parts.functionCall) {
-          partList.push(parts);
-        }
-      }
-      if (partList.length) {
-        content.push({ role: "model", parts: partList });
-      }
+      content.push(candidate.content);
     }
     const partList: Part[] = [];
     for (const functionCall of gemini.functionCalls) {
