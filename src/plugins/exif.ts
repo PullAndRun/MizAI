@@ -40,7 +40,7 @@ async function Plugin(event: GroupMessage) {
     nodeSegment.push(
       Structs.customNode([
         Structs.image(imageBuffer),
-        Structs.text(exif.join("\n")),
+        Structs.text(exif.join("\n").replace(/\"base64\":\".*?\"/g, "")),
       ])
     );
   }
