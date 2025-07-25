@@ -11,8 +11,8 @@ function ToJson(text: string) {
 }
 
 function AIReply(message: string) {
-  return decodeURIComponent(
-    message
+  return (
+    decodeURIComponent(message)
       //移除think标签
       .replace(/[\S\s]*?<\/think>/g, "")
       //移除开头的换行
