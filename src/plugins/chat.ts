@@ -12,11 +12,11 @@ import {
 import {
   ChatHistory,
   FunctionDeclarations,
-  Music,
 } from "@miz/ai/src/core/functionCall";
 import { UrlToBlob_2 } from "@miz/ai/src/core/http";
 import { AIPartText, AIReply, GroupPrompt } from "@miz/ai/src/core/util";
 import { Deepseek, Gemini } from "@miz/ai/src/service/ai";
+import { HotComment, ID } from "@miz/ai/src/service/music";
 import { Structs, type GroupMessage, type WSSendReturn } from "node-napcat-ts";
 import type OpenAI from "openai";
 
@@ -87,19 +87,7 @@ async function GeminiGroupContent(
   };
 }
 
-async function GeminiChat(event: GroupMessage) {
-  const content: Content[] = [];
-  const geminiGroupContent = await GeminiGroupContent(event);
-  if (!geminiGroupContent) return;
-  content.push(geminiGroupContent);
-  const groupPrompt = await GroupPrompt(event.group_id);
-  if (!groupPrompt) {
-    await SendGroupMessage(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.text(`系统未录入迷子AI人格，请联系管理员。`),
-    ]);
-    return;
-  }
+async function GeminiFunctionCall(event: GroupMessage, content: Content[]) {
   for (let retry = 0; retry < Config.AI.retry; retry++) {
     const gemini = await Gemini(content, `你将扮演${Config.Bot.nickname}`, {
       tools: [{ functionDeclarations: FunctionDeclarations() }],
@@ -116,15 +104,6 @@ async function GeminiChat(event: GroupMessage) {
     }
     const partList: Part[] = [];
     for (const functionCall of gemini.functionCalls) {
-      if (functionCall.name === "get_music") {
-        const music = await Music(event, functionCall);
-        partList.push({
-          functionResponse: {
-            name: functionCall.name,
-            response: { music_name: music || "" },
-          },
-        });
-      }
       if (functionCall.name === "require_chat_history") {
         const chatHistory = await ChatHistory(
           event,
@@ -147,6 +126,22 @@ async function GeminiChat(event: GroupMessage) {
       });
     }
   }
+}
+
+async function GeminiChat(event: GroupMessage) {
+  const content: Content[] = [];
+  const geminiGroupContent = await GeminiGroupContent(event);
+  if (!geminiGroupContent) return;
+  content.push(geminiGroupContent);
+  const groupPrompt = await GroupPrompt(event.group_id);
+  if (!groupPrompt) {
+    await SendGroupMessage(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text(`系统未录入迷子AI人格，请联系管理员。`),
+    ]);
+    return;
+  }
+  await GeminiFunctionCall(event, content);
   for (let retry = 0; retry < Config.AI.retry; retry++) {
     const gemini = await Gemini(content, groupPrompt, {
       tools: [{ googleSearch: {} }],
@@ -168,7 +163,29 @@ async function GeminiChat(event: GroupMessage) {
         ]);
       }
     }
+    await SendMusic(event, gemini.text);
     break;
+  }
+}
+
+async function SendMusic(event: GroupMessage, text: string) {
+  const musicNames = text.match(/<music\s+name=\[.*?\]\/>/)
+    ? [...text.matchAll(/"([^"]+)"/g)].map((match) => match[1])
+    : [];
+  for (const musicName of musicNames) {
+    if (!musicName) continue;
+    const id = await ID(musicName);
+    if (!id) return undefined;
+    const message = await SendGroupMessage(event.group_id, [
+      Structs.music("163", id),
+    ]);
+    if (!message) return musicName;
+    const hotComment = await HotComment(id);
+    if (!hotComment) return musicName;
+    await SendGroupMessage(event.group_id, [
+      Structs.reply(message.message_id),
+      Structs.text(hotComment),
+    ]);
   }
 }
 

@@ -1,31 +1,9 @@
-import {
-  Type,
-  type Content,
-  type FunctionCall,
-  type FunctionDeclaration,
-} from "@google/genai";
-import { Client, SendGroupMessage } from "@miz/ai/src/core/bot";
+import { Type, type Content, type FunctionDeclaration } from "@google/genai";
+import { Client } from "@miz/ai/src/core/bot";
 import { GeminiGroupContent } from "@miz/ai/src/plugins/chat";
-import { Detail, HotComment, ID } from "@miz/ai/src/service/music";
-import { Structs, type GroupMessage } from "node-napcat-ts";
-import { z } from "zod";
+import { type GroupMessage } from "node-napcat-ts";
 
 function FunctionDeclarations() {
-  const getMuisc: FunctionDeclaration = {
-    name: "get_music",
-    description:
-      "解析用户请求并调用音乐搜索功能。返回音乐名称。音乐名称可能包含歌手名称。",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        music_name: {
-          type: Type.STRING,
-          description: "音乐名称。",
-        },
-      },
-      required: ["music_name"],
-    },
-  };
   const getGroupChatHistory: FunctionDeclaration = {
     name: "require_chat_history",
     description:
@@ -41,7 +19,7 @@ function FunctionDeclarations() {
       required: ["need_history"],
     },
   };
-  return [getGroupChatHistory, getMuisc];
+  return [getGroupChatHistory];
 }
 
 async function ChatHistory(
@@ -68,30 +46,4 @@ async function ChatHistory(
   });
 }
 
-async function Music(event: GroupMessage, functionCall: FunctionCall) {
-  const musicSchema = z.object({
-    args: z.object({
-      music_name: z.string(),
-    }),
-  });
-  const music = musicSchema.safeParse(functionCall);
-  if (!music.success) return undefined;
-  const musicName = music.data.args.music_name;
-  const id = await ID(musicName);
-  if (!id) return undefined;
-  const message = await SendGroupMessage(event.group_id, [
-    Structs.music("163", id),
-  ]);
-  if (!message) return musicName;
-  const hotComment = await HotComment(id);
-  if (!hotComment) return musicName;
-  await SendGroupMessage(event.group_id, [
-    Structs.reply(message.message_id),
-    Structs.text(hotComment),
-  ]);
-  const musicDetail = await Detail(id);
-  if (!musicDetail) return undefined;
-  return musicDetail.name;
-}
-
-export { ChatHistory, FunctionDeclarations, Music };
+export { ChatHistory, FunctionDeclarations };

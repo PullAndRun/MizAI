@@ -76,10 +76,7 @@ async function CustomPrompt(message: string, event: GroupMessage) {
     ]);
     return;
   }
-  await AIModel.Update(
-    event.group_id.toString(),
-    prompt.prompt.replace("***替换文本***", message)
-  );
+  await AIModel.Update(event.group_id.toString(), message);
   await GroupModel.Update(event.group_id, {
     prompt_name: event.group_id.toString(),
   });

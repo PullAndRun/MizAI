@@ -15,6 +15,8 @@ function AIReply(message: string) {
     message
       //移除think标签
       .replace(/[\S\s]*?<\/think>/g, "")
+      //去除music标签
+      .replace(/<music[^>]*\/>/g, "")
       //移除开头的换行
       .replace(/^(\n+)/g, "")
       //超过3个换行符，变成2个
@@ -47,7 +49,10 @@ async function GroupPrompt(groupID: number) {
   if (!promptName) return undefined;
   const prompt = await AIModel.Find(promptName.prompt_name);
   if (!prompt) return undefined;
-  return prompt.prompt;
+  if (promptName.prompt_name === "默认") return prompt.prompt;
+  const promptModel = await AIModel.Find("自定义范本");
+  if (!promptModel) return undefined;
+  return promptModel.prompt.replaceAll("***替换文本***", prompt.prompt);
 }
 
 export { AIPartText, AIReply, GroupPrompt, ToJson };
