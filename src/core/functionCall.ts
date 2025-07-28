@@ -1,9 +1,48 @@
-import { type Content, type FunctionCall } from "@google/genai";
+import {
+  Type,
+  type Content,
+  type FunctionCall,
+  type FunctionDeclaration,
+} from "@google/genai";
 import { Client, SendGroupMessage } from "@miz/ai/src/core/bot";
 import { GeminiGroupContent } from "@miz/ai/src/plugins/chat";
-import { HotComment, ID } from "@miz/ai/src/service/music";
+import { Detail, HotComment, ID } from "@miz/ai/src/service/music";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 import { z } from "zod";
+
+function FunctionDeclarations() {
+  const getMuisc: FunctionDeclaration = {
+    name: "get_music",
+    description:
+      "解析用户请求并调用音乐搜索功能。返回音乐名称。音乐名称可能包含歌手名称。",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        music_name: {
+          type: Type.STRING,
+          description: "音乐名称。",
+        },
+      },
+      required: ["music_name"],
+    },
+  };
+  const getGroupChatHistory: FunctionDeclaration = {
+    name: "require_chat_history",
+    description:
+      "判断是否需要读取群聊记录来回答当前问题，当问题涉及之前的讨论内容、需要上下文理解、或包含模糊指代时返回true",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        need_history: {
+          type: Type.BOOLEAN,
+          description: "当且仅当必须通过查看历史消息才能正确回答问题时为true",
+        },
+      },
+      required: ["need_history"],
+    },
+  };
+  return [getGroupChatHistory, getMuisc];
+}
 
 async function ChatHistory(
   event: GroupMessage,
@@ -50,7 +89,9 @@ async function Music(event: GroupMessage, functionCall: FunctionCall) {
     Structs.reply(message.message_id),
     Structs.text(hotComment),
   ]);
-  return musicName;
+  const musicDetail = await Detail(id);
+  if (!musicDetail) return undefined;
+  return musicDetail.name;
 }
 
-export { ChatHistory, Music };
+export { ChatHistory, FunctionDeclarations, Music };

@@ -9,10 +9,14 @@ import {
   GetMessage,
   SendGroupMessage,
 } from "@miz/ai/src/core/bot";
-import { ChatHistory, Music } from "@miz/ai/src/core/functionCall";
+import {
+  ChatHistory,
+  FunctionDeclarations,
+  Music,
+} from "@miz/ai/src/core/functionCall";
 import { UrlToBlob_2 } from "@miz/ai/src/core/http";
 import { AIPartText, AIReply, GroupPrompt } from "@miz/ai/src/core/util";
-import { Deepseek, FunctionDeclarations, Gemini } from "@miz/ai/src/service/ai";
+import { Deepseek, Gemini } from "@miz/ai/src/service/ai";
 import { Structs, type GroupMessage, type WSSendReturn } from "node-napcat-ts";
 import type OpenAI from "openai";
 
@@ -89,7 +93,7 @@ async function GeminiChat(event: GroupMessage) {
   if (!geminiGroupContent) return;
   content.push(geminiGroupContent);
   const groupPrompt = await GroupPrompt(event.group_id);
-  if (!prompt) {
+  if (!groupPrompt) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(`系统未录入迷子AI人格，请联系管理员。`),

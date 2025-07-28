@@ -1,9 +1,7 @@
 import {
   GoogleGenAI,
-  Type,
   type ContentListUnion,
   type ContentUnion,
-  type FunctionDeclaration,
   type GenerateContentConfig,
 } from "@google/genai";
 import Config from "@miz/ai/config/config.toml";
@@ -51,38 +49,4 @@ async function Gemini(
     .catch((_) => undefined);
 }
 
-function FunctionDeclarations() {
-  const getMuisc: FunctionDeclaration = {
-    name: "get_music",
-    description:
-      "解析用户请求并调用音乐搜索功能。返回音乐名称。音乐名称可能包含歌手名称。",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        music_name: {
-          type: Type.STRING,
-          description: "音乐名称。",
-        },
-      },
-      required: ["music_name"],
-    },
-  };
-  const getGroupChatHistory: FunctionDeclaration = {
-    name: "require_chat_history",
-    description:
-      "判断是否需要读取群聊记录来回答当前问题，当问题涉及之前的讨论内容、需要上下文理解、或包含模糊指代时返回true",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        need_history: {
-          type: Type.BOOLEAN,
-          description: "当且仅当必须通过查看历史消息才能正确回答问题时为true",
-        },
-      },
-      required: ["need_history"],
-    },
-  };
-  return [getGroupChatHistory, getMuisc];
-}
-
-export { Deepseek, FunctionDeclarations, Gemini };
+export { Deepseek, Gemini };
