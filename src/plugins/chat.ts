@@ -172,7 +172,7 @@ async function SendMusic(event: GroupMessage, text: string) {
   const musicNames = text.match(/<music\s+name=\[.*?\]\/>/)
     ? [...text.matchAll(/"([^"]+)"/g)].map((match) => match[1])
     : [];
-  for (const musicName of musicNames) {
+  for (const musicName of musicNames.filter((_, i) => i < Config.AI.music)) {
     if (!musicName) continue;
     const id = await ID(musicName);
     if (!id) return undefined;
