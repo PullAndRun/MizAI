@@ -163,7 +163,9 @@ async function GeminiChat(event: GroupMessage) {
         ]);
       }
     }
-    await SendMusic(event, gemini.text);
+    if (gemini.text.includes("留声机")) {
+      await SendMusic(event, gemini.text);
+    }
     break;
   }
 }
