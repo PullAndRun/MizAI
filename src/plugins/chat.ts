@@ -163,7 +163,11 @@ async function GeminiChat(event: GroupMessage) {
         ]);
       }
     }
-    if (gemini.text.includes("留声机")) {
+    const musicNames = Array.from(
+      gemini.text.matchAll(/《([\s\S]+?)》/g),
+      (m) => m[1]
+    ).filter((v): v is string => !!v);
+    if (musicNames.length) {
       await SendMusic(event, gemini.text);
     }
     break;
