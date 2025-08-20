@@ -163,35 +163,7 @@ async function GeminiChat(event: GroupMessage) {
         ]);
       }
     }
-    const musicNames = Array.from(
-      gemini.text.matchAll(/《([\s\S]+?)》/g),
-      (m) => m[1]
-    ).filter((v): v is string => !!v);
-    if (musicNames.length) {
-      await SendMusic(event, gemini.text);
-    }
     break;
-  }
-}
-
-async function SendMusic(event: GroupMessage, text: string) {
-  const musicNames = text.match(/<music\s+name=\[.*?\]\/>/)
-    ? [...text.matchAll(/"([^"]+)"/g)].map((match) => match[1])
-    : [];
-  for (const musicName of musicNames.filter((_, i) => i < Config.AI.music)) {
-    if (!musicName) continue;
-    const id = await ID(musicName);
-    if (!id) return undefined;
-    const message = await SendGroupMessage(event.group_id, [
-      Structs.music("163", id),
-    ]);
-    if (!message) return musicName;
-    const hotComment = await HotComment(id);
-    if (!hotComment) return musicName;
-    await SendGroupMessage(event.group_id, [
-      Structs.reply(message.message_id),
-      Structs.text(hotComment),
-    ]);
   }
 }
 
