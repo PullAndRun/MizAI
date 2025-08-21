@@ -41,6 +41,10 @@ async function SendGroupMessage(
   groupID: number,
   message: (SendMessageSegment | undefined)[]
 ) {
+  const { group_all_shut } = await Client().get_group_info({
+    group_id: groupID,
+  });
+  if (group_all_shut === -1) return;
   return Client()
     .send_group_msg({ group_id: groupID, message: message.filter((v) => !!v) })
     .catch((e) => {
