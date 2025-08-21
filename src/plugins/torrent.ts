@@ -55,7 +55,7 @@ async function Plugin(event: GroupMessage) {
   nodeSegment.unshift(
     Structs.customNode([
       Structs.text(
-        `本消息${Config.Bitmagnet.timeout}秒后自动撤回，请手动保存搜索内容。`
+        `本消息${Config.Bitmagnet.timeout}秒后自动撤回，请手动保存搜索结果。`
       ),
     ])
   );
