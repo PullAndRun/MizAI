@@ -1,7 +1,11 @@
 import { fileTypeFromBuffer } from "file-type";
 
-async function UrlToJson(url: string, headers?: Bun.HeadersInit) {
-  return fetch(url, { signal: AbortSignal.timeout(5000), headers })
+async function UrlToJson(
+  url: string,
+  headers?: Bun.HeadersInit,
+  option?: RequestInit
+) {
+  return fetch(url, { signal: AbortSignal.timeout(5000), headers, ...option })
     .then(async (res) => res.json())
     .catch((_) => undefined);
 }
