@@ -1,6 +1,7 @@
 import Config from "@miz/ai/config/config.toml";
 import { Logger } from "@miz/ai/src/core/log";
 import { Pick } from "@miz/ai/src/core/plugin";
+import * as BlackListModel from "@miz/ai/src/models/blacklist";
 import * as GroupModel from "@miz/ai/src/models/group";
 import * as PluginModel from "@miz/ai/src/models/plugin";
 import {
@@ -165,6 +166,8 @@ async function Invoke(
 async function Listener() {
   const loginInfo = await Client().get_login_info();
   Client().on("message.group", async (event) => {
+    const isBanUser = await BlackListModel.Find(event.user_id.toString());
+    if (isBanUser) return;
     let messageList: string[] = [];
     let callBot = false;
     for (const eventMessage of event.message) {

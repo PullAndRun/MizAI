@@ -16,7 +16,6 @@ import {
 import { UrlToBlob_2 } from "@miz/ai/src/core/http";
 import { AIPartText, AIReply, GroupPrompt } from "@miz/ai/src/core/util";
 import { Deepseek, Gemini } from "@miz/ai/src/service/ai";
-import { HotComment, ID } from "@miz/ai/src/service/music";
 import { Structs, type GroupMessage, type WSSendReturn } from "node-napcat-ts";
 import type OpenAI from "openai";
 
