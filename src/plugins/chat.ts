@@ -143,7 +143,7 @@ async function GeminiChat(event: GroupMessage) {
   await GeminiFunctionCall(event, content);
   for (let retry = 0; retry < Config.AI.retry; retry++) {
     const gemini = await Gemini(content, groupPrompt, {
-      tools: [{ googleSearch: {} }],
+      tools: [{ urlContext: {} }, { googleSearch: {} }],
     });
     if (
       !gemini ||

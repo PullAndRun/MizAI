@@ -166,8 +166,6 @@ async function Invoke(
 async function Listener() {
   const loginInfo = await Client().get_login_info();
   Client().on("message.group", async (event) => {
-    const isBanUser = await BlackListModel.Find(event.user_id.toString());
-    if (isBanUser) return;
     let messageList: string[] = [];
     let callBot = false;
     for (const eventMessage of event.message) {
@@ -203,6 +201,8 @@ async function Listener() {
       Pick("复读=>无法调用")?.Plugin(event);
       return;
     }
+    const isBanUser = await BlackListModel.Find(event.user_id.toString());
+    if (isBanUser) return;
     const message = messageList.filter((v) => !!v).join("");
     if (!message) return;
     const plugin = Pick(message);
