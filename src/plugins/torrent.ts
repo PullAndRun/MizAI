@@ -33,6 +33,7 @@ async function Plugin(event: GroupMessage) {
   const nodeSegment: NodeSegment[] = [];
 
   for (const { torrent } of search) {
+    if (!Verify(torrent.name)) continue;
     nodeSegment.push(
       Structs.customNode([
         Structs.text(
