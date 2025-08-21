@@ -46,7 +46,10 @@ async function Gemini(
         ...config,
       },
     })
-    .catch((_) => undefined);
+    .catch((e) => {
+      console.log(e);
+      return undefined;
+    });
 }
 
 export { Deepseek, Gemini };

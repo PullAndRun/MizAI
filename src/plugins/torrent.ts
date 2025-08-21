@@ -1,5 +1,5 @@
 import Config from "@miz/ai/config/config.toml";
-import { CommandText, SendGroupMessage } from "@miz/ai/src/core/bot";
+import { Client, CommandText, SendGroupMessage } from "@miz/ai/src/core/bot";
 import { Search } from "@miz/ai/src/service/torrent";
 import { Structs, type GroupMessage, type NodeSegment } from "node-napcat-ts";
 import { Filter, Verify } from "../service/sensitive";
@@ -52,7 +52,18 @@ async function Plugin(event: GroupMessage) {
     ]);
     return;
   }
-  await SendGroupMessage(event.group_id, nodeSegment);
+  nodeSegment.unshift(
+    Structs.customNode([
+      Structs.text(
+        `本消息${Config.Bitmagnet.timeout}秒后自动撤回，请手动保存搜索内容。`
+      ),
+    ])
+  );
+  const message = await SendGroupMessage(event.group_id, nodeSegment);
+  if (!message) return;
+  setTimeout(async () => {
+    await Client().delete_msg({ message_id: message.message_id });
+  }, Config.Bitmagnet.timeout * 1000);
 }
 
 export { info };
