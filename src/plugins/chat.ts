@@ -41,17 +41,35 @@ async function GeminiGroupContent(
     | {
         message: Array<{ type: "text"; data: { text: string } }>;
         sender: { card?: string; nickname?: string };
+        message_id: number;
       }
 ) {
   const parts: Part[] = [];
+  let replyTo: number | undefined = undefined;
   const meta = (sender: string) => {
     return [
       `<metadata>`,
       `This is a group message`,
+      `MessageID : "${event.message_id}"`,
+      replyTo && `Quoting to MessageID: "${replyTo}"`,
       `Sender's name: "${sender}"`,
       `</metadata>`,
     ];
   };
+  const reply = (parts: Part[]) => {
+    return {
+      role: "user",
+      parts: [
+        {
+          text: `${meta(
+            event.sender.card || event.sender.nickname || "无名氏"
+          ).join("\n")}`,
+        },
+        ...parts,
+      ],
+    };
+  };
+  const content: Array<{ role: string; parts: Part[] }> = [];
   for (const message of event.message) {
     if (message.type === "text") {
       parts.push({ text: message.data.text });
@@ -69,28 +87,24 @@ async function GeminiGroupContent(
       if (!getMessage) continue;
       const replyParts = await GeminiGroupContent(getMessage);
       if (!replyParts) continue;
-      parts.push(...replyParts.parts);
+      content.push(...replyParts);
+      replyTo = getMessage.message_id;
     }
   }
   if (!parts.length) return undefined;
-  return {
-    role: "user",
-    parts: [
-      {
-        text: `${meta(
-          event.sender.card || event.sender.nickname || "无名氏"
-        ).join("\n")}`,
-      },
-      ...parts,
-    ],
-  };
+  content.push(reply(parts));
+  return content;
 }
 
-async function GeminiFunctionCall(event: GroupMessage, content: Content[]) {
+async function GeminiFunctionCall(
+  event: GroupMessage,
+  content: Content[],
+  prompt: string
+) {
   for (let retry = 0; retry < Config.AI.retry; retry++) {
     const gemini = await Gemini(
       content,
-      `你将扮演${Config.Bot.nickname}`,
+      prompt,
       {
         tools: [{ functionDeclarations: FunctionDeclarations() }],
         toolConfig: {
@@ -136,7 +150,7 @@ async function GeminiChat(event: GroupMessage) {
   const content: Content[] = [];
   const geminiGroupContent = await GeminiGroupContent(event);
   if (!geminiGroupContent) return;
-  content.push(geminiGroupContent);
+  content.push(...geminiGroupContent);
   const groupPrompt = await GroupPrompt(event.group_id);
   if (!groupPrompt) {
     await SendGroupMessage(event.group_id, [
@@ -145,7 +159,9 @@ async function GeminiChat(event: GroupMessage) {
     ]);
     return;
   }
-  await GeminiFunctionCall(event, content);
+  const chatHistory = await ChatHistory(event, content, Config.AI.nearChat);
+  content.unshift(...chatHistory);
+  await GeminiFunctionCall(event, content, groupPrompt);
   for (let retry = 0; retry < Config.AI.retry; retry++) {
     const gemini = await Gemini(content, groupPrompt, {
       tools: [{ googleSearch: {} }],

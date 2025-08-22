@@ -36,7 +36,7 @@ async function ChatHistory(
   for (const messages of groupMessageHistory.messages) {
     const geminiGroupContent = await GeminiGroupContent(messages);
     if (!geminiGroupContent) continue;
-    historyContent.push(geminiGroupContent);
+    historyContent.push(...geminiGroupContent);
   }
   return historyContent.filter((hc) => {
     for (const ct of newContent) {
