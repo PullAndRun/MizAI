@@ -28,12 +28,7 @@ async function PushEarthquake() {
     link: string;
   }> = [];
   for (const earthquake of recentEarthquakeList) {
-    const findEarthquake = await EarthquakeModel.Find(
-      earthquake.title,
-      earthquake.description,
-      earthquake.link,
-      earthquake.pubDate
-    );
+    const findEarthquake = await EarthquakeModel.Find(earthquake.description);
     if (!findEarthquake) {
       earthquakes.push(earthquake);
     }

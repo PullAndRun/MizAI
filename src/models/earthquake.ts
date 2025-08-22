@@ -21,17 +21,9 @@ class Earthquake extends BaseEntity {
   pub_date: string;
 }
 
-async function Find(
-  title: string,
-  description: string,
-  link: string,
-  pub_date: string
-) {
+async function Find(description: string) {
   return Earthquake.findOneBy({
-    title,
     description,
-    link,
-    pub_date,
   }).catch((_) => undefined);
 }
 
