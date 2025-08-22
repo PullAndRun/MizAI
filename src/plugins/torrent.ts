@@ -37,11 +37,11 @@ async function Plugin(event: GroupMessage) {
     nodeSegment.push(
       Structs.customNode([
         Structs.text(
-          `📝标题: ${Filter(torrent.name).text}\n📏大小: ${(
+          `📝 标题: ${Filter(torrent.name).text}\n📦 大小: ${(
             torrent.size /
             1024 /
             1024
-          ).toFixed(2)} MB\n🧲磁链: ${torrent.magnetUri.replace(/&dn.*/g, "")}`
+          ).toFixed(2)} MB\n🧲 磁链: ${torrent.magnetUri.replace(/&dn.*/g, "")}`
         ),
       ])
     );
