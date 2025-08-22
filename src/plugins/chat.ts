@@ -88,13 +88,18 @@ async function GeminiGroupContent(
 
 async function GeminiFunctionCall(event: GroupMessage, content: Content[]) {
   for (let retry = 0; retry < Config.AI.retry; retry++) {
-    const gemini = await Gemini(content, `你将扮演${Config.Bot.nickname}`, {
-      tools: [{ functionDeclarations: FunctionDeclarations() }],
-      toolConfig: {
-        functionCallingConfig: { mode: FunctionCallingConfigMode.ANY },
+    const gemini = await Gemini(
+      content,
+      `你将扮演${Config.Bot.nickname}`,
+      {
+        tools: [{ functionDeclarations: FunctionDeclarations() }],
+        toolConfig: {
+          functionCallingConfig: { mode: FunctionCallingConfigMode.ANY },
+        },
+        temperature: 0,
       },
-      temperature: 0,
-    });
+      "gemini-2.5-flash-lite"
+    );
     if (!gemini || !gemini.candidates) continue;
     if (!gemini.functionCalls || !gemini.functionCalls.length) break;
     for (const candidate of gemini.candidates) {

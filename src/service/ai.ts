@@ -34,11 +34,12 @@ async function Deepseek(
 async function Gemini(
   contents: ContentListUnion,
   systemInstruction?: ContentUnion | undefined,
-  config?: GenerateContentConfig
+  config?: GenerateContentConfig,
+  model: string = Config.Gemini.model
 ) {
   return gemini.models
     .generateContent({
-      model: Config.Gemini.model,
+      model: model,
       contents,
       config: {
         systemInstruction,
