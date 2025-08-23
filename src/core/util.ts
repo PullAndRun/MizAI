@@ -19,8 +19,6 @@ function AIReply(message: string) {
       .replace(/[\S\s]*?<\/thinking>/g, "")
       //移除think标签
       .replace(/[\S\s]*?<\/metadata>/g, "")
-      //去除music标签
-      .replace(/<music[^>]*\/>/g, "")
       //移除开头的换行
       .replace(/^(\n+)/g, "")
       //超过3个换行符，变成2个

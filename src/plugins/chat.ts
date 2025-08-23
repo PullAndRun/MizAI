@@ -143,6 +143,7 @@ async function GeminiFunctionCall(
         parts: partList,
       });
     }
+    break;
   }
 }
 
