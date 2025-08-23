@@ -14,7 +14,12 @@ import {
   FunctionDeclarations,
 } from "@miz/ai/src/core/functionCall";
 import { UrlToBlob_2 } from "@miz/ai/src/core/http";
-import { AIPartText, AIReply, GroupPrompt } from "@miz/ai/src/core/util";
+import {
+  AIPartText,
+  AIReply,
+  GroupPrompt,
+  SplitStringByLength,
+} from "@miz/ai/src/core/util";
 import { Deepseek, Gemini } from "@miz/ai/src/service/ai";
 import { Structs, type GroupMessage, type WSSendReturn } from "node-napcat-ts";
 import type OpenAI from "openai";
@@ -178,10 +183,13 @@ async function GeminiChat(event: GroupMessage) {
       if (!candidate.content || !candidate.content.parts) continue;
       for (const part of candidate.content.parts) {
         if (!part.text || !AIReply(part.text)) continue;
-        await SendGroupMessage(event.group_id, [
-          Structs.reply(event.message_id),
-          Structs.text(AIReply(part.text)),
-        ]);
+        const msgs = SplitStringByLength(part.text, 4000);
+        for (const msg of msgs) {
+          await SendGroupMessage(event.group_id, [
+            Structs.reply(event.message_id),
+            Structs.text(AIReply(msg)),
+          ]);
+        }
       }
     }
     break;
@@ -223,10 +231,13 @@ async function DeepseekChat(event: GroupMessage) {
   for (const message of deepseek.choices) {
     const content = message.message.content;
     if (!content || !AIReply(content)) continue;
-    await SendGroupMessage(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.text(AIReply(content)),
-    ]);
+    const msgs = SplitStringByLength(content, 4000);
+    for (const msg of msgs) {
+      await SendGroupMessage(event.group_id, [
+        Structs.reply(event.message_id),
+        Structs.text(AIReply(msg)),
+      ]);
+    }
   }
 }
 

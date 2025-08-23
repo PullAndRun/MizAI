@@ -62,4 +62,17 @@ async function GroupPrompt(groupID: number) {
   return promptModel.prompt.replaceAll("***替换文本***", ai.prompt);
 }
 
-export { AIPartText, AIReply, GroupPrompt, ToJson };
+function SplitStringByLength(text: string, maxLength: number) {
+  if (text.length <= maxLength) return [text];
+  const result: string[] = [];
+  let currentIndex = 0;
+  while (currentIndex < text.length) {
+    const end = Math.min(currentIndex + maxLength, text.length);
+    const segment = text.substring(currentIndex, end);
+    result.push(segment);
+    currentIndex += maxLength;
+  }
+  return result;
+}
+
+export { AIPartText, AIReply, GroupPrompt, SplitStringByLength, ToJson };
