@@ -116,6 +116,7 @@ async function GeminiFunctionCall(
           functionCallingConfig: { mode: FunctionCallingConfigMode.ANY },
         },
         temperature: 0,
+        maxOutputTokens: 500,
       },
       "gemini-2.5-flash-lite"
     );
