@@ -49,14 +49,19 @@ function AIPartText(text: string) {
 }
 
 async function GroupPrompt(groupID: number) {
-  const promptName = await GroupModel.Find(groupID);
-  if (!promptName) return undefined;
-  const prompt = await AIModel.Find(promptName.prompt_name);
-  if (!prompt) return undefined;
-  if (promptName.prompt_name === "默认") return prompt.prompt;
+  const group = await GroupModel.FindOrAdd(groupID);
+  if (!group) return undefined;
+  const ai = await AIModel.Find(group.prompt_name);
+  if (!ai) {
+    const defaultPrompt = await AIModel.Find("默认");
+    if (!defaultPrompt) return undefined;
+    await GroupModel.Update(groupID, { prompt_name: "默认" });
+    return defaultPrompt.prompt;
+  }
+  if (group.prompt_name === "默认") return ai.prompt;
   const promptModel = await AIModel.Find("自定义范本");
   if (!promptModel) return undefined;
-  return promptModel.prompt.replaceAll("***替换文本***", prompt.prompt);
+  return promptModel.prompt.replaceAll("***替换文本***", ai.prompt);
 }
 
 export { AIPartText, AIReply, GroupPrompt, ToJson };
