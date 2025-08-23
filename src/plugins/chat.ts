@@ -176,7 +176,7 @@ async function GeminiChat(event: GroupMessage) {
     for (const candidate of gemini.candidates) {
       if (!candidate.content || !candidate.content.parts) continue;
       for (const part of candidate.content.parts) {
-        if (!part.text) continue;
+        if (!part.text || !AIReply(part.text)) continue;
         await SendGroupMessage(event.group_id, [
           Structs.reply(event.message_id),
           Structs.text(AIReply(part.text)),
@@ -221,7 +221,7 @@ async function DeepseekChat(event: GroupMessage) {
   }
   for (const message of deepseek.choices) {
     const content = message.message.content;
-    if (!content) continue;
+    if (!content || !AIReply(content)) continue;
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(AIReply(content)),
