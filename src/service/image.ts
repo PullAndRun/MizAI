@@ -1,6 +1,7 @@
 import Config from "@miz/ai/config/config.toml";
 import { UrlToBuffer, UrlToJson, UrlToText } from "@miz/ai/src/core/http";
-import { ToJson } from "@miz/ai/src/core/util";
+import { ReadRandomImageFromDir, ToJson } from "@miz/ai/src/core/util";
+import path from "node:path";
 import { z } from "zod";
 
 async function Suyanw(text: string) {
@@ -51,4 +52,12 @@ async function Baidu(text: string) {
   return UrlToBuffer(randomImage.thumbURL);
 }
 
-export { Baidu, Suyanw };
+async function Genshit() {
+  return ReadRandomImageFromDir(path.resolve(Config.Genshit.dir));
+}
+
+async function Pixiv() {
+  return ReadRandomImageFromDir(path.resolve(Config.Pixiv.dir));
+}
+
+export { Baidu, Genshit, Pixiv, Suyanw };
