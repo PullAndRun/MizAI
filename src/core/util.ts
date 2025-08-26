@@ -82,7 +82,8 @@ async function ReadRandomImageFromDir(dir: string) {
   const files = await readdir(dir, {
     withFileTypes: true,
     recursive: true,
-  });
+  }).catch((_) => undefined);
+  if (!files) return undefined;
   const jpgFiles = files.filter(
     (file) => file.isFile() && file.name.endsWith(".jpg")
   );
@@ -90,7 +91,10 @@ async function ReadRandomImageFromDir(dir: string) {
   const randomFile = jpgFiles[Math.floor(Math.random() * jpgFiles.length)];
   if (!randomFile) return;
   const filePath = path.resolve(randomFile.parentPath + "/" + randomFile.name);
-  const jpgFileBuffer = await file(filePath).arrayBuffer();
+  const jpgFileBuffer = await file(filePath)
+    .arrayBuffer()
+    .catch((_) => undefined);
+  if (!jpgFileBuffer) return undefined;
   return Buffer.from(jpgFileBuffer);
 }
 
