@@ -21,13 +21,14 @@
     "file-type": "^21.0.0",
     "mint-filter": "^4.0.3",
     "NeteaseCloudMusicApi": "^4.27.0",
-    "node-napcat-ts": "^0.4.13",
+    "node-napcat-ts": "^0.4.15",
     "node-schedule": "^2.1.1",
-    "openai": "^5.13.1",
+    "openai": "^5.16.0",
     "pg": "^8.16.3",
     "puppeteer-core": "^24.17.0",
     "typeorm": "^0.3.26",
     "winston": "^3.17.0",
+    "youtube-dl-exec": "^3.0.24",
     "zod": "^3.25.76"
   }
 }
