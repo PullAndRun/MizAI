@@ -22,12 +22,12 @@ async function Download(url: string) {
   const fileName = randomUUIDv7();
   await create(url, {
     noPlaylist: true,
-    output: path.resolve(`${Config.Ytdlp.video_folder}${fileName}`),
+    output: path.resolve(`${Config.Ytdlp.video_folder}${fileName}.mp4`),
     ffmpegLocation: path.resolve(
       `${Config.Bot.tools_folder}${Config.Bot.ffmpeg_file_name}`
     ),
     cookies: Config.Ytdlp.cookie,
-    format: "(bv*[vcodec~='^((he|a)vc|h26[45])']+ba)",
+    format: "(bv*[vcodec~='^((he|a)vc|h26[45])']+ba) / (bv*+ba/b)",
     proxy: Config.Bot.proxy,
   }).catch((_) => undefined);
   return fileName + ".mp4";
