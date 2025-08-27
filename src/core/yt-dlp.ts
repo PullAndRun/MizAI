@@ -5,7 +5,7 @@ import * as ytdlp from "youtube-dl-exec";
 
 async function Metadata(url: string) {
   const create = ytdlp.create(
-    path.resolve(`${Config.Bot.tools_folder}yt-dlp.exe`)
+    path.resolve(`${Config.Bot.tools_folder}${Config.Bot.ytdlp_file_name}`)
   );
   return create(url, {
     skipDownload: true,
@@ -17,13 +17,15 @@ async function Metadata(url: string) {
 
 async function Download(url: string) {
   const create = ytdlp.create(
-    path.resolve(`${Config.Bot.tools_folder}yt-dlp.exe`)
+    path.resolve(`${Config.Bot.tools_folder}${Config.Bot.ytdlp_file_name}`)
   );
   const fileName = randomUUIDv7();
   await create(url, {
     noPlaylist: true,
     output: path.resolve(`${Config.Ytdlp.video_folder}${fileName}`),
-    ffmpegLocation: path.resolve(`${Config.Bot.tools_folder}ffmpeg.exe`),
+    ffmpegLocation: path.resolve(
+      `${Config.Bot.tools_folder}${Config.Bot.ffmpeg_file_name}`
+    ),
     cookies: Config.Ytdlp.cookie,
     format: "(bv*[vcodec~='^((he|a)vc|h26[45])']+ba)",
     proxy: Config.Bot.proxy,
