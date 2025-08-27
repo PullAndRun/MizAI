@@ -1,0 +1,103 @@
+[NCWebsocketOptions]
+baseUrl = ""
+accessToken = ""
+throwPromise = true
+reconnection = { enable = true, attempts = 10, delay = 5000 }
+
+[Database]
+type = ""
+host = ""
+port = 1234
+username = ""
+password = ""
+database = ""
+synchronize = true
+logging = false
+entities = ["src/models/*.ts"]
+
+[Ytdlp]
+video_folder = "resource/ytdlp/"
+cookie = "resource/ytdlp/cookie.txt"
+duration = 10
+
+[Puppeteer]
+browserWSEndpoint = ""
+
+[Bitmagnet]
+url = ""
+limit = 50
+field = "relevance"
+timeout = 30
+
+[Bili]
+dynamic = { url = "", spec = "", delay = 10 }
+live = { url = "", spec = "", delay = 1 }
+card = { url = "" }
+user = { url = "" }
+cookie = ""
+
+[Earthquake]
+url = ""
+level = 4
+spec = ""
+limit = 2
+
+[Bot]
+name = ""
+nickname = ""
+admin = 111111111
+repeat = 3
+message_delay = 1
+tools_folder = "resource/tools/"
+ytdlp_file_name = "yt-dlp.exe"
+ffmpeg_file_name = "ffmpeg.exe"
+proxy = ""
+
+[Log]
+level = "info"
+dir = "log"
+
+[FF14]
+intro = { url = "" }
+detail = { url = "" }
+
+[Music]
+netease = { url = "" }
+
+[Image]
+suyanw = { url = "" }
+baidu = { url = "" }
+
+[AI]
+history = 15
+retry = 3
+nearChat = 6
+
+[Deepseek]
+url = ""
+key = ""
+model = ""
+config = { temperature = 1.5, max_tokens = 3000, frequency_penalty = 0.1, presence_penalty = 1.9, n = 1 }
+
+[Gemini]
+url = ""
+key = ""
+model = ""
+config = { temperature = 1.5, maxOutputTokens = 6000, frequencyPenalty = 0.1, presencePenalty = 1.9, candidateCount = 1 }
+
+[News]
+hot = { url = "" }
+finance = { url = "" }
+realtime = { spec = "", quantity = 5 }
+daily = { spec = "", quantity = 10 }
+clean = { spec = "", limit = 100 }
+
+[Wallpaper]
+url = ""
+spec = ""
+
+[Genshit]
+dir = "resource/miHoYoJokes"
+
+[Pixiv]
+dir = "resource/pixiv"
