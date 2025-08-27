@@ -69,8 +69,8 @@ async function SendVideo(event: GroupMessage) {
     info.name,
   ]);
   if (
-    (!commandText.startsWith("https://www.bilibili.com") ||
-      !commandText.includes("https://b23.tv")) &&
+    !commandText.includes("bilibili") ||
+    !commandText.includes("b23.tv") ||
     event.sender.user_id !== Config.Bot.admin
   ) {
     await SendGroupMessage(event.group_id, [
