@@ -28,6 +28,11 @@ async function Download(url: string) {
     ),
     cookies: Config.Ytdlp.cookie,
     format: "(bv*[vcodec~='^((he|a)vc|h26[45])']+ba) / (bv*+ba/b)",
+    recodeVideo: "mp4",
+    formatSort: [
+      "res",
+      "ext:mp4:m4a",
+    ] as unknown as ytdlp.OptionFormatSortPlus[],
     proxy: Config.Bot.proxy,
   }).catch((_) => undefined);
   return fileName + ".mp4";
