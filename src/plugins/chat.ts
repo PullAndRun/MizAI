@@ -115,6 +115,7 @@ async function GeminiFunctionCall(
         toolConfig: {
           functionCallingConfig: { mode: FunctionCallingConfigMode.ANY },
         },
+        thinkingConfig: { thinkingBudget: 0 },
         temperature: 0,
         maxOutputTokens: 500,
       },
