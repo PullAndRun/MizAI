@@ -210,7 +210,7 @@ async function Listener() {
     const message = messageList.filter((v) => !!v).join("");
     if (!message) return;
     const plugin = Pick(message);
-    if (!plugin) {
+    if (!plugin || message.includes(Config.Bot.nickname)) {
       Pick("聊天=>无法调用")?.Plugin(event);
       return;
     }
