@@ -172,12 +172,14 @@ async function Listener() {
   Client().on("message.group", async (event) => {
     let messageList: string[] = [];
     let callBot = false;
+    let isReplyOrAt = false;
     for (const eventMessage of event.message) {
       if (
         eventMessage.type === "at" &&
         eventMessage.data.qq === loginInfo.user_id.toString()
       ) {
         callBot = true;
+        isReplyOrAt = true;
       }
       if (eventMessage.type === "reply") {
         const groupMessage = await GetMessage(
@@ -185,6 +187,7 @@ async function Listener() {
         );
         if (groupMessage && groupMessage.user_id === loginInfo.user_id) {
           callBot = true;
+          isReplyOrAt = true;
         }
       }
       if (eventMessage.type === "text") {
@@ -207,6 +210,10 @@ async function Listener() {
     }
     const isBanUser = await BlackListModel.Find(event.user_id.toString());
     if (isBanUser) return;
+    if (isReplyOrAt && callBot) {
+      Pick("聊天=>无法调用")?.Plugin(event);
+      return;
+    }
     const message = messageList.filter((v) => !!v).join("");
     if (!message) return;
     const plugin = Pick(message);
