@@ -1,9 +1,9 @@
-import Config from "@miz/ai/config/config.toml";
-import { Client, SendGroupMessage } from "@miz/ai/src/core/bot";
-import * as EarthquakeModel from "@miz/ai/src/models/earthquake";
-import * as GroupModel from "@miz/ai/src/models/group";
-import * as PluginModel from "@miz/ai/src/models/plugin";
-import { Earthquake, EarthquakeReply } from "@miz/ai/src/service/earthquake";
+import Config from "miz/config/config.toml";
+import { Client, SendGroupMessage } from "miz/src/core/bot";
+import * as EarthquakeModel from "miz/src/models/earthquake";
+import * as GroupModel from "miz/src/models/group";
+import * as PluginModel from "miz/src/models/plugin";
+import { Earthquake, EarthquakeReply } from "miz/src/service/earthquake";
 import { sleep } from "bun";
 import dayjs from "dayjs";
 import { Structs } from "node-napcat-ts";

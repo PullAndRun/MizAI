@@ -1,6 +1,6 @@
-import Config from "@miz/ai/config/config.toml";
-import { CommandText, Invoke, SendGroupMessage } from "@miz/ai/src/core/bot";
-import * as BlackListModel from "@miz/ai/src/models/blacklist";
+import Config from "miz/config/config.toml";
+import { CommandText, Invoke, SendGroupMessage } from "miz/src/core/bot";
+import * as BlackListModel from "miz/src/models/blacklist";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {

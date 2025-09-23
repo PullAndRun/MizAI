@@ -1,6 +1,6 @@
-import Config from "@miz/ai/config/config.toml";
-import * as AIModel from "@miz/ai/src/models/ai";
-import * as GroupModel from "@miz/ai/src/models/group";
+import Config from "miz/config/config.toml";
+import * as AIModel from "miz/src/models/ai";
+import * as GroupModel from "miz/src/models/group";
 import { file } from "bun";
 import { readdir } from "node:fs/promises";
 import path from "node:path";

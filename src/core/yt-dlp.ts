@@ -1,4 +1,4 @@
-import Config from "@miz/ai/config/config.toml";
+import Config from "miz/config/config.toml";
 import { randomUUIDv7 } from "bun";
 import path from "node:path";
 import * as ytdlp from "youtube-dl-exec";

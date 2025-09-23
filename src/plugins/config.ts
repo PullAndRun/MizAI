@@ -1,8 +1,8 @@
-import Config from "@miz/ai/config/config.toml";
-import { CommandText, Invoke, SendGroupMessage } from "@miz/ai/src/core/bot";
-import * as AIModel from "@miz/ai/src/models/ai";
-import * as GroupModel from "@miz/ai/src/models/group";
-import * as PluginModel from "@miz/ai/src/models/plugin";
+import Config from "miz/config/config.toml";
+import { CommandText, Invoke, SendGroupMessage } from "miz/src/core/bot";
+import * as AIModel from "miz/src/models/ai";
+import * as GroupModel from "miz/src/models/group";
+import * as PluginModel from "miz/src/models/plugin";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {

@@ -1,6 +1,6 @@
-import Config from "@miz/ai/config/config.toml";
-import { CommandText, SendGroupMessage } from "@miz/ai/src/core/bot";
-import { Divination } from "@miz/ai/src/service/divination";
+import Config from "miz/config/config.toml";
+import { CommandText, SendGroupMessage } from "miz/src/core/bot";
+import { Divination } from "miz/src/service/divination";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {

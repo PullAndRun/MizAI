@@ -1,5 +1,5 @@
-import Config from "@miz/ai/config/config.toml";
-import { ForwardGroupMessage } from "@miz/ai/src/core/bot";
+import Config from "miz/config/config.toml";
+import { ForwardGroupMessage } from "miz/src/core/bot";
 import { type GroupMessage } from "node-napcat-ts";
 
 const info = {

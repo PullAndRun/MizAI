@@ -1,6 +1,6 @@
 import { Type, type Content, type FunctionDeclaration } from "@google/genai";
-import { Client } from "@miz/ai/src/core/bot";
-import { GeminiGroupContent } from "@miz/ai/src/plugins/chat";
+import { Client } from "miz/src/core/bot";
+import { GeminiGroupContent } from "miz/src/plugins/chat";
 import { type GroupMessage } from "node-napcat-ts";
 
 function FunctionDeclarations() {

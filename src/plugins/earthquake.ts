@@ -1,6 +1,6 @@
-import Config from "@miz/ai/config/config.toml";
-import { SendGroupMessage } from "@miz/ai/src/core/bot";
-import { Earthquake } from "@miz/ai/src/service/earthquake";
+import Config from "miz/config/config.toml";
+import { SendGroupMessage } from "miz/src/core/bot";
+import { Earthquake } from "miz/src/service/earthquake";
 import dayjs from "dayjs";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 

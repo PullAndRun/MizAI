@@ -1,5 +1,5 @@
 {
-  "name": "mizai",
+  "name": "miz",
   "type": "module",
   "scripts": {
     "start": "bun run ./main.ts"
@@ -12,23 +12,23 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@google/genai": "^1.15.0",
-    "@miz/ai": "file:",
+    "@google/genai": "^1.20.0",
+    "miz": "link:miz",
     "cheerio": "^1.1.2",
-    "dayjs": "^1.11.13",
-    "exifreader": "^4.31.1",
+    "dayjs": "^1.11.18",
+    "exifreader": "^4.32.0",
     "fast-xml-parser": "^5.2.5",
     "file-type": "^21.0.0",
     "mint-filter": "^4.0.3",
-    "NeteaseCloudMusicApi": "^4.27.0",
-    "node-napcat-ts": "^0.4.15",
+    "NeteaseCloudMusicApi": "^4.28.0",
+    "node-napcat-ts": "^0.4.20",
     "node-schedule": "^2.1.1",
-    "openai": "^5.16.0",
+    "openai": "^5.23.0",
     "pg": "^8.16.3",
-    "puppeteer-core": "^24.17.0",
-    "typeorm": "^0.3.26",
+    "puppeteer-core": "^24.22.2",
+    "typeorm": "^0.3.27",
     "winston": "^3.17.0",
-    "youtube-dl-exec": "^3.0.24",
-    "zod": "^3.25.76"
+    "youtube-dl-exec": "^3.0.25",
+    "zod": "^4.1.11"
   }
 }

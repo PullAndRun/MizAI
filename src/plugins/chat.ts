@@ -3,24 +3,17 @@ import {
   type Content,
   type Part,
 } from "@google/genai";
-import Config from "@miz/ai/config/config.toml";
-import {
-  CommandText,
-  GetMessage,
-  SendGroupMessage,
-} from "@miz/ai/src/core/bot";
-import {
-  ChatHistory,
-  FunctionDeclarations,
-} from "@miz/ai/src/core/functionCall";
-import { UrlToBlob_2 } from "@miz/ai/src/core/http";
+import Config from "miz/config/config.toml";
+import { CommandText, GetMessage, SendGroupMessage } from "miz/src/core/bot";
+import { ChatHistory, FunctionDeclarations } from "miz/src/core/functionCall";
+import { UrlToBlob_2 } from "miz/src/core/http";
 import {
   AIPartText,
   AIReply,
   GroupPrompt,
   SplitStringByLength,
-} from "@miz/ai/src/core/util";
-import { Deepseek, Gemini } from "@miz/ai/src/service/ai";
+} from "miz/src/core/util";
+import { Deepseek, Gemini } from "miz/src/service/ai";
 import { Structs, type GroupMessage, type WSSendReturn } from "node-napcat-ts";
 import type OpenAI from "openai";
 

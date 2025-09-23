@@ -1,8 +1,8 @@
-import Config from "@miz/ai/config/config.toml";
-import { Logger } from "@miz/ai/src/core/log";
-import * as AIModel from "@miz/ai/src/models/ai";
-import * as EarthquakeModel from "@miz/ai/src/models/earthquake";
-import { Earthquake } from "@miz/ai/src/service/earthquake";
+import Config from "miz/config/config.toml";
+import { Logger } from "miz/src/core/log";
+import * as AIModel from "miz/src/models/ai";
+import * as EarthquakeModel from "miz/src/models/earthquake";
+import { Earthquake } from "miz/src/service/earthquake";
 import { DataSource } from "typeorm";
 
 const dataSource = new DataSource({

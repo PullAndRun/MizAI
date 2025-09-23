@@ -1,5 +1,5 @@
-import { SendGroupMessage } from "@miz/ai/src/core/bot";
-import { ShowPlugin } from "@miz/ai/src/core/plugin";
+import { SendGroupMessage } from "miz/src/core/bot";
+import { ShowPlugin } from "miz/src/core/plugin";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {

@@ -1,16 +1,12 @@
-import Config from "@miz/ai/config/config.toml";
-import { CommandText, SendGroupMessage } from "@miz/ai/src/core/bot";
-import { Delete, Download, Metadata } from "@miz/ai/src/core/yt-dlp";
-import { Baidu, Pixiv } from "@miz/ai/src/service/image";
+import Config from "miz/config/config.toml";
+import { CommandText, SendGroupMessage } from "miz/src/core/bot";
+import { Delete, Download, Metadata } from "miz/src/core/yt-dlp";
+import { Baidu, Pixiv } from "miz/src/service/image";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
   name: "看",
-  comment: [
-    `使用 "看" 命令查看随机图片`,
-    `使用 "看 [看什么图]" 命令看图`,
-    `使用 "看 [视频网址]" 命令看视频`,
-  ],
+  comment: [`使用 "看" 命令查看随机图片`, `使用 "看 [视频网址]" 命令看视频`],
   Plugin,
 };
 async function Plugin(event: GroupMessage) {
@@ -18,15 +14,18 @@ async function Plugin(event: GroupMessage) {
     Config.Bot.name,
     info.name,
   ]);
-  if (!commandText) {
-    await SendRandomImage(event);
-    return;
-  }
   if (commandText.startsWith("http")) {
     await SendVideo(event);
     return;
   }
-  await SendSearchImage(event);
+  await SendRandomImage(event);
+  if (commandText) {
+    await SendGroupMessage(event.group_id, [
+      Structs.reply(event.message_id),
+      Structs.text(`搜图功能已下线，为您推荐一张精选图片。`),
+    ]);
+  }
+  // await SendSearchImage(event);
 }
 
 async function SendSearchImage(event: GroupMessage) {

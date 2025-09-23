@@ -1,9 +1,9 @@
-import Config from "@miz/ai/config/config.toml";
-import { Logger } from "@miz/ai/src/core/log";
-import { Pick } from "@miz/ai/src/core/plugin";
-import * as BlackListModel from "@miz/ai/src/models/blacklist";
-import * as GroupModel from "@miz/ai/src/models/group";
-import * as PluginModel from "@miz/ai/src/models/plugin";
+import Config from "miz/config/config.toml";
+import { Logger } from "miz/src/core/log";
+import { Pick } from "miz/src/core/plugin";
+import * as BlackListModel from "miz/src/models/blacklist";
+import * as GroupModel from "miz/src/models/group";
+import * as PluginModel from "miz/src/models/plugin";
 import {
   NCWebsocket,
   Structs,

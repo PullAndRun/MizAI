@@ -1,4 +1,4 @@
-import Config from "@miz/ai/config/config.toml";
+import Config from "miz/config/config.toml";
 import puppeteer from "puppeteer-core";
 
 async function Browser() {

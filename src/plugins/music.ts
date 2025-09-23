@@ -1,6 +1,6 @@
-import Config from "@miz/ai/config/config.toml";
-import { CommandText, SendGroupMessage } from "@miz/ai/src/core/bot";
-import { HotComment, ID } from "@miz/ai/src/service/music";
+import Config from "miz/config/config.toml";
+import { CommandText, SendGroupMessage } from "miz/src/core/bot";
+import { HotComment, ID } from "miz/src/service/music";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {

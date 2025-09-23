@@ -1,6 +1,6 @@
-import Config from "@miz/ai/config/config.toml";
-import { UrlToBuffer, UrlToJson, UrlToText } from "@miz/ai/src/core/http";
-import { ReadRandomImageFromDir, ToJson } from "@miz/ai/src/core/util";
+import Config from "miz/config/config.toml";
+import { UrlToBuffer, UrlToJson, UrlToText } from "miz/src/core/http";
+import { ReadRandomImageFromDir, ToJson } from "miz/src/core/util";
 import path from "node:path";
 import { z } from "zod";
 

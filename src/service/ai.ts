@@ -4,7 +4,7 @@ import {
   type ContentUnion,
   type GenerateContentConfig,
 } from "@google/genai";
-import Config from "@miz/ai/config/config.toml";
+import Config from "miz/config/config.toml";
 import OpenAI from "openai";
 
 const deepseek = new OpenAI({

@@ -1,10 +1,10 @@
-import Config from "@miz/ai/config/config.toml";
+import Config from "miz/config/config.toml";
 import {
   Client,
   CommandText,
   RawText,
   SendGroupMessage,
-} from "@miz/ai/src/core/bot";
+} from "miz/src/core/bot";
 import { sleep } from "bun";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 

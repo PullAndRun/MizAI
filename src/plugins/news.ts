@@ -1,6 +1,6 @@
-import Config from "@miz/ai/config/config.toml";
-import { CommandText, Invoke, SendGroupMessage } from "@miz/ai/src/core/bot";
-import { Duplicate, Finance, Hot } from "@miz/ai/src/service/news";
+import Config from "miz/config/config.toml";
+import { CommandText, Invoke, SendGroupMessage } from "miz/src/core/bot";
+import { Duplicate, Finance, Hot } from "miz/src/service/news";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {

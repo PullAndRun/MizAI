@@ -1,5 +1,5 @@
-import Config from "@miz/ai/config/config.toml";
-import { UrlToText } from "@miz/ai/src/core/http";
+import Config from "miz/config/config.toml";
+import { UrlToText } from "miz/src/core/http";
 import dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";

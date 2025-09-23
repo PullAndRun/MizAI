@@ -1,7 +1,7 @@
-import Config from "@miz/ai/config/config.toml";
-import { Client, CommandText, SendGroupMessage } from "@miz/ai/src/core/bot";
-import { Filter, Verify } from "@miz/ai/src/service/sensitive";
-import { Search } from "@miz/ai/src/service/torrent";
+import Config from "miz/config/config.toml";
+import { Client, CommandText, SendGroupMessage } from "miz/src/core/bot";
+import { Filter, Verify } from "miz/src/service/sensitive";
+import { Search } from "miz/src/service/torrent";
 import { Structs, type GroupMessage, type NodeSegment } from "node-napcat-ts";
 
 const info = {

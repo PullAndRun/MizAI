@@ -1,4 +1,4 @@
-import { Logger } from "@miz/ai/src/core/log";
+import { Logger } from "miz/src/core/log";
 import type { GroupMessage } from "node-napcat-ts";
 import { readdir } from "node:fs/promises";
 import path from "node:path";

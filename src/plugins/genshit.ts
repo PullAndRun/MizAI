@@ -1,5 +1,5 @@
-import { SendGroupMessage } from "@miz/ai/src/core/bot";
-import { Genshit } from "@miz/ai/src/service/image";
+import { SendGroupMessage } from "miz/src/core/bot";
+import { Genshit } from "miz/src/service/image";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {

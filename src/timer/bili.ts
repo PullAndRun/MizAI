@@ -1,9 +1,9 @@
-import Config from "@miz/ai/config/config.toml";
-import { Client, SendGroupMessage } from "@miz/ai/src/core/bot";
-import { UrlToBuffer } from "@miz/ai/src/core/http";
-import * as BiliModel from "@miz/ai/src/models/bili";
-import * as GroupModel from "@miz/ai/src/models/group";
-import * as PluginModel from "@miz/ai/src/models/plugin";
+import Config from "miz/config/config.toml";
+import { Client, SendGroupMessage } from "miz/src/core/bot";
+import { UrlToBuffer } from "miz/src/core/http";
+import * as BiliModel from "miz/src/models/bili";
+import * as GroupModel from "miz/src/models/group";
+import * as PluginModel from "miz/src/models/plugin";
 import {
   Card,
   Dynamic,
@@ -11,7 +11,7 @@ import {
   Live,
   LiveEndReply,
   LiveStartReply,
-} from "@miz/ai/src/service/bili";
+} from "miz/src/service/bili";
 import { sleep } from "bun";
 import dayjs from "dayjs";
 import { Structs } from "node-napcat-ts";

@@ -1,5 +1,5 @@
-import Config from "@miz/ai/config/config.toml";
-import { UrlToBuffer, UrlToJson, UrlToText } from "@miz/ai/src/core/http";
+import Config from "miz/config/config.toml";
+import { UrlToBuffer, UrlToJson, UrlToText } from "miz/src/core/http";
 import * as cheerio from "cheerio";
 import dayjs from "dayjs";
 import { XMLParser } from "fast-xml-parser";

@@ -1,8 +1,8 @@
-import Config from "@miz/ai/config/config.toml";
-import { Client, SendGroupMessage } from "@miz/ai/src/core/bot";
-import * as GroupModel from "@miz/ai/src/models/group";
-import * as PluginModel from "@miz/ai/src/models/plugin";
-import { Wallpaper } from "@miz/ai/src/service/wallpaper";
+import Config from "miz/config/config.toml";
+import { Client, SendGroupMessage } from "miz/src/core/bot";
+import * as GroupModel from "miz/src/models/group";
+import * as PluginModel from "miz/src/models/plugin";
+import { Wallpaper } from "miz/src/service/wallpaper";
 import { sleep } from "bun";
 import { Structs } from "node-napcat-ts";
 import schedule from "node-schedule";

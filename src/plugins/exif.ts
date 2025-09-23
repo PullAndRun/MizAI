@@ -1,6 +1,6 @@
-import { GetMessage, SendGroupMessage } from "@miz/ai/src/core/bot";
-import { UrlToBuffer } from "@miz/ai/src/core/http";
-import { Exif } from "@miz/ai/src/service/exif";
+import { GetMessage, SendGroupMessage } from "miz/src/core/bot";
+import { UrlToBuffer } from "miz/src/core/http";
+import { Exif } from "miz/src/service/exif";
 import { Structs, type GroupMessage, type NodeSegment } from "node-napcat-ts";
 
 const info = {

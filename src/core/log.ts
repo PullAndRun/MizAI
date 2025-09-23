@@ -1,4 +1,4 @@
-import Config from "@miz/ai/config/config.toml";
+import Config from "miz/config/config.toml";
 import dayjs from "dayjs";
 import path from "path";
 import { createLogger, format, transports } from "winston";

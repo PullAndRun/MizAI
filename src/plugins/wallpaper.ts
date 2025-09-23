@@ -1,5 +1,5 @@
-import { SendGroupMessage } from "@miz/ai/src/core/bot";
-import { Wallpaper } from "@miz/ai/src/service/wallpaper";
+import { SendGroupMessage } from "miz/src/core/bot";
+import { Wallpaper } from "miz/src/service/wallpaper";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {

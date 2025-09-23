@@ -1,5 +1,5 @@
-import Config from "@miz/ai/config/config.toml";
-import { UrlToJson } from "@miz/ai/src/core/http";
+import Config from "miz/config/config.toml";
+import { UrlToJson } from "miz/src/core/http";
 import { z } from "zod";
 
 async function Search(query: string) {
