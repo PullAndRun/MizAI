@@ -22,7 +22,9 @@ async function Plugin(event: GroupMessage) {
   if (commandText) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
-      Structs.text(`搜图功能已下线，为您推荐一张精选图片。`),
+      Structs.text(
+        `搜图功能已下线，当前仅支持 "bot看" 命令看一张随机图片。\n为您推荐一张精选图片。`
+      ),
     ]);
   }
   // await SendSearchImage(event);
