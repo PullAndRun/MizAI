@@ -44,7 +44,12 @@ async function SendGroupMessage(
   const { group_all_shut } = await Client().get_group_info({
     group_id: groupID,
   });
-  if (group_all_shut === -1) return;
+  const get_login_info = await Client().get_login_info();
+  const get_group_member_info = await Client().get_group_member_info({
+    group_id: groupID,
+    user_id: get_login_info.user_id,
+  });
+  if (group_all_shut === -1 && get_group_member_info.role !== "admin") return;
   return Client()
     .send_group_msg({ group_id: groupID, message: message.filter((v) => !!v) })
     .catch((e) => {
