@@ -18,6 +18,8 @@ function AIReply(message: string) {
     message
       //移除think标签
       .replace(/[\S\s]*?<\/think>/g, "")
+      //移除思考标签
+      .replace(/[\S\s]*?<\/思考>/g, "")
       //移除thinking标签
       .replace(/[\S\s]*?<\/thinking>/g, "")
       //移除think标签
