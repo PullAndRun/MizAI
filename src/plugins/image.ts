@@ -72,7 +72,8 @@ async function SendVideo(event: GroupMessage) {
   if (
     !commandText.includes("bilibili") &&
     !commandText.includes("b23.tv") &&
-    event.sender.user_id !== Config.Bot.admin
+    event.sender.user_id !== Config.Bot.admin &&
+    event.sender.user_id !== 815007320
   ) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
