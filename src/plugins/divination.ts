@@ -1,5 +1,5 @@
 import Config from "miz/config/config.toml";
-import { CommandText, SendGroupMessage } from "miz/src/core/bot";
+import { Message, SendGroupMessage } from "miz/src/core/bot";
 import { Divination } from "miz/src/service/divination";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
@@ -10,11 +10,8 @@ const info = {
 };
 
 async function Plugin(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [
-    Config.Bot.name,
-    info.name,
-  ]);
-  if (!commandText) {
+  const message = Message(event.message, [Config.Bot.name, info.name]);
+  if (!message) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(
@@ -25,7 +22,7 @@ async function Plugin(event: GroupMessage) {
   }
   await SendGroupMessage(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.text(`您占卜的 "${commandText}" 结果是 "${Divination()}"`),
+    Structs.text(`您占卜的 "${message}" 结果是 "${Divination()}"`),
   ]);
 }
 

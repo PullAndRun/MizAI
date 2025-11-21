@@ -1,5 +1,5 @@
 import Config from "miz/config/config.toml";
-import { Client, CommandText, SendGroupMessage } from "miz/src/core/bot";
+import { Client, Message, SendGroupMessage } from "miz/src/core/bot";
 import { Filter, Verify } from "miz/src/service/sensitive";
 import { Search } from "miz/src/service/torrent";
 import { Structs, type GroupMessage, type NodeSegment } from "node-napcat-ts";
@@ -11,18 +11,15 @@ const info = {
 };
 
 async function Plugin(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [
-    Config.Bot.name,
-    info.name,
-  ]);
-  if (!commandText) {
+  const message = Message(event.message, [Config.Bot.name, info.name]);
+  if (!message) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(`搜索失败，缺少搜索内容。\n请${info.comment[0]}`),
     ]);
     return;
   }
-  const search = await Search(commandText);
+  const search = await Search(message);
   if (!search) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
@@ -60,10 +57,10 @@ async function Plugin(event: GroupMessage) {
       ),
     ])
   );
-  const message = await SendGroupMessage(event.group_id, nodeSegment);
-  if (!message) return;
+  const sendGroupMessage = await SendGroupMessage(event.group_id, nodeSegment);
+  if (!sendGroupMessage) return;
   setTimeout(async () => {
-    await Client().delete_msg({ message_id: message.message_id });
+    await Client().delete_msg({ message_id: sendGroupMessage.message_id });
   }, Config.Bitmagnet.timeout * 1000);
 }
 

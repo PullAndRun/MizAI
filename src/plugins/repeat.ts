@@ -1,5 +1,5 @@
 import Config from "miz/config/config.toml";
-import { ForwardGroupMessage } from "miz/src/core/bot";
+import { SendForwardMessage } from "miz/src/core/bot";
 import { type GroupMessage } from "node-napcat-ts";
 
 const info = {
@@ -29,7 +29,7 @@ async function Plugin(event: GroupMessage) {
     count: newCount,
   });
   if (newCount !== Config.Bot.repeat) return;
-  await ForwardGroupMessage(group_id, event.message_id);
+  await SendForwardMessage(group_id, event.message_id);
 }
 
 export { info };

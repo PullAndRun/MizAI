@@ -1,7 +1,11 @@
 import Config from "miz/config/config.toml";
-import { CommandText, SendGroupMessage } from "miz/src/core/bot";
+import {
+  Message,
+  SendGroupMessage,
+  SendSegmentMessage,
+} from "miz/src/core/bot";
 import { Delete, Download, Metadata } from "miz/src/core/yt-dlp";
-import { Baidu, Pixiv } from "miz/src/service/image";
+import { RandomImage } from "miz/src/service/image";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
@@ -9,49 +13,21 @@ const info = {
   comment: [`使用 "看" 命令查看随机图片`, `使用 "看 [视频网址]" 命令看视频`],
   Plugin,
 };
+
 async function Plugin(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [
-    Config.Bot.name,
-    info.name,
-  ]);
-  if (commandText.startsWith("http")) {
-    await SendVideo(event);
+  const message = Message(event.message, [Config.Bot.name, info.name]);
+  const urlList = message.match(/(https?:\/\/[^\s]+)/i) || [];
+  const url = urlList[0];
+  if (url) {
+    await SendVideo(event, url);
     return;
   }
   await SendRandomImage(event);
-  if (commandText) {
-    await SendGroupMessage(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.text(
-        `搜图功能已下线，当前仅支持 "bot看" 命令看一张随机图片。\n为您推荐一张精选图片。`
-      ),
-    ]);
-  }
-  // await SendSearchImage(event);
-}
-
-async function SendSearchImage(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [
-    Config.Bot.name,
-    info.name,
-  ]);
-  const baiduImage = await Baidu(commandText);
-  if (!baiduImage) {
-    await SendGroupMessage(event.group_id, [
-      Structs.reply(event.message_id),
-      Structs.text("没找要你要看的图"),
-    ]);
-    return;
-  }
-  await SendGroupMessage(event.group_id, [
-    Structs.reply(event.message_id),
-    Structs.image(baiduImage),
-  ]);
 }
 
 async function SendRandomImage(event: GroupMessage) {
-  const pixiv = await Pixiv();
-  if (!pixiv) {
+  const randomImage = await RandomImage();
+  if (!randomImage) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(`暂时没有随机图片。`),
@@ -60,20 +36,16 @@ async function SendRandomImage(event: GroupMessage) {
   }
   await SendGroupMessage(event.group_id, [
     Structs.reply(event.message_id),
-    Structs.image(pixiv),
+    Structs.image(randomImage),
   ]);
 }
 
-async function SendVideo(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [
-    Config.Bot.name,
-    info.name,
-  ]);
+async function SendVideo(event: GroupMessage, url: string) {
   if (
-    !commandText.includes("bilibili") &&
-    !commandText.includes("b23.tv") &&
+    !url.includes("bilibili") &&
+    !url.includes("b23.tv") &&
     event.sender.user_id !== Config.Bot.admin &&
-    event.sender.user_id !== 815007320
+    !(<number[]>Config.Bot.whiteList).includes(event.sender.user_id)
   ) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
@@ -81,7 +53,7 @@ async function SendVideo(event: GroupMessage) {
     ]);
     return;
   }
-  const metadata = await Metadata(commandText);
+  const metadata = await Metadata(url);
   if (!metadata) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
@@ -98,7 +70,7 @@ async function SendVideo(event: GroupMessage) {
     ]);
     return;
   }
-  const fileName = await Download(commandText);
+  const fileName = await Download(url);
   const videoBuffer = await Bun.file(Config.Ytdlp.video_folder + fileName)
     .arrayBuffer()
     .catch((_) => undefined);
@@ -110,10 +82,16 @@ async function SendVideo(event: GroupMessage) {
     await Delete(fileName);
     return;
   }
+  await SendSegmentMessage(event.group_id, [
+    [
+      Structs.video(
+        "data:video/mp4;base64," + Buffer.from(videoBuffer).toBase64()
+      ),
+    ],
+  ]);
   await SendGroupMessage(event.group_id, [
-    Structs.video(
-      "data:video/mp4;base64," + Buffer.from(videoBuffer).toBase64()
-    ),
+    Structs.reply(event.message_id),
+    Structs.text(`已为您推送视频。`),
   ]);
   await Delete(fileName);
 }

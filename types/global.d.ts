@@ -3,7 +3,7 @@ import "node-napcat-ts";
 
 declare global {
   type GroupRole = "member" | "admin" | "owner" | "system";
-  declare type InvokeParameterList = Array<{
+  declare type Menu = Array<{
     command: string;
     comment: string;
     role: groupRole;

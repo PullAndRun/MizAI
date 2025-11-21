@@ -1,5 +1,5 @@
 import Config from "miz/config/config.toml";
-import { CommandText, Invoke, SendGroupMessage } from "miz/src/core/bot";
+import { Menu, Message, SendGroupMessage } from "miz/src/core/bot";
 import { UrlToBuffer } from "miz/src/core/http";
 import * as BiliModel from "miz/src/models/bili";
 import {
@@ -25,11 +25,8 @@ const info = {
 };
 
 async function Plugin(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [
-    Config.Bot.name,
-    info.name,
-  ]);
-  const invokeParameterList: InvokeParameterList = [
+  const message = Message(event.message, [Config.Bot.name, info.name]);
+  const menu: Menu = [
     {
       command: "关注",
       comment: `使用 "主播 关注 [主播昵称]" 命令关注主播`,
@@ -61,7 +58,7 @@ async function Plugin(event: GroupMessage) {
       plugin: List,
     },
   ];
-  await Invoke(event, commandText, invokeParameterList);
+  await Menu(event, message, menu);
 }
 
 async function Dynamics(uname: string, event: GroupMessage) {

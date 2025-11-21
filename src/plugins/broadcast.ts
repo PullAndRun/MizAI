@@ -1,11 +1,6 @@
-import Config from "miz/config/config.toml";
-import {
-  Client,
-  CommandText,
-  RawText,
-  SendGroupMessage,
-} from "miz/src/core/bot";
 import { sleep } from "bun";
+import Config from "miz/config/config.toml";
+import { Client, Message, SendGroupMessage } from "miz/src/core/bot";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
@@ -22,22 +17,17 @@ async function Plugin(event: GroupMessage) {
     ]);
     return;
   }
-  const commandText = CommandText(event.raw_message, [
-    Config.Bot.name,
-    info.name,
-  ]);
-  if (!commandText) {
+  const message = Message(event.message, [Config.Bot.name, info.name]);
+  if (!message) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(`缺少广播内容\n请输入广播内容`),
     ]);
-
     return;
   }
-  const rawText = RawText(event.raw_message, [Config.Bot.name, info.name]);
   const groups = await Client().get_group_list();
   for (const group of groups) {
-    await SendGroupMessage(group.group_id, [Structs.text(rawText)]);
+    await SendGroupMessage(group.group_id, [Structs.text(message)]);
     sleep(Config.Bot.message_delay * 1000);
   }
 }

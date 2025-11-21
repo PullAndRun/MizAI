@@ -1,7 +1,7 @@
+import dayjs from "dayjs";
 import Config from "miz/config/config.toml";
 import { SendGroupMessage } from "miz/src/core/bot";
 import { Earthquake } from "miz/src/service/earthquake";
-import dayjs from "dayjs";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
 const info = {
@@ -28,7 +28,7 @@ async function Plugin(event: GroupMessage) {
             v.title
           }"\n💬 地震详情: ${v.description}\n⏰ 地震时间: ${dayjs(
             v.pubDate
-          ).format("YYYY年MM月DD日 HH点mm分ss秒")}\n👉 官方讯息: ${v.link}`;
+          ).format("YYYY年MM月DD日 HH点mm分ss秒")}`;
         })
         .filter((_, i) => i < 10)
         .join("\n\n")

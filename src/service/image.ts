@@ -56,8 +56,8 @@ async function Genshit() {
   return ReadRandomImageFromDir(path.resolve(Config.Genshit.dir));
 }
 
-async function Pixiv() {
+async function RandomImage() {
   return ReadRandomImageFromDir(path.resolve(Config.Pixiv.dir));
 }
 
-export { Baidu, Genshit, Pixiv, Suyanw };
+export { Baidu, Genshit, RandomImage, Suyanw };

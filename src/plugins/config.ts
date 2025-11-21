@@ -1,5 +1,5 @@
 import Config from "miz/config/config.toml";
-import { CommandText, Invoke, SendGroupMessage } from "miz/src/core/bot";
+import { Menu, Message, SendGroupMessage } from "miz/src/core/bot";
 import * as AIModel from "miz/src/models/ai";
 import * as GroupModel from "miz/src/models/group";
 import * as PluginModel from "miz/src/models/plugin";
@@ -12,11 +12,8 @@ const info = {
 };
 
 async function Plugin(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [
-    Config.Bot.name,
-    info.name,
-  ]);
-  const invokeParameterList: InvokeParameterList = [
+  const message = Message(event.message, [Config.Bot.name, info.name]);
+  const menu: Menu = [
     {
       command: "人格",
       comment: `使用 "设置 人格" 命令查看如何变更AI人格`,
@@ -30,11 +27,11 @@ async function Plugin(event: GroupMessage) {
       plugin: Plugins,
     },
   ];
-  await Invoke(event, commandText, invokeParameterList);
+  await Menu(event, message, menu);
 }
 
 async function AI(message: string, event: GroupMessage) {
-  const invokeParameterList: InvokeParameterList = [
+  const menu: Menu = [
     {
       command: "自定义",
       comment: `\n使用 "设置 人格 自定义 [人格内容]" 命令自定义AI人格。\n自定义AI人格需要以 "迷子是" 开头，AI人格限定200字以内。`,
@@ -48,7 +45,7 @@ async function AI(message: string, event: GroupMessage) {
       plugin: RestorePrompt,
     },
   ];
-  await Invoke(event, message, invokeParameterList);
+  await Menu(event, message, menu);
 }
 
 async function CustomPrompt(message: string, event: GroupMessage) {
@@ -97,7 +94,7 @@ async function RestorePrompt(_: string, event: GroupMessage) {
 }
 
 async function Plugins(message: string, event: GroupMessage) {
-  const invokeParameterList: InvokeParameterList = [
+  const menu: Menu = [
     {
       command: "启用",
       comment: `使用 "设置 插件 启用 [插件名称]" 命令启用插件`,
@@ -117,7 +114,7 @@ async function Plugins(message: string, event: GroupMessage) {
       plugin: PluginState,
     },
   ];
-  await Invoke(event, message, invokeParameterList);
+  await Menu(event, message, menu);
 }
 
 async function PluginEnable(plugin: string, event: GroupMessage) {

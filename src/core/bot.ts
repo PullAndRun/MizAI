@@ -8,25 +8,26 @@ import {
   NCWebsocket,
   Structs,
   type GroupMessage,
+  type NodeSegment,
+  type Receive,
   type SendMessageSegment,
 } from "node-napcat-ts";
 
 const clients: NCWebsocket[] = [];
+const loginInfo: Array<{
+  user_id: number;
+  nickname: string;
+}> = [];
 
 async function Connect() {
   const ncWebSocket = new NCWebsocket({ ...Config.NCWebsocketOptions });
   await ncWebSocket.connect().catch((_) => undefined);
   const status = await ncWebSocket.get_status().catch((_) => undefined);
-  if (!status) {
-    Logger.error("连接不上napcat");
-    return;
-  }
-  if (!status.online) {
-    Logger.error("qq不在线");
-    return;
-  }
-  Logger.info("登录成功");
+  if (!status) throw new Error("连接不上napcat");
+  if (!status.online) throw new Error("qq不在线");
   clients.push(ncWebSocket);
+  loginInfo.push(await ncWebSocket.get_login_info());
+  Logger.info("登录成功");
 }
 
 function Client() {
@@ -37,19 +38,33 @@ function Client() {
   return client;
 }
 
+function LoginInfo() {
+  const info = loginInfo[0];
+  if (!info) {
+    throw new Error("在线机器人没有登录信息");
+  }
+  return info;
+}
+
+async function Sendable(groupID: number) {
+  const { group_all_shut } = await Client().get_group_info({
+    group_id: groupID,
+  });
+  if (group_all_shut !== -1) return true;
+  const login_info = await Client().get_login_info();
+  const group_member_info = await Client().get_group_member_info({
+    group_id: groupID,
+    user_id: login_info.user_id,
+  });
+  return group_member_info.role === "admin";
+}
+
 async function SendGroupMessage(
   groupID: number,
   message: (SendMessageSegment | undefined)[]
 ) {
-  const { group_all_shut } = await Client().get_group_info({
-    group_id: groupID,
-  });
-  const get_login_info = await Client().get_login_info();
-  const get_group_member_info = await Client().get_group_member_info({
-    group_id: groupID,
-    user_id: get_login_info.user_id,
-  });
-  if (group_all_shut === -1 && get_group_member_info.role !== "admin") return;
+  const sendable = await Sendable(groupID);
+  if (!sendable) return;
   return Client()
     .send_group_msg({ group_id: groupID, message: message.filter((v) => !!v) })
     .catch((e) => {
@@ -64,13 +79,9 @@ async function SendGroupMessage(
     });
 }
 
-async function GetMessage(messageID: number) {
-  return Client()
-    .get_msg({ message_id: messageID })
-    .catch((_) => undefined);
-}
-
-async function ForwardGroupMessage(groupID: number, messageID: number) {
+async function SendForwardMessage(groupID: number, messageID: number) {
+  const sendable = await Sendable(groupID);
+  if (!sendable) return null;
   return Client()
     .forward_group_single_msg({ group_id: groupID, message_id: messageID })
     .catch((e) => {
@@ -79,50 +90,56 @@ async function ForwardGroupMessage(groupID: number, messageID: number) {
           e
         )}\n->消息id:\n${messageID}`
       );
-      return undefined;
+      return null;
     });
 }
 
-function CommandText(message: string, commands: string[]) {
-  const cleanedMessage = message
-    //删除所有方括号内容
-    .replace(/\[.*?\]/g, "")
-    //合并所有回车符
+async function SendSegmentMessage(
+  groupID: number,
+  contents: Array<Array<SendMessageSegment>>
+) {
+  const sendable = await Sendable(groupID);
+  if (!sendable) return;
+  const nodeSegment: NodeSegment[] = [];
+  for (const content of contents) {
+    nodeSegment.push(Structs.customNode(content));
+  }
+  if (!nodeSegment.length) return;
+  await SendGroupMessage(groupID, nodeSegment);
+}
+
+async function GetMessage(messageID: number) {
+  return Client()
+    .get_msg({ message_id: messageID })
+    .catch((_) => undefined);
+}
+
+function Message(
+  messages: Array<Receive[keyof Receive]>,
+  commands: Array<string> = []
+) {
+  const message = messages
+    .map((v) => {
+      if (v.type === "text") return v.data.text.trim();
+      return undefined;
+    })
+    .filter((v) => !!v)
+    .join("\n")
     .replace(/(\r+)/g, "\r")
-    //合并所有换行符
     .replace(/(\n+)/g, "\n")
-    //合并所有空白字符
     .replace(/\s+/g, " ");
   return commands
     .reduce(
-      (acc, cur) =>
-        acc
-          //删除以当前命令开头(含前后空格)的部分
-          .replace(new RegExp(`(^\\s*${cur}\\s*)`, "g"), ""),
-      cleanedMessage
+      (acc, cur) => acc.replace(new RegExp(`(^\\s*${cur}\\s*)`, "g"), ""),
+      message
     )
     .trim();
 }
 
-function RawText(message: string, commands: string[]) {
-  //删除所有方括号内容
-  const cleanedMessage = message.replace(/\[.*?\]/g, "");
-  return commands
-    .reduce(
-      (acc, cur) =>
-        acc
-          .trim()
-          //删除以当前命令开头(含前后空格)的部分
-          .replace(new RegExp(`(^\\s*${cur}\\s*)`, "g"), ""),
-      cleanedMessage
-    )
-    .trim();
-}
-
-async function Invoke(
+async function Menu(
   event: GroupMessage,
   message: string,
-  invokeParameterList: InvokeParameterList
+  invokeParameterList: Menu
 ) {
   const roleHierarchy = ["member", "admin", "owner", "system"];
   const permissionMapping: Record<string, string> = {
@@ -153,7 +170,7 @@ async function Invoke(
       return;
     }
     await invokeParameter.plugin(
-      CommandText(message, [invokeParameter.command]),
+      Message(event.message, [invokeParameter.command]),
       event
     );
     return;
@@ -172,66 +189,66 @@ async function Invoke(
   ]);
 }
 
-async function Listener() {
-  const loginInfo = await Client().get_login_info();
+async function Event() {
   Client().on("message.group", async (event) => {
-    let messageList: string[] = [];
-    let callBot = false;
-    let isReplyOrAt = false;
-    for (const eventMessage of event.message) {
-      if (
-        eventMessage.type === "at" &&
-        eventMessage.data.qq === loginInfo.user_id.toString()
-      ) {
-        callBot = true;
-        isReplyOrAt = true;
-      }
-      if (eventMessage.type === "reply") {
-        const groupMessage = await GetMessage(
-          Number.parseFloat(eventMessage.data.id)
-        );
-        if (groupMessage && groupMessage.user_id === loginInfo.user_id) {
-          callBot = true;
-          isReplyOrAt = true;
-        }
-      }
-      if (eventMessage.type === "text") {
-        const text = eventMessage.data.text.trim();
+    if (event.sender.user_id === LoginInfo().user_id) return;
+    const message = Message(event.message, [Config.Bot.name]);
+    if (!message) return;
+    const isCallBot = async () => {
+      for (const eventMessage of event.message) {
         if (
-          text.startsWith(Config.Bot.name) ||
-          text.includes(Config.Bot.nickname)
-        ) {
-          callBot = true;
+          eventMessage.type === "at" &&
+          eventMessage.data.qq === LoginInfo().user_id.toString()
+        )
+          return true;
+        if (eventMessage.type === "reply") {
+          const groupMessage = await GetMessage(
+            Number.parseFloat(eventMessage.data.id)
+          );
+          if (groupMessage && groupMessage.user_id === LoginInfo().user_id)
+            return true;
         }
-        messageList.push(CommandText(text, [Config.Bot.name]));
+        if (eventMessage.type === "text") {
+          const text = eventMessage.data.text.trim();
+          if (
+            text.startsWith(Config.Bot.name) ||
+            text.includes(Config.Bot.nickname)
+          )
+            return true;
+        }
       }
-    }
-    if (event.sender.user_id === loginInfo.user_id) {
-      callBot = false;
-    }
-    if (!callBot) {
+      return false;
+    };
+    const call = await isCallBot();
+    if (!call) {
       Pick("复读=>无法调用")?.Plugin(event);
       return;
     }
     const isBanUser = await BlackListModel.Find(event.user_id.toString());
     if (isBanUser) return;
-    if (isReplyOrAt && callBot) {
-      Pick("聊天=>无法调用")?.Plugin(event);
-      return;
-    }
-    const message = messageList.filter((v) => !!v).join("");
-    if (!message) return;
     const plugin = Pick(message);
-    if (!plugin || message.includes(Config.Bot.nickname)) {
+    if (!plugin) {
+      if (!message.includes(Config.Bot.nickname)) {
+        await SendGroupMessage(event.group_id, [
+          Structs.reply(event.message_id),
+          Structs.text(
+            `您输入的命令有误。\n如需帮助，请输入 "${Config.Bot.name}帮助" 。\n如需使用AI，请在聊天内容包含 "${Config.Bot.nickname}" 关键字。`
+          ),
+        ]);
+        return;
+      }
       Pick("聊天=>无法调用")?.Plugin(event);
       return;
     }
-    const lock = await PluginModel.FindOrAdd(event.group_id, plugin.name, true);
-    if (!lock) return;
-    if (!lock.enable) {
+    const pluginState = await PluginModel.FindOrAdd(
+      event.group_id,
+      plugin.name,
+      true
+    );
+    if (pluginState && !pluginState.enable) {
       await SendGroupMessage(event.group_id, [
         Structs.reply(event.message_id),
-        Structs.text(`错误: "${lock.name}" 功能未激活,请联系管理员激活`),
+        Structs.text(`错误: "${pluginState.name}" 功能未激活,请联系管理员激活`),
       ]);
       return;
     }
@@ -244,7 +261,7 @@ async function Listener() {
   });
   Client().on("notice.group_increase", async (event) => {
     const lock = await PluginModel.FindOrAdd(event.group_id, "入群推送", true);
-    if (!lock || !lock.enable || event.user_id === loginInfo.user_id) return;
+    if (!lock || !lock.enable || event.user_id === LoginInfo().user_id) return;
     const member = await Client().get_group_member_info({
       group_id: event.group_id,
       user_id: event.user_id,
@@ -263,7 +280,7 @@ async function Listener() {
   Client().on("notice.group_decrease", async (event) => {
     if (Config.Bot.admin === event.user_id) {
       await SendGroupMessage(event.group_id, [
-        Structs.text(`监测到系统管理员退群。${Config.Bot.nickname} 跟随退群。`),
+        Structs.text(`监测到系统管理员离开群聊。`),
       ]);
       await Client().set_group_leave({ group_id: event.group_id });
       await GroupModel.Update(event.group_id, { active: false });
@@ -303,16 +320,17 @@ async function GroupInit() {
 async function Init() {
   await Connect();
   await GroupInit();
-  await Listener();
+  await Event();
 }
 
 export {
   Client,
-  CommandText,
-  ForwardGroupMessage,
   GetMessage,
   Init,
-  Invoke,
-  RawText,
+  LoginInfo,
+  Menu,
+  Message,
+  SendForwardMessage,
   SendGroupMessage,
+  SendSegmentMessage,
 };

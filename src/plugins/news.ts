@@ -1,5 +1,5 @@
 import Config from "miz/config/config.toml";
-import { CommandText, Invoke, SendGroupMessage } from "miz/src/core/bot";
+import { Menu, Message, SendGroupMessage } from "miz/src/core/bot";
 import { Duplicate, Finance, Hot } from "miz/src/service/news";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
@@ -13,11 +13,8 @@ const info = {
 };
 
 async function Plugin(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [
-    Config.Bot.name,
-    info.name,
-  ]);
-  const invokeParameterList: InvokeParameterList = [
+  const message = Message(event.message, [Config.Bot.name, info.name]);
+  const menu: Menu = [
     {
       command: "头条",
       comment: `使用 "新闻 头条" 命令查看当前头条新闻`,
@@ -31,7 +28,7 @@ async function Plugin(event: GroupMessage) {
       plugin: FinanceNews,
     },
   ];
-  await Invoke(event, commandText, invokeParameterList);
+  await Menu(event, message, menu);
 }
 
 async function HotNews(_: string, event: GroupMessage) {

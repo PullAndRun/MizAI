@@ -1,5 +1,5 @@
 import Config from "miz/config/config.toml";
-import { CommandText, Invoke, SendGroupMessage } from "miz/src/core/bot";
+import { Menu, Message, SendGroupMessage } from "miz/src/core/bot";
 import * as BlackListModel from "miz/src/models/blacklist";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
@@ -13,18 +13,15 @@ const info = {
 };
 
 async function Plugin(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [
-    Config.Bot.name,
-    info.name,
-  ]);
-  if (!commandText) {
+  const message = Message(event.message, [Config.Bot.name, info.name]);
+  if (!message) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.message_id),
       Structs.text(info.comment.join("\n")),
     ]);
     return;
   }
-  const invokeParameterList: InvokeParameterList = [
+  const menu: Menu = [
     {
       command: "add",
       comment: `使用 "设置 人格" 命令查看如何变更AI人格`,
@@ -38,7 +35,7 @@ async function Plugin(event: GroupMessage) {
       plugin: Remove,
     },
   ];
-  await Invoke(event, commandText, invokeParameterList);
+  await Menu(event, message, menu);
 }
 
 async function Add(message: string, event: GroupMessage) {

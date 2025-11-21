@@ -1,5 +1,5 @@
 import Config from "miz/config/config.toml";
-import { CommandText, Invoke, SendGroupMessage } from "miz/src/core/bot";
+import { Menu, Message, SendGroupMessage } from "miz/src/core/bot";
 import { TradingBoard } from "miz/src/service/ff14";
 import { Structs, type GroupMessage } from "node-napcat-ts";
 
@@ -12,11 +12,8 @@ const info = {
 };
 
 async function Plugin(event: GroupMessage) {
-  const commandText = CommandText(event.raw_message, [
-    Config.Bot.name,
-    info.name,
-  ]);
-  const invokeParameterList: InvokeParameterList = [
+  const message = Message(event.message, [Config.Bot.name, info.name]);
+  const menu: Menu = [
     {
       command: "板子",
       comment: `使用 "ff14 板子 [猫|猪|狗|鸟] [商品名]" 命令进行最终幻想14交易板商品查询`,
@@ -24,7 +21,7 @@ async function Plugin(event: GroupMessage) {
       plugin: Board,
     },
   ];
-  await Invoke(event, commandText, invokeParameterList);
+  await Menu(event, message, menu);
 }
 
 async function Board(message: string, event: GroupMessage) {

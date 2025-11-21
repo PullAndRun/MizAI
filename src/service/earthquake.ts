@@ -47,9 +47,7 @@ function EarthquakeReply(earthquakeData: {
       earthquakeData.title
     }"\n💬 地震详情: ${earthquakeData.description}\n⏰ 地震时间: ${dayjs(
       earthquakeData.pubDate
-    ).format("YYYY年MM月DD日 HH点mm分ss秒")}\n👉 官方讯息: ${
-      earthquakeData.link
-    }`,
+    ).format("YYYY年MM月DD日 HH点mm分ss秒")}`,
   };
 }
 

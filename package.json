@@ -12,24 +12,24 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@google/genai": "^1.20.0",
+    "@google/genai": "^1.29.1",
     "NeteaseCloudMusicApi": "^4.28.0",
     "cheerio": "^1.1.2",
-    "dayjs": "^1.11.18",
+    "dayjs": "^1.11.19",
     "exifreader": "^4.32.0",
-    "fast-xml-parser": "^5.2.5",
-    "file-type": "^21.0.0",
+    "fast-xml-parser": "^5.3.2",
+    "file-type": "^21.1.0",
     "mint-filter": "^4.0.3",
     "miz": "link:miz",
     "node-napcat-ts": "^0.4.20",
     "node-schedule": "^2.1.1",
-    "openai": "^5.23.0",
+    "openai": "^6.9.0",
     "pg": "^8.16.3",
     "pinyin-pro": "^3.27.0",
-    "puppeteer-core": "^24.22.2",
+    "puppeteer-core": "^24.30.0",
     "typeorm": "^0.3.27",
-    "winston": "^3.17.0",
-    "youtube-dl-exec": "^3.0.25",
-    "zod": "^4.1.11"
+    "winston": "^3.18.3",
+    "youtube-dl-exec": "^3.0.26",
+    "zod": "^4.1.12"
   }
 }

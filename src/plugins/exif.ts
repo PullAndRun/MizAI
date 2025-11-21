@@ -1,7 +1,15 @@
-import { GetMessage, SendGroupMessage } from "miz/src/core/bot";
+import {
+  GetMessage,
+  SendGroupMessage,
+  SendSegmentMessage,
+} from "miz/src/core/bot";
 import { UrlToBuffer } from "miz/src/core/http";
 import { Exif } from "miz/src/service/exif";
-import { Structs, type GroupMessage, type NodeSegment } from "node-napcat-ts";
+import {
+  Structs,
+  type GroupMessage,
+  type SendMessageSegment,
+} from "node-napcat-ts";
 
 const info = {
   name: "exif",
@@ -10,14 +18,6 @@ const info = {
 };
 
 async function Plugin(event: GroupMessage) {
-  if (!event.raw_message) {
-    await SendGroupMessage(event.group_id, [
-      Structs.reply(event.sender.user_id),
-      Structs.text(`请确认消息内包含图片`),
-    ]);
-    return;
-  }
-  const nodeSegment: NodeSegment[] = [];
   const urls: string[] = [];
   for (const message of event.message) {
     if (message.type === "reply") {
@@ -33,25 +33,24 @@ async function Plugin(event: GroupMessage) {
       urls.push(message.data.url);
     }
   }
+  const contents: SendMessageSegment[][] = [];
   for (const url of urls) {
     const imageBuffer = await UrlToBuffer(url);
     if (!imageBuffer) continue;
     const exif = await Exif(imageBuffer);
-    nodeSegment.push(
-      Structs.customNode([
-        Structs.image(imageBuffer),
-        Structs.text(exif.join("\n").replace(/\"base64\":\".*?\"/g, "")),
-      ])
-    );
+    contents.push([
+      Structs.image(imageBuffer),
+      Structs.text(exif.join("\n").replace(/\"base64\":\".*?\"/g, "")),
+    ]);
   }
-  if (!nodeSegment.length) {
+  if (!contents.length) {
     await SendGroupMessage(event.group_id, [
       Structs.reply(event.sender.user_id),
       Structs.text(`请确认消息内包含图片`),
     ]);
     return;
   }
-  await SendGroupMessage(event.group_id, nodeSegment);
+  await SendSegmentMessage(event.group_id, contents);
 }
 
 export { info };
